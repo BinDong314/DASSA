@@ -46,8 +46,7 @@ double nStack = 0;
 inline Stencil<double>
 stack_udf(const Stencil<double> &iStencil)
 {
-    nStack++;
-    //std::cout << "nStack: " << nStack++ << " at " << au_mpi_rank_global << "\n";
+    std::cout << "nStack: " << nStack++ << " at " << au_mpi_rank_global << "\n";
 
     std::vector<int> start_offset{0, 0}, end_offset{CHS - 1, LTS - 1};
     //std::vector<double> ts = iStencil.Read(start_offset, end_offset);
