@@ -1,15 +1,15 @@
 
-This is simple README file for DASSA, which now have the same copyright as ArrayUDF (https://bitbucket.org/dbin_sdm/arrayudf-test/src/master/)
+# This is simple README file for DASSA, which now have the same copyright as ArrayUDF (https://bitbucket.org/dbin_sdm/arrayudf-test/src/master/)
 
 
-For the tips on Lawrencium, see the section 8 at the end 
+# For the tips on Lawrencium, see the section 6 at the end 
 
 
-1, Install FastTensor (ArrayUDF) 
+# 1, Install FastTensor (ArrayUDF) 
 
   See Readme file at https://bitbucket.org/dbin_sdm/arrayudf-test/src/master/
 
-2, Install Dependency 
+# 2, Install Dependency 
 
    2.1, FFTW etc.
 
@@ -17,7 +17,7 @@ For the tips on Lawrencium, see the section 8 at the end
   or install your own (see DIY tips below in Section 7)
  
 
-3, Compile DASSA
+# 3, Compile DASSA
 
 Edit the Makefile to to have correct setting for below items
 ```properties
@@ -32,7 +32,7 @@ Then
 > make
 ``` 
 
-4, Simple test
+# 4, Simple test
 
 ```properties
 ./stack -i /clusterfs/bear/BinDong_DAS_Data/xcorr_examples_h5
@@ -49,7 +49,7 @@ Output files will be in current directoy
     xcorr_examples_h5_stack_semblance_denom_sum.h5
 ```
 
-5, DIY Tips on FFTW:
+# 5, DIY Tips on FFTW:
 
 ```properties
 > cd Tools3rd
@@ -60,9 +60,9 @@ Output files will be in current directoy
 ```
 
 
-6, Tips on Lawrencium
+# 6, Tips on Lawrencium
    
-   6.1 A quick start:
+##   6.1 A quick start:
    
    It uses the FastTensor installed by Bin at /clusterfs/bear/BinDong_DAS_Data/fasttensor/build
 
@@ -74,7 +74,7 @@ Output files will be in current directoy
    
    Then, go back to 5. above to run the test code
 
-   6.2 Some compile details for DIY
+##   6.2 Some compile details for DIY
 
    ```properties 
    > git clone https://dbin_sdm@bitbucket.org/dbin_sdm/dassa.git
