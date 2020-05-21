@@ -1,5 +1,9 @@
 
-1. See ../../Readme to install ArrayUDF first.
+See the section at the end for tips on Lawrencium
+
+1. See ../../Readme to install FastTensor (ArrayUDF) first.
+
+   git clone https://dbin_sdm@bitbucket.org/dbin_sdm/fasttensor.git 
 
 2, Install FFTW
 
@@ -16,20 +20,15 @@
    FFTW_DIR=/Users/dbin/work/test-fasttensor/fasttensor/examples/dassa/Tools3rd/fftw-3.3.8/build
    DASH_DIR=/Users/dbin/opt/dash-0.4.
 ```
-
-4, change line 150 
-
-```
-   std::string XCORR_DIR = "/Users/dbin/work/arrayudf-git-svn-test-on-bitbucket/examples/das/stacking_files/xcorr_examples_h5_2";
-```
    
-   To be the directory contains all xcorr files. 
-   
-5, make
+4, make
 
-6, ./au_example_stack
 
-7, Output files will be 
+5, ./stack -i /clusterfs/bear/BinDong_DAS_Data/xcorr_examples_h5
+  
+  The "/clusterfs/bear/BinDong_DAS_Data/xcorr_examples_h5" is the directory for input files.
+  
+6, Output files will be 
 
 ```
     xcorr_examples_h5_stack_data_in_sum.h5
@@ -38,7 +37,7 @@
     xcorr_examples_h5_stack_semblance_denom_sum.h5
 ```
 
-DIY Tips on FFTW:
+7. DIY Tips on FFTW:
 
 ```
 > cd Tools3rd
@@ -48,10 +47,26 @@ DIY Tips on FFTW:
 > make install
 ```
 
+8. Tips on Lawrencium
+   
+   8.1 a quick start:
+   
+   It uses the FastTensor installed by Bin at /clusterfs/bear/BinDong_DAS_Data/fasttensor/build
 
-Notes on
-1, module load gcc/7.4.0 hdf5/1.10.5-gcc-p fftw
-2, module load hdf5/1.10.5-gcc-p
-3, module load fftw
+   ```
+   > git clone https://dbin_sdm@bitbucket.org/dbin_sdm/dassa.git
+   > cd dassa
+   > make
+   ```
+   
+   Go back to 5. above to run the test code
 
+   8.2 Some compile details of each step 
+
+   ``` 
+   > git clone https://dbin_sdm@bitbucket.org/dbin_sdm/dassa.git
+   > module load gcc/7.4.0 hdf5/1.10.5-gcc-p fftw
+   > edit Makefile to have correct setting AU_DIR/HDF5_DIR/FFTW_DIR/DASH_DIR
+   > make
+   ```
 
