@@ -7,11 +7,7 @@ For the tips on Lawrencium, see the section 8 at the end
 
 1, Install FastTensor (ArrayUDF) 
 
-  See Readme file at
-
-  ```properties
-  https://bitbucket.org/dbin_sdm/arrayudf-test/src/master/
-   ```
+  See Readme file at https://bitbucket.org/dbin_sdm/arrayudf-test/src/master/
 
 2, Install Dependency 
 
