@@ -46,7 +46,7 @@ double nStack = 0;
 inline Stencil<double>
 stack_udf(const Stencil<double> &iStencil)
 {
-    std::cout << "nStack: " << nStack++ << " at " << au_mpi_rank_global << "\n";
+    //std::cout << "nStack: " << nStack++ << " at " << au_mpi_rank_global << "\n";
 
     std::vector<int> start_offset{0, 0}, end_offset{CHS - 1, LTS - 1};
     //std::vector<double> ts = iStencil.Read(start_offset, end_offset);
@@ -76,7 +76,7 @@ stack_udf(const Stencil<double> &iStencil)
     if (flag == false)
     {
         std::reverse(ts2d.begin(), ts2d.end());
-        std::cout << "reverse ts2d \n";
+        //std::cout << "reverse ts2d \n";
     }
 
     size_t LTS_new = ts2d[0].size();
