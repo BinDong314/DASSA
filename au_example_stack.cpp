@@ -21,6 +21,8 @@
 #include "au.h"
 #include "DasLib.h"
 
+void printf_help(char *cmd);
+
 using namespace std;
 using namespace AU;
 
@@ -44,7 +46,8 @@ double nStack = 0;
 inline Stencil<double>
 stack_udf(const Stencil<double> &iStencil)
 {
-    std::cout << "nStack: " << nStack++ << " at " << au_mpi_rank_global << "\n";
+    nStack++;
+    //std::cout << "nStack: " << nStack++ << " at " << au_mpi_rank_global << "\n";
 
     std::vector<int> start_offset{0, 0}, end_offset{CHS - 1, LTS - 1};
     //std::vector<double> ts = iStencil.Read(start_offset, end_offset);
@@ -124,6 +127,21 @@ stack_udf(const Stencil<double> &iStencil)
 
 int main(int argc, char *argv[])
 {
+    std::string XCORR_DIR = "/clusterfs/bear/BinDong_DAS_Data/xcorr_examples_h5/";
+    int copt, mpi_rank, mpi_size;
+    while ((copt = getopt(argc, argv, "i:h")) != -1)
+        switch (copt)
+        {
+        case 'i':
+            XCORR_DIR.assign(optarg);
+            break;
+        default:
+            printf("Wrong option [%c] for %s \n", copt, argv[0]);
+            printf_help(argv[0]);
+            exit(-1);
+            break;
+        }
+
     //Init the MPICH, etc.
     AU_Init(argc, argv);
 
@@ -147,25 +165,24 @@ int main(int argc, char *argv[])
     //semblanceWeight->Nonvolatile("EP_HDF5:./xcorr_examples_h5_stack_semblanceWeight.h5:/data");
     //phaseWeight->Nonvolatile("EP_HDF5:./xcorr_examples_h5_stack_phaseWeight.h5:/data");
     //Input data,
-    std::string XCORR_DIR = "/Users/dbin/work/arrayudf-git-svn-test-on-bitbucket/examples/das/stacking_files/xcorr_examples_h5_2";
+
     AU::Array<double> *A = new AU::Array<double>("EP_DIR:EP_HDF5:" + XCORR_DIR + ":/xcoor", chunk_size, overlap_size);
 
     std::vector<int> skip_size = {CHS, LTS};
     A->EnableApplyStride(skip_size);
 
-    std::cout << "Pre clone \n";
-
+    //std::cout << "Pre clone \n";
     //Clone to create local copy
     //std::complex<double> complex_zero(0, 0);
     //coherency_sum->Fill(complex_zero);
     //std::cout << "Fill \n";
 
     semblance_denom_sum->Clone();
-    std::cout << "Clone semblance_denom_sum  \n";
+    //std::cout << "Clone semblance_denom_sum  \n";
     coherency_sum->Clone();
-    std::cout << "Clone coherency_sum  \n";
+    //std::cout << "Clone coherency_sum  \n";
     data_in_sum->Clone();
-    std::cout << "Pre apply \n";
+    //std::cout << "Pre apply \n";
 
     //Run
     A->Apply(stack_udf);
@@ -223,4 +240,13 @@ int main(int argc, char *argv[])
     AU_Finalize();
 
     return 0;
+}
+
+void printf_help(char *cmd)
+{
+    char *msg = (char *)"Usage: %s [OPTION]\n\
+      	  -h help (--help)\n\
+          -i input directory \n\
+          Example: mpirun -n 1 %s -i /clusterfs/bear/BinDong_DAS_Data/xcorr_examples_h5/\n";
+    fprintf(stdout, msg, cmd, cmd);
 }
