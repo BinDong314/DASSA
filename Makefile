@@ -1,12 +1,18 @@
-
-
 #Bin's Mac
-AU_DIR=/Users/dbin/work/test-fasttensor/fasttensor/build
-#AU_DIR=/Users/dbin/work/FastTensor/build
-HDF5_DIR=/Users/dbin/work/test-fasttensor/hdf5-1.12.0/build
-FFTW_DIR=/opt/local
-DASH_DIR=/Users/dbin/opt/dash-0.4.0
-EIGEN3_DIR=/Users/dbin/work/test-fasttensor/fasttensor/examples/dassa/Tools3rd
+#AU_DIR=/Users/dbin/work/test-fasttensor/fasttensor/build
+#HDF5_DIR=/Users/dbin/work/test-fasttensor/hdf5-1.12.0/build
+#FFTW_DIR=/opt/local
+#DASH_DIR=/Users/dbin/opt/dash-0.4.0
+#EIGEN3_DIR=/Users/dbin/work/test-fasttensor/fasttensor/examples/dassa/Tools3rd
+
+#Lawrencium
+AU_DIR=/clusterfs/bear/BinDong_DAS_Data/fasttensor/build
+#HDF5_DIR=${HDF5_DIR}
+#FFTW_DIR=${FFTW3_DIR}
+DASH_DIR=/clusterfs/bear/BinDong_DAS_Data/fasttensor/tools3rd/dash/build/opt/dash-0.4.0
+EIGEN3_DIR=${PWD}/Tools3rd/
+
+SHELL:=/bin/bash
 
 CCC=mpicxx
 OTHER_FLAGS=-O0 -g  -std=c++17 DasLib3rd.cpp
@@ -22,6 +28,7 @@ ALL_FLAGS=$(AU_FLAG) $(HDF5_FLAG) $(FFTW_FLAG) $(OTHER_FLAGS) $(DASH_FLAG) $(EIG
 all:stack
 
 stack:stack.cpp
+	module load gcc/7.4.0 hdf5/1.10.5-gcc-p fftw; \
 	$(CCC) -o stack stack.cpp $(ALL_FLAGS)
 
 clean:
