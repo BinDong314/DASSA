@@ -76,7 +76,7 @@ stack_udf(const Stencil<double> &iStencil)
     if (flag == false)
     {
         std::reverse(ts2d.begin(), ts2d.end());
-        std::cout << "reverse ts2d\n";
+        std::cout << "reverse ts2d \n";
     }
 
     size_t LTS_new = ts2d[0].size();
