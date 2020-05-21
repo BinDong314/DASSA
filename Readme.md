@@ -62,23 +62,24 @@ Output files will be in current directoy
 
 # 6, Tips on Lawrencium
    
-##   6.1 A quick start:
-   
+##   6.1 A quick start: 
    It uses the FastTensor installed by Bin at /clusterfs/bear/BinDong_DAS_Data/fasttensor/build
-   ```properties
+
+```properties
    > git clone https://dbin_sdm@bitbucket.org/dbin_sdm/dassa.git
    > cd dassa
    > make
-   ```
+```
    
    Then, go back to 5. above to run the test code
 
 ##   6.2 Some compile details for DIY
-   ```properties 
+
+```properties 
    > git clone https://dbin_sdm@bitbucket.org/dbin_sdm/dassa.git
    > module load gcc/7.4.0 hdf5/1.10.5-gcc-p fftw
    > edit Makefile to have correct setting AU_DIR/HDF5_DIR/FFTW_DIR/DASH_DIR
    > make
-   ```
+```
 
 
