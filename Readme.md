@@ -1,37 +1,49 @@
 
-See the section at the end for tips on Lawrencium
+This is simple README file for DASSA, which now have the same copyright as ArrayUDF (https://bitbucket.org/dbin_sdm/arrayudf-test/src/master/)
 
 
-1. See ../../Readme to install FastTensor (ArrayUDF) first.
+For the tips on Lawrencium, see the section 8 at the end 
 
-   ```
+
+1, Install FastTensor (ArrayUDF) 
+
+  See Readme file at
+   ```properties
    git clone https://dbin_sdm@bitbucket.org/dbin_sdm/fasttensor.git 
    ```
 
-2, Install FFTW
+2, Install Dependency 
 
-  
-   Either use existing modules (e.g., apt get insall fftw3, module load fftw3, etc.)
-   or install your own (see DIY tips below)
+   2.1, FFTW etc.
+
+   You can either use existing modules (e.g., apt get insall fftw3, module load fftw3, etc.)
+  or install your own (see DIY tips below in Section 7)
  
 
-3, Edit the Makefile
+3, Compile DASSA
 
-```
+Edit the Makefile to to have correct setting for below items
+```properties
    AU_DIR=/Users/dbin/work/FastTensor/build
    HDF5_DIR=/Users/dbin/work/soft/hdf5-1.10.5/build
    FFTW_DIR=/Users/dbin/work/test-fasttensor/fasttensor/examples/dassa/Tools3rd/fftw-3.3.8/build
    DASH_DIR=/Users/dbin/opt/dash-0.4.
 ```
-   
-4, make
 
+Then
+```properties
+> make
+``` 
 
-5, ./stack -i /clusterfs/bear/BinDong_DAS_Data/xcorr_examples_h5
+4, Simple test
+
+```properties
+./stack -i /clusterfs/bear/BinDong_DAS_Data/xcorr_examples_h5
+```
+
+-i: the directory for input files 
   
-  The "/clusterfs/bear/BinDong_DAS_Data/xcorr_examples_h5" is the directory for input files.
-  
-6, Output files will be 
+Output files will be in current directoy
 
 ```
     xcorr_examples_h5_stack_data_in_sum.h5
@@ -40,31 +52,32 @@ See the section at the end for tips on Lawrencium
     xcorr_examples_h5_stack_semblance_denom_sum.h5
 ```
 
-7, DIY Tips on FFTW:
+5, DIY Tips on FFTW:
 
-```
+```properties
 > cd Tools3rd
 > tar zxvf fftw-3.3.8.tar.gz
 > cd fftw-3.3.8
-> ./configure  --prefix=$PWD/build
+> ./configure  --prefix=$PWD/buildproperties
 > make install
 ```
 
-8, Tips on Lawrencium
+
+6, Tips on Lawrencium
    
-   8.1 a quick start:
+   6.1 A quick start:
    
    It uses the FastTensor installed by Bin at /clusterfs/bear/BinDong_DAS_Data/fasttensor/build
 
-   ```
+   ```properties
    > git clone https://dbin_sdm@bitbucket.org/dbin_sdm/dassa.git
    > cd dassa
    > make
    ```
    
-   Go back to 5. above to run the test code
+   Then, go back to 5. above to run the test code
 
-   8.2 Some compile details of each step 
+   6.2 Some compile details for DIY
 
    ```properties 
    > git clone https://dbin_sdm@bitbucket.org/dbin_sdm/dassa.git
