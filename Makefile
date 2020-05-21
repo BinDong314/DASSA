@@ -19,10 +19,10 @@ EIGEN3_FLAG=-I$(EIGEN3_DIR)
 ALL_FLAGS=$(AU_FLAG) $(HDF5_FLAG) $(FFTW_FLAG) $(OTHER_FLAGS) $(DASH_FLAG) $(EIGEN3_FLAG)
 
 .PHONY:all
-all:au_example_stack
+all:stack
 
-au_example_stack:au_example_stack.cpp
-	$(CCC) -o au_example_stack au_example_stack.cpp $(ALL_FLAGS)
+stack:stack.cpp
+	$(CCC) -o stack stack.cpp $(ALL_FLAGS)
 
 clean:
-	rm au_example_stack
+	rm stack
