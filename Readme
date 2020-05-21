@@ -1,9 +1,12 @@
 
 See the section at the end for tips on Lawrencium
 
+
 1. See ../../Readme to install FastTensor (ArrayUDF) first.
 
+   ```
    git clone https://dbin_sdm@bitbucket.org/dbin_sdm/fasttensor.git 
+   ```
 
 2, Install FFTW
 
