@@ -40,7 +40,7 @@ See the section at the end for tips on Lawrencium
     xcorr_examples_h5_stack_semblance_denom_sum.h5
 ```
 
-7. DIY Tips on FFTW:
+7, DIY Tips on FFTW:
 
 ```
 > cd Tools3rd
@@ -50,7 +50,7 @@ See the section at the end for tips on Lawrencium
 > make install
 ```
 
-8. Tips on Lawrencium
+8, Tips on Lawrencium
    
    8.1 a quick start:
    
