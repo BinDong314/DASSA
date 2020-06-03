@@ -7,8 +7,8 @@
 
 #Lawrencium
 AU_DIR=/clusterfs/bear/BinDong_DAS_Data/fasttensor/build
-HDF5_DIR=${HDF5_DIR}
-FFTW_DIR=${FFTW3_DIR}
+#HDF5_DIR=${HDF5_DIR}
+#FFTW_DIR=${FFTW3_DIR}
 DASH_DIR=/clusterfs/bear/BinDong_DAS_Data/fasttensor/tools3rd/dash/build/opt/dash-0.4.0
 EIGEN3_DIR=${PWD}/Tools3rd/
 
