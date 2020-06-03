@@ -1,16 +1,17 @@
 #Bin's Mac
-AU_DIR=/Users/dbin/work/test-fasttensor/fasttensor/build
-HDF5_DIR=/Users/dbin/work/test-fasttensor/hdf5-1.12.0/build
-FFTW_DIR=/opt/local
-DASH_DIR=/Users/dbin/opt/dash-0.4.0
-EIGEN3_DIR=/Users/dbin/work/test-fasttensor/fasttensor/examples/dassa/Tools3rd
+#AU_DIR=/Users/dbin/work/test-fasttensor/fasttensor/build
+#HDF5_DIR=/Users/dbin/work/test-fasttensor/hdf5-1.12.0/build
+#FFTW_DIR=/opt/local
+#DASH_DIR=/Users/dbin/opt/dash-0.4.0
+#EIGEN3_DIR=/Users/dbin/work/test-fasttensor/fasttensor/examples/dassa/Tools3rd
 
 #Lawrencium
-#AU_DIR=/clusterfs/bear/BinDong_DAS_Data/fasttensor/build
-#HDF5_DIR=${HDF5_DIR}
-#FFTW_DIR=${FFTW3_DIR}
-#DASH_DIR=/clusterfs/bear/BinDong_DAS_Data/fasttensor/tools3rd/dash/build/opt/dash-0.4.0
-#EIGEN3_DIR=${PWD}/Tools3rd/
+AU_DIR=/clusterfs/bear/BinDong_DAS_Data/fasttensor/build
+HDF5_DIR=${HDF5_DIR}
+FFTW_DIR=${FFTW3_DIR}
+DASH_DIR=/clusterfs/bear/BinDong_DAS_Data/fasttensor/tools3rd/dash/build/opt/dash-0.4.0
+EIGEN3_DIR=${PWD}/Tools3rd/
+
 
 SHELL:=/bin/bash
 
