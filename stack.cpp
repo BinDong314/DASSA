@@ -46,6 +46,7 @@ double nStack = 0;
 inline Stencil<double>
 stack_udf(const Stencil<double> &iStencil)
 {
+    nStack++;
     //std::cout << "nStack: " << nStack++ << " at " << au_mpi_rank_global << "\n";
 
     std::vector<int> start_offset{0, 0}, end_offset{CHS - 1, LTS - 1};
@@ -75,8 +76,13 @@ stack_udf(const Stencil<double> &iStencil)
     bool flag = DasLib::CausalityFlagging(ts2d, 0.05, 3.0, 10, -59, 59, sample_rate);
     if (flag == false)
     {
-        std::reverse(ts2d.begin(), ts2d.end());
-        //std::cout << "reverse ts2d \n";
+        std::cout << "reverse ts2d at " << nStack << "\n";
+        for (int i = 0; i < CHS; i++)
+        {
+            std::reverse(ts2d[i].begin(), ts2d[i].end());
+        }
+        //PrintVector("Before reverse ts2d at " + std::to_string(nStack), ts2d[0]);
+        //PrintVector("After reverse ts2d at " + std::to_string(nStack), ts2d[0]);
     }
 
     size_t LTS_new = ts2d[0].size();
@@ -186,6 +192,10 @@ int main(int argc, char *argv[])
     //Run
     A->Apply(stack_udf);
 
+    std::vector<unsigned long long> H_start_test{0, 0}, H_end_test{CHS - 1, size_after_subset - 1};
+    std::vector<double> data_in_sum_v_test = data_in_sum->ReadArray(H_start_test, H_end_test);
+    PrintVector("data_in_sum_v_test", data_in_sum_v_test);
+
     semblance_denom_sum->Merge(AU_SUM);
     coherency_sum->Merge(AU_SUM);
     data_in_sum->Merge(AU_SUM);
@@ -216,7 +226,6 @@ int main(int argc, char *argv[])
 
         //PrintVector("semblance_denom_sum_v", semblance_denom_sum_v);
 
-        data_in_sum->Nonvolatile("EP_HDF5:./xcorr_examples_h5_stack_data_in_sum.h5:/data");
         semblance_denom_sum->Nonvolatile("EP_HDF5:./xcorr_examples_h5_stack_semblance_denom_sum.h5:/data");
 
         for (int i = 0; i < CHS * size_after_subset; i++)
@@ -227,6 +236,14 @@ int main(int argc, char *argv[])
 
         //PrintVector("semblanceWeight_v", semblanceWeight_v);
         //PrintVector("phaseWeight_v", phaseWeight_v);
+
+        for (int i = 0; i < data_in_sum_v.size(); i++)
+        {
+            data_in_sum_v[i] = data_in_sum_v[i] / TotalStack;
+        }
+        data_in_sum->WriteArray(H_start, H_end, data_in_sum_v);
+
+        data_in_sum->Nonvolatile("EP_HDF5:./xcorr_examples_h5_stack_data_in_sum.h5:/data");
 
         semblanceWeight->WriteArray(H_start, H_end, semblanceWeight_v);
         phaseWeight->WriteArray(H_start, H_end, phaseWeight_v);
