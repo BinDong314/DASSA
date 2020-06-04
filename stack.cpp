@@ -41,6 +41,8 @@ AU::Array<double> *data_in_sum;
 AU::Array<double> *phaseWeight;
 AU::Array<double> *semblanceWeight;
 
+AU::Array<double> *final_pwstack;
+
 double nStack = 0;
 
 inline Stencil<double>
@@ -163,7 +165,7 @@ int main(int argc, char *argv[])
     semblance_denom_sum = new AU::Array<double>("EP_MEMORY", sc_size);
     coherency_sum = new AU::Array<std::complex<double>>("EP_MEMORY", sc_size);
     data_in_sum = new AU::Array<double>("EP_MEMORY", sc_size);
-
+    final_pwstack = new AU::Array<double>("EP_HDF5:./xcorr_examples_h5_stack_final_pwstack.h5:/data", sc_size);
     semblanceWeight = new AU::Array<double>("EP_HDF5:./xcorr_examples_h5_stack_semblanceWeight.h5:/data", sc_size);
     phaseWeight = new AU::Array<double>("EP_HDF5:./xcorr_examples_h5_stack_phaseWeight.h5:/data", sc_size);
 
@@ -236,10 +238,12 @@ int main(int argc, char *argv[])
 
         //PrintVector("semblanceWeight_v", semblanceWeight_v);
         //PrintVector("phaseWeight_v", phaseWeight_v);
-
+        std::vector<double> final_pwstack_v;
+        final_pwstack_v.resize(data_in_sum_v.size());
         for (int i = 0; i < data_in_sum_v.size(); i++)
         {
             data_in_sum_v[i] = data_in_sum_v[i] / TotalStack;
+            final_pwstack_v[i] = data_in_sum_v[i] * phaseWeight_v[i];
         }
         data_in_sum->WriteArray(H_start, H_end, data_in_sum_v);
 
@@ -247,6 +251,8 @@ int main(int argc, char *argv[])
 
         semblanceWeight->WriteArray(H_start, H_end, semblanceWeight_v);
         phaseWeight->WriteArray(H_start, H_end, phaseWeight_v);
+
+        final_pwstack->WriteArray(H_start, H_end, final_pwstack_v);
     }
     delete semblance_denom_sum;
     delete coherency_sum;
