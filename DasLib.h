@@ -4,6 +4,7 @@
 #include "DasLib3rd.h"
 #include "DasLib_filtfilt.h"
 #include "Tools3rd/INIReader.h"
+#include "Tools3rd/termcolor.hpp"
 
 #include <complex>
 #include <cmath>

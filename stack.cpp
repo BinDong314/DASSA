@@ -36,9 +36,6 @@ int stack_config_reader(std::string file_name, int mpi_rank);
 extern int au_size;
 extern int au_rank;
 
-//#define LTS 14999 //length of time series
-//#define CHS 201   //channels
-
 int lts_per_file = 14999;
 int chs_per_file = 201;
 
@@ -347,23 +344,23 @@ int stack_config_reader(std::string file_name, int mpi_rank)
     if (!mpi_rank)
     {
         std::cout << "\n\n";
-        std::cout << "Configurations to run the Stack: ";
-        std::cout << "\n        xcorr_input_dir = " << xcorr_input_dir;
-        std::cout << "\n        xcorr_input_dataset_name = " << xcorr_input_dataset_name;
-        std::cout << "\n        stack_output_dir = " << stack_output_dir;
-        std::cout << "\n        chs_per_file = " << chs_per_file;
-        std::cout << "\n        t_start = " << t_start;
-        std::cout << "\n        t_end = " << t_end;
-        std::cout << "\n        sample_rate = " << sample_rate;
-        std::cout << "\n        sub_start_t = " << sub_start_t;
-        std::cout << "\n        sub_end_t = " << sub_end_t;
-        std::cout << "\n        CausalityFlagging_tmin = " << CausalityFlagging_tmin;
-        std::cout << "\n        CausalityFlagging_tmax = " << CausalityFlagging_tmax;
-        std::cout << "\n        CausalityFlagging_fmax = " << CausalityFlagging_fmax;
-        std::cout << "\n        CausalityFlagging_ButterLow_order = " << CausalityFlagging_ButterLow_order;
-        std::cout << "\n        CausalityFlagging_ButterLow_fcf = " << CausalityFlagging_ButterLow_fcf;
-        std::cout << "\n        pow_u = " << pow_u;
-        std::cout << "\n\n";
+        std::cout << termcolor::magenta << "Configurations to run the Stack: ";
+        std::cout << termcolor::green << "\n        xcorr_input_dir = " << termcolor::red << xcorr_input_dir;
+        std::cout << termcolor::red << "\n        xcorr_input_dataset_name = " << termcolor::green << xcorr_input_dataset_name;
+        std::cout << termcolor::red << "\n        stack_output_dir = " << termcolor::green << stack_output_dir;
+        std::cout << termcolor::red << "\n        chs_per_file = " << termcolor::green << chs_per_file;
+        std::cout << termcolor::red << "\n        t_start = " << termcolor::green << t_start;
+        std::cout << termcolor::red << "\n        t_end = " << termcolor::green << t_end;
+        std::cout << termcolor::red << "\n        sample_rate = " << termcolor::green << sample_rate;
+        std::cout << termcolor::red << "\n        sub_start_t = " << termcolor::green << sub_start_t;
+        std::cout << termcolor::red << "\n        sub_end_t = " << termcolor::green << sub_end_t;
+        std::cout << termcolor::red << "\n        CausalityFlagging_tmin = " << termcolor::green << CausalityFlagging_tmin;
+        std::cout << termcolor::red << "\n        CausalityFlagging_tmax = " << termcolor::green << CausalityFlagging_tmax;
+        std::cout << termcolor::red << "\n        CausalityFlagging_fmax = " << termcolor::green << CausalityFlagging_fmax;
+        std::cout << termcolor::red << "\n        CausalityFlagging_ButterLow_order = " << termcolor::green << CausalityFlagging_ButterLow_order;
+        std::cout << termcolor::red << "\n        CausalityFlagging_ButterLow_fcf = " << termcolor::green << CausalityFlagging_ButterLow_fcf;
+        std::cout << termcolor::red << "\n        pow_u = " << termcolor::green << pow_u;
+        std::cout << termcolor::reset << "\n\n";
     }
     fflush(stdout);
 
