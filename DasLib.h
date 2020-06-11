@@ -3,6 +3,7 @@
 
 #include "DasLib3rd.h"
 #include "DasLib_filtfilt.h"
+#include "Tools3rd/INIReader.h"
 
 #include <complex>
 #include <cmath>
@@ -199,7 +200,7 @@ inline std::vector<std::vector<T>> Vector1D2D(size_t cols, std::vector<T> &data1
 }
 
 template <class T>
-inline bool CausalityFlagging(std::vector<std::vector<T>> &v, double tmin, double tmax, double fmax, double start_t, double end_t, double smaple_rate)
+inline bool CausalityFlagging(std::vector<std::vector<T>> &v, double tmin, double tmax, double fmax, double start_t, double end_t, double smaple_rate, double CausalityFlagging_ButterLow_order, double CausalityFlagging_ButterLow_fcf)
 {
     int N = v.size();
     std::vector<std::vector<T>> tv1, tv2, tv3, tv4;
@@ -209,7 +210,7 @@ inline bool CausalityFlagging(std::vector<std::vector<T>> &v, double tmin, doubl
     tv4.resize(N);
 
     std::vector<double> A, B;
-    ButterLow(3, 0.16, A, B);
+    ButterLow(CausalityFlagging_ButterLow_order, CausalityFlagging_ButterLow_fcf, A, B);
 
     /*PrintScalar("N", N);
     PrintVector("A", A);
