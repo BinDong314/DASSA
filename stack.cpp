@@ -41,9 +41,19 @@ int chs_per_file = 201;
 
 std::string config_file = "./stack.config";
 
+//Output file name
 std::string xcorr_input_dir = "/clusterfs/bear/BinDong_DAS_Data/xcorr_examples_h5/";
 std::string xcorr_input_dataset_name = "/xcoor";
+
 std::string stack_output_dir = "./";
+
+//Output file name
+std::string stack_output_file_data_in_sum_name = "xcorr_examples_h5_stack_data_in_sum.h5";
+std::string stack_output_file_final_pwstack = "xcorr_examples_h5_stack_final_pwstack.h5";
+std::string stack_output_file_phaseWeight = "xcorr_examples_h5_stack_phaseWeight.h5";
+std::string stack_output_file_semblanceWeight = "xcorr_examples_h5_stack_semblanceWeight.h5";
+std::string stack_output_file_semblance_denom_sum = "xcorr_examples_h5_stack_semblance_denom_sum.h5";
+std::string stack_output_file_dataset_name = "/data";
 
 double t_start = -59.9920000000000, t_end = 59.9920000000000, sample_rate = 0.00800000000000000;
 double sub_start_t = -59, sub_end_t = 59;
@@ -339,16 +349,22 @@ int stack_config_reader(std::string file_name, int mpi_rank)
     CausalityFlagging_fmax = reader.GetReal("parameter", "CausalityFlagging_fmax", 10);
     CausalityFlagging_ButterLow_order = reader.GetReal("parameter", "CausalityFlagging_ButterLow_order", 3);
     CausalityFlagging_ButterLow_fcf = reader.GetReal("parameter", "CausalityFlagging_ButterLow_fcf", 0.16);
-    pow_u = reader.GetReal("parameter", "pow_u", 0.3);
+    pow_u = reader.GetReal("parameter", "dsiStackFileSet_versatile_pow_u", 0.3);
 
+    stack_output_file_data_in_sum_name = reader.Get("parameter", "stack_output_file_data_in_sum_name", "xcorr_examples_h5_stack_data_in_sum.h5");
+    stack_output_file_final_pwstack = reader.Get("parameter", "stack_output_file_final_pwstack", "xcorr_examples_h5_stack_final_pwstack.h5");
+    stack_output_file_phaseWeight = reader.Get("parameter", "stack_output_file_phaseWeight", "xcorr_examples_h5_stack_phaseWeight.h5");
+    stack_output_file_semblanceWeight = reader.Get("parameter", "stack_output_file_semblanceWeight", "xcorr_examples_h5_stack_semblanceWeight.h5");
+    stack_output_file_semblance_denom_sum = reader.Get("parameter", "stack_output_file_semblance_denom_sum", "xcorr_examples_h5_stack_semblance_denom_sum.h5");
+    stack_output_file_dataset_name = reader.Get("parameter", "stack_output_file_dataset_name", "/data");
     if (!mpi_rank)
     {
         std::cout << "\n\n";
         std::cout << termcolor::magenta << "Configurations to run the Stack: ";
         std::cout << termcolor::green << "\n        xcorr_input_dir = " << termcolor::red << xcorr_input_dir;
         std::cout << termcolor::red << "\n        xcorr_input_dataset_name = " << termcolor::green << xcorr_input_dataset_name;
-        std::cout << termcolor::red << "\n        stack_output_dir = " << termcolor::green << stack_output_dir;
-        std::cout << termcolor::red << "\n        chs_per_file = " << termcolor::green << chs_per_file;
+
+        std::cout << termcolor::red << "\n\n        chs_per_file = " << termcolor::green << chs_per_file;
         std::cout << termcolor::red << "\n        t_start = " << termcolor::green << t_start;
         std::cout << termcolor::red << "\n        t_end = " << termcolor::green << t_end;
         std::cout << termcolor::red << "\n        sample_rate = " << termcolor::green << sample_rate;
@@ -359,7 +375,16 @@ int stack_config_reader(std::string file_name, int mpi_rank)
         std::cout << termcolor::red << "\n        CausalityFlagging_fmax = " << termcolor::green << CausalityFlagging_fmax;
         std::cout << termcolor::red << "\n        CausalityFlagging_ButterLow_order = " << termcolor::green << CausalityFlagging_ButterLow_order;
         std::cout << termcolor::red << "\n        CausalityFlagging_ButterLow_fcf = " << termcolor::green << CausalityFlagging_ButterLow_fcf;
-        std::cout << termcolor::red << "\n        pow_u = " << termcolor::green << pow_u;
+        std::cout << termcolor::red << "\n        dsiStackFileSet_versatile_pow_u = " << termcolor::green << pow_u;
+
+        std::cout << termcolor::red << "\n\n        stack_output_dir = " << termcolor::green << stack_output_dir;
+        std::cout << termcolor::red << "\n        file_data_in_sum_name = " << termcolor::green << stack_output_file_data_in_sum_name;
+        std::cout << termcolor::red << "\n        output_file_final_pwstack = " << termcolor::green << stack_output_file_final_pwstack;
+        std::cout << termcolor::red << "\n        output_file_phaseWeight = " << termcolor::green << stack_output_file_phaseWeight;
+        std::cout << termcolor::red << "\n        output_file_semblanceWeight = " << termcolor::green << stack_output_file_semblanceWeight;
+        std::cout << termcolor::red << "\n        output_file_semblance_denom_sum = " << termcolor::green << stack_output_file_semblance_denom_sum;
+        std::cout << termcolor::red << "\n        output_file_dataset_name = " << termcolor::green << stack_output_file_dataset_name;
+
         std::cout << termcolor::reset << "\n\n";
     }
     fflush(stdout);
