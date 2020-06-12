@@ -80,7 +80,7 @@ Please see the section 7 for more about control for input, output control, and r
    > make
 ```
    
-   If it works, go back to 5. above to run the test code
+   If it works, go back to Section 5 above to run the test code
 
    If it does not work, following below steps to check environment or edit your Makefile
 
