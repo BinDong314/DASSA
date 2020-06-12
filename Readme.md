@@ -8,17 +8,17 @@ For the tips on Lawrencium, see the section 6 at the end
 
 1, **Install FastTensor (ArrayUDF)** 
 
-  See Readme file at https://bitbucket.org/dbin_sdm/arrayudf-test/src/master/
+  See Readme file at the below link
+  https://bitbucket.org/dbin_sdm/fasttensor/src/master/
 
 2, **Install Dependency** 
 
    2.1, FFTW etc.
 
-   You can either use existing modules (e.g., apt get insall fftw3, module load fftw3, etc.)
-  or install your own (see DIY tips below in Section 7)
+   You can either use existing modules (e.g., ``apt get insall fftw3``, ``module load fftw3``, etc.) or install your own (see DIY tips below in Section 5)
  
 
-3, *Compile DASSA*
+3, **Compile DASSA**
 
 Edit the Makefile to to have correct setting for below items
 ```bash
@@ -48,9 +48,12 @@ Output files will be in current directoy
     xcorr_examples_h5_stack_phaseWeight.h5
     xcorr_examples_h5_stack_semblanceWeight.h5
     xcorr_examples_h5_stack_semblance_denom_sum.h5
+    xcorr_examples_h5_stack_final_pwstack.h5
 ```
 
-5, **DIY Tips on FFTW:**
+Please see the section 7 for more about control for input, output control, and runtime parameters.
+
+5, **How to install FFTW:**
 
 ```bash
 > cd Tools3rd
@@ -61,10 +64,15 @@ Output files will be in current directoy
 ```
 
 
-6, **Tips on Lawrencium**
+6, **How to install on Lawrencium**
    
-6.1 A quick start: 
-   It uses the FastTensor installed by Bin at /clusterfs/bear/BinDong_DAS_Data/fasttensor/build
+6.1 Install FastTensor: 
+
+   You need to first install FastTensor following the method in Section 1.  
+
+   Or, if you have access, you can use the FastTensor installed by Bin at /clusterfs/bear/BinDong_DAS_Data/fasttensor/build
+   
+   Then, check out the Dassa code and try the make.
 
 ```bash
    > git clone https://dbin_sdm@bitbucket.org/dbin_sdm/dassa.git
@@ -72,18 +80,17 @@ Output files will be in current directoy
    > make
 ```
    
-   Then, go back to 5. above to run the test code
+   If it works, go back to 5. above to run the test code
 
-6.2 Some compile details for DIY
+   If it does not work, following below steps to check environment or edit your Makefile
 
 ```bash 
-   > git clone https://dbin_sdm@bitbucket.org/dbin_sdm/dassa.git
    > module load gcc/7.4.0 hdf5/1.10.5-gcc-p fftw
    > edit Makefile to have correct setting AU_DIR/HDF5_DIR/FFTW_DIR/DASH_DIR
    > make
 ```
 
-
+7, **Input/Output/Runtime Parameters**
 
 
 **Copyright Notice ArrayUDF Copyright (c) 2017**
