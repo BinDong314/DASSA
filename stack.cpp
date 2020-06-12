@@ -351,7 +351,7 @@ int stack_config_reader(std::string file_name, int mpi_rank)
     CausalityFlagging_ButterLow_fcf = reader.GetReal("parameter", "CausalityFlagging_ButterLow_fcf", 0.16);
     pow_u = reader.GetReal("parameter", "dsiStackFileSet_versatile_pow_u", 0.3);
 
-    stack_output_file_data_in_sum_name = reader.Get("parameter", "stack_output_file_data_in_sum_name", "xcorr_examples_h5_stack_data_in_sum.h5");
+    stack_output_file_data_in_sum_name = reader.Get("parameter", "stack_output_file_data_in_sum", "xcorr_examples_h5_stack_data_in_sum.h5");
     stack_output_file_final_pwstack = reader.Get("parameter", "stack_output_file_final_pwstack", "xcorr_examples_h5_stack_final_pwstack.h5");
     stack_output_file_phaseWeight = reader.Get("parameter", "stack_output_file_phaseWeight", "xcorr_examples_h5_stack_phaseWeight.h5");
     stack_output_file_semblanceWeight = reader.Get("parameter", "stack_output_file_semblanceWeight", "xcorr_examples_h5_stack_semblanceWeight.h5");
@@ -360,30 +360,34 @@ int stack_config_reader(std::string file_name, int mpi_rank)
     if (!mpi_rank)
     {
         std::cout << "\n\n";
-        std::cout << termcolor::magenta << "Configurations to run the Stack: ";
-        std::cout << termcolor::green << "\n        xcorr_input_dir = " << termcolor::red << xcorr_input_dir;
-        std::cout << termcolor::red << "\n        xcorr_input_dataset_name = " << termcolor::green << xcorr_input_dataset_name;
+        std::cout << termcolor::red << "Parameters to run the Stack: ";
 
-        std::cout << termcolor::red << "\n\n        chs_per_file = " << termcolor::green << chs_per_file;
-        std::cout << termcolor::red << "\n        t_start = " << termcolor::green << t_start;
-        std::cout << termcolor::red << "\n        t_end = " << termcolor::green << t_end;
-        std::cout << termcolor::red << "\n        sample_rate = " << termcolor::green << sample_rate;
-        std::cout << termcolor::red << "\n        sub_start_t = " << termcolor::green << sub_start_t;
-        std::cout << termcolor::red << "\n        sub_end_t = " << termcolor::green << sub_end_t;
-        std::cout << termcolor::red << "\n        CausalityFlagging_tmin = " << termcolor::green << CausalityFlagging_tmin;
-        std::cout << termcolor::red << "\n        CausalityFlagging_tmax = " << termcolor::green << CausalityFlagging_tmax;
-        std::cout << termcolor::red << "\n        CausalityFlagging_fmax = " << termcolor::green << CausalityFlagging_fmax;
-        std::cout << termcolor::red << "\n        CausalityFlagging_ButterLow_order = " << termcolor::green << CausalityFlagging_ButterLow_order;
-        std::cout << termcolor::red << "\n        CausalityFlagging_ButterLow_fcf = " << termcolor::green << CausalityFlagging_ButterLow_fcf;
-        std::cout << termcolor::red << "\n        dsiStackFileSet_versatile_pow_u = " << termcolor::green << pow_u;
+        std::cout << termcolor::blue << "\n\n Input parameters: ";
+        std::cout << termcolor::magenta << "\n        xcorr_input_dir = " << termcolor::green << xcorr_input_dir;
+        std::cout << termcolor::magenta << "\n        xcorr_input_dataset_name = " << termcolor::green << xcorr_input_dataset_name;
 
-        std::cout << termcolor::red << "\n\n        stack_output_dir = " << termcolor::green << stack_output_dir;
-        std::cout << termcolor::red << "\n        file_data_in_sum_name = " << termcolor::green << stack_output_file_data_in_sum_name;
-        std::cout << termcolor::red << "\n        output_file_final_pwstack = " << termcolor::green << stack_output_file_final_pwstack;
-        std::cout << termcolor::red << "\n        output_file_phaseWeight = " << termcolor::green << stack_output_file_phaseWeight;
-        std::cout << termcolor::red << "\n        output_file_semblanceWeight = " << termcolor::green << stack_output_file_semblanceWeight;
-        std::cout << termcolor::red << "\n        output_file_semblance_denom_sum = " << termcolor::green << stack_output_file_semblance_denom_sum;
-        std::cout << termcolor::red << "\n        output_file_dataset_name = " << termcolor::green << stack_output_file_dataset_name;
+        std::cout << termcolor::blue << "\n\n Runtime parameters: ";
+        std::cout << termcolor::magenta << "\n\n        chs_per_file = " << termcolor::green << chs_per_file;
+        std::cout << termcolor::magenta << "\n        t_start = " << termcolor::green << t_start;
+        std::cout << termcolor::magenta << "\n        t_end = " << termcolor::green << t_end;
+        std::cout << termcolor::magenta << "\n        sample_rate = " << termcolor::green << sample_rate;
+        std::cout << termcolor::magenta << "\n        sub_start_t = " << termcolor::green << sub_start_t;
+        std::cout << termcolor::magenta << "\n        sub_end_t = " << termcolor::green << sub_end_t;
+        std::cout << termcolor::magenta << "\n        CausalityFlagging_tmin = " << termcolor::green << CausalityFlagging_tmin;
+        std::cout << termcolor::magenta << "\n        CausalityFlagging_tmax = " << termcolor::green << CausalityFlagging_tmax;
+        std::cout << termcolor::magenta << "\n        CausalityFlagging_fmax = " << termcolor::green << CausalityFlagging_fmax;
+        std::cout << termcolor::magenta << "\n        CausalityFlagging_ButterLow_order = " << termcolor::green << CausalityFlagging_ButterLow_order;
+        std::cout << termcolor::magenta << "\n        CausalityFlagging_ButterLow_fcf = " << termcolor::green << CausalityFlagging_ButterLow_fcf;
+        std::cout << termcolor::magenta << "\n        dsiStackFileSet_versatile_pow_u = " << termcolor::green << pow_u;
+
+        std::cout << termcolor::blue << "\n\n Output parameters: ";
+        std::cout << termcolor::magenta << "\n\n        stack_output_dir = " << termcolor::green << stack_output_dir;
+        std::cout << termcolor::magenta << "\n        output_file_data_in_sum_name = " << termcolor::green << stack_output_file_data_in_sum_name;
+        std::cout << termcolor::magenta << "\n        output_file_final_pwstack = " << termcolor::green << stack_output_file_final_pwstack;
+        std::cout << termcolor::magenta << "\n        output_file_phaseWeight = " << termcolor::green << stack_output_file_phaseWeight;
+        std::cout << termcolor::magenta << "\n        output_file_semblanceWeight = " << termcolor::green << stack_output_file_semblanceWeight;
+        std::cout << termcolor::magenta << "\n        output_file_semblance_denom_sum = " << termcolor::green << stack_output_file_semblance_denom_sum;
+        std::cout << termcolor::magenta << "\n        output_file_dataset_name = " << termcolor::green << stack_output_file_dataset_name;
 
         std::cout << termcolor::reset << "\n\n";
     }
