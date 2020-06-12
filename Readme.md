@@ -1,15 +1,15 @@
 
-# This is simple README file for DASSA, which now have the same copyright as ArrayUDF (https://bitbucket.org/dbin_sdm/arrayudf-test/src/master/)
+This is simple README file for DASSA, which now have the same copyright as ArrayUDF now(https://bitbucket.org/dbin_sdm/arrayudf-test/src/master/)
 
 
-# For the tips on Lawrencium, see the section 6 at the end 
+For the tips on Lawrencium, see the section 6 at the end 
 
 
-# 1, Install FastTensor (ArrayUDF) 
+1, **Install FastTensor (ArrayUDF)** 
 
   See Readme file at https://bitbucket.org/dbin_sdm/arrayudf-test/src/master/
 
-# 2, Install Dependency 
+2, **Install Dependency** 
 
    2.1, FFTW etc.
 
@@ -17,10 +17,10 @@
   or install your own (see DIY tips below in Section 7)
  
 
-# 3, Compile DASSA
+3, *Compile DASSA*
 
 Edit the Makefile to to have correct setting for below items
-```properties
+```bash
    AU_DIR=/Users/dbin/work/FastTensor/build
    HDF5_DIR=/Users/dbin/work/soft/hdf5-1.10.5/build
    FFTW_DIR=/Users/dbin/work/test-fasttensor/fasttensor/examples/dassa/Tools3rd/fftw-3.3.8/build
@@ -28,13 +28,13 @@ Edit the Makefile to to have correct setting for below items
 ```
 
 Then
-```properties
+```bash
 > make
 ``` 
 
-# 4, Simple test
+4, **Simple test**
 
-```properties
+```bash
 ./stack -i /clusterfs/bear/BinDong_DAS_Data/xcorr_examples_h5
 ```
 
@@ -49,9 +49,9 @@ Output files will be in current directoy
     xcorr_examples_h5_stack_semblance_denom_sum.h5
 ```
 
-# 5, DIY Tips on FFTW:
+5, **DIY Tips on FFTW:**
 
-```properties
+```bash
 > cd Tools3rd
 > tar zxvf fftw-3.3.8.tar.gz
 > cd fftw-3.3.8
@@ -60,12 +60,12 @@ Output files will be in current directoy
 ```
 
 
-# 6, Tips on Lawrencium
+6, **Tips on Lawrencium**
    
-##   6.1 A quick start: 
+6.1 A quick start: 
    It uses the FastTensor installed by Bin at /clusterfs/bear/BinDong_DAS_Data/fasttensor/build
 
-```properties
+```bash
    > git clone https://dbin_sdm@bitbucket.org/dbin_sdm/dassa.git
    > cd dassa
    > make
@@ -73,9 +73,9 @@ Output files will be in current directoy
    
    Then, go back to 5. above to run the test code
 
-##   6.2 Some compile details for DIY
+6.2 Some compile details for DIY
 
-```properties 
+```bash 
    > git clone https://dbin_sdm@bitbucket.org/dbin_sdm/dassa.git
    > module load gcc/7.4.0 hdf5/1.10.5-gcc-p fftw
    > edit Makefile to have correct setting AU_DIR/HDF5_DIR/FFTW_DIR/DASH_DIR
