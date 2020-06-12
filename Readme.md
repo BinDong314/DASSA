@@ -3,7 +3,7 @@ This is simple README file for DASSA, which now has the same Copyright as ArrayU
 Please see the Coryright at the end.
 
 
-##For the tips on Lawrencium, see the section 6 at the end## 
+**For the tips on Lawrencium, see the section 6 at the end** 
 
 
 1, **Install FastTensor (ArrayUDF)** 
