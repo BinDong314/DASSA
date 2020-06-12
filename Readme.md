@@ -1,5 +1,5 @@
 
-This is simple README file for DASSA, which now have the same copyright as ArrayUDF now(https://bitbucket.org/dbin_sdm/arrayudf-test/src/master/)
+This is simple README file for DASSA, which now has the same copyright as ArrayUDF now(https://bitbucket.org/dbin_sdm/arrayudf-test/src/master/)
 
 
 For the tips on Lawrencium, see the section 6 at the end 
