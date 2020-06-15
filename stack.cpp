@@ -206,9 +206,9 @@ int main(int argc, char *argv[])
     semblance_denom_sum = new AU::Array<double>("EP_MEMORY", sc_size);
     coherency_sum = new AU::Array<std::complex<double>>("EP_MEMORY", sc_size);
     data_in_sum = new AU::Array<double>("EP_MEMORY", sc_size);
-    final_pwstack = new AU::Array<double>("EP_HDF5:./xcorr_examples_h5_stack_final_pwstack.h5:/data", sc_size);
-    semblanceWeight = new AU::Array<double>("EP_HDF5:./xcorr_examples_h5_stack_semblanceWeight.h5:/data", sc_size);
-    phaseWeight = new AU::Array<double>("EP_HDF5:./xcorr_examples_h5_stack_phaseWeight.h5:/data", sc_size);
+    final_pwstack = new AU::Array<double>("EP_HDF5:" + stack_output_file_final_pwstack + ":" + stack_output_file_dataset_name, sc_size);
+    semblanceWeight = new AU::Array<double>("EP_HDF5:" + stack_output_file_semblanceWeight + ":" + stack_output_file_dataset_name, sc_size);
+    phaseWeight = new AU::Array<double>("EP_HDF5:" + stack_output_file_phaseWeight + ":" + stack_output_file_dataset_name, sc_size);
 
     //semblanceWeight->Nonvolatile("EP_HDF5:./xcorr_examples_h5_stack_semblanceWeight.h5:/data");
     //phaseWeight->Nonvolatile("EP_HDF5:./xcorr_examples_h5_stack_phaseWeight.h5:/data");
@@ -269,7 +269,7 @@ int main(int argc, char *argv[])
 
         //PrintVector("semblance_denom_sum_v", semblance_denom_sum_v);
 
-        semblance_denom_sum->Nonvolatile("EP_HDF5:./xcorr_examples_h5_stack_semblance_denom_sum.h5:/data");
+        semblance_denom_sum->Nonvolatile("EP_HDF5:" + stack_output_file_semblance_denom_sum + ":" + stack_output_file_dataset_name);
 
         for (int i = 0; i < chs_per_file * size_after_subset; i++)
         {
@@ -288,7 +288,7 @@ int main(int argc, char *argv[])
         }
         data_in_sum->WriteArray(H_start, H_end, data_in_sum_v);
 
-        data_in_sum->Nonvolatile("EP_HDF5:./xcorr_examples_h5_stack_data_in_sum.h5:/data");
+        data_in_sum->Nonvolatile("EP_HDF5:" + stack_output_file_data_in_sum_name + ":" + stack_output_file_dataset_name);
 
         semblanceWeight->WriteArray(H_start, H_end, semblanceWeight_v);
         phaseWeight->WriteArray(H_start, H_end, phaseWeight_v);
