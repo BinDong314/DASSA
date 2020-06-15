@@ -6,7 +6,7 @@ Please see the Coryright at the end.
 **For the tips on Lawrencium, see the section 6 at the end** 
 
 
-1, **Install FastTensor (ArrayUDF)** 
+**1, Install FastTensor (ArrayUDF)** 
 
   See Readme file at the below link
   https://bitbucket.org/dbin_sdm/fasttensor/src/master/
@@ -90,7 +90,15 @@ Please see the section 7 for more about control for input, output control, and r
    > make
 ```
 
-7, **Input/Output/Runtime Parameters**
+**7, Input/Output/Runtime Parameters**
+
+The stack.config file provides an example to specify the Input/Output/Runtime parameters.
+To use the config file:
+
+```bash
+  > stack -c stack.config
+```
+
 
 
 **Copyright Notice ArrayUDF Copyright (c) 2017**

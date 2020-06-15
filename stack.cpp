@@ -237,7 +237,7 @@ int main(int argc, char *argv[])
 
     std::vector<unsigned long long> H_start_test{0, 0}, H_end_test{static_cast<unsigned long long>(chs_per_file) - 1, static_cast<unsigned long long>(size_after_subset) - 1};
     std::vector<double> data_in_sum_v_test = data_in_sum->ReadArray(H_start_test, H_end_test);
-    PrintVector("data_in_sum_v_test", data_in_sum_v_test);
+    //PrintVector("data_in_sum_v_test", data_in_sum_v_test);
 
     semblance_denom_sum->Merge(AU_SUM);
     coherency_sum->Merge(AU_SUM);
