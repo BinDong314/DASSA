@@ -11,14 +11,14 @@ Please see the Coryright at the end.
   See Readme file at the below link
   https://bitbucket.org/dbin_sdm/fasttensor/src/master/
 
-2, **Install Dependency** 
+**2, Install Dependency** 
 
    2.1, FFTW etc.
 
    You can either use existing modules (e.g., ``apt get insall fftw3``, ``module load fftw3``, etc.) or install your own (see DIY tips below in Section 5)
  
 
-3, **Compile DASSA**
+**3, Compile DASSA**
 
 Edit the Makefile to to have correct setting for below items
 ```bash
@@ -33,7 +33,7 @@ Then
 > make
 ``` 
 
-4, **Simple test**
+**4, Simple test**
 
 ```bash
 ./stack -i /clusterfs/bear/BinDong_DAS_Data/xcorr_examples_h5
@@ -53,7 +53,7 @@ Output files will be in current directoy
 
 Please see the section 7 for more about control for input, output control, and runtime parameters.
 
-5, **How to install FFTW:**
+**5, How to install FFTW:**
 
 ```bash
 > cd Tools3rd
@@ -64,7 +64,7 @@ Please see the section 7 for more about control for input, output control, and r
 ```
 
 
-6, **How to install on Lawrencium**
+**6, How to install on Lawrencium**
    
 6.1 Install FastTensor: 
 
@@ -99,6 +99,25 @@ To use the config file:
   > stack -c stack.config
 ```
 
+The stack.config is the example configure files.
+I hope that their names are self-identified. 
+There are some ways I encode the parameters for sub functions, e.g.
+
+```bash
+CausalityFlagging_ButterLow_order = 3
+```
+
+This line is to set the order parameter for Butterworth filter (low pass) and it is called by  CausalityFlagging.
+
+Another assumption in the input parameter are dataset (variable) name (i.e.,  below two parameters):
+
+```bash
+xcorr_input_dataset_name = /xcoor ; dataset name within all XCORR files
+stack_output_file_dataset_name = /data ;dataset name for all output files
+```
+
+To simplify the case, the two dataset names apply to all input files and output files. 
+Their file names can  be specified for different variables. 
 
 
 **Copyright Notice ArrayUDF Copyright (c) 2017**
