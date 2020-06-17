@@ -75,12 +75,15 @@ AU::Array<double> *final_pwstack;
 
 double nStack = 0;
 
+double IO_Read_Time = 0, IO_Reduce_Time = 0, CPU_Time = 0;
+double temp_time;
+
 inline Stencil<double>
 stack_udf(const Stencil<double> &iStencil)
 {
     nStack++;
     //std::cout << "nStack: " << nStack++ << " at " << au_mpi_rank_global << "\n";
-
+    temp_time = AU_WTIME;
     std::vector<int> start_offset{0, 0}, end_offset{chs_per_file - 1, lts_per_file - 1};
     //std::vector<double> ts = iStencil.Read(start_offset, end_offset);
     //std::vector<double> ts(CHS * LTS);
@@ -95,6 +98,8 @@ stack_udf(const Stencil<double> &iStencil)
         }
     }
     //PrintVV("ts2d at rank " + std::to_string(au_rank), ts2d);
+    IO_Read_Time = IO_Read_Time + (AU_WTIME - temp_time);
+    temp_time = AU_WTIME;
 
     DasLib::DeleteMedian(ts2d);
 
@@ -134,6 +139,9 @@ stack_udf(const Stencil<double> &iStencil)
         coherency[i] = DasLib::instanPhaseEstimator(ts2d[i]);
     }
 
+    CPU_Time = CPU_Time + (AU_WTIME - temp_time);
+    temp_time = AU_WTIME;
+
     std::vector<unsigned long long> H_start{0, 0}, H_end{static_cast<unsigned long long>(chs_per_file) - 1, static_cast<unsigned long long>(LTS_new) - 1};
     std::vector<double> semblance_denom_sum_v = semblance_denom_sum->ReadArray(H_start, H_end);
     std::vector<std::complex<double>> coherency_sum_v = coherency_sum->ReadArray(H_start, H_end);
@@ -157,6 +165,9 @@ stack_udf(const Stencil<double> &iStencil)
     semblance_denom_sum->WriteArray(H_start, H_end, semblance_denom_sum_v);
     coherency_sum->WriteArray(H_start, H_end, coherency_sum_v);
     data_in_sum->WriteArray(H_start, H_end, data_in_sum_v);
+
+    IO_Reduce_Time = IO_Reduce_Time + (AU_WTIME - temp_time);
+    temp_time = AU_WTIME;
 
     //std::cout << "finish one file, temp_index " << std::endl;
     return 0;
@@ -299,6 +310,10 @@ int main(int argc, char *argv[])
     delete coherency_sum;
     delete data_in_sum;
     delete phaseWeight;
+
+    PrintScalar("IO_Read_Time: ", IO_Read_Time);
+    PrintScalar("CPU_Time: ", CPU_Time);
+    PrintScalar("IO_Reduce_Time: ", IO_Reduce_Time);
 
     AU_Finalize();
 
