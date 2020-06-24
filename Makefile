@@ -24,11 +24,15 @@ EIGEN3_FLAG=-I$(EIGEN3_DIR)
 ALL_FLAGS=$(AU_FLAG) $(HDF5_FLAG) $(FFTW_FLAG) $(OTHER_FLAGS) $(DASH_FLAG) $(EIGEN3_FLAG) 
 
 .PHONY:all
-all:stack
+all:stack tdms2h5
 
 stack:stack.cpp
 	module load gcc/7.4.0 hdf5/1.10.5-gcc-p fftw; \
 	$(CCC) -o stack stack.cpp $(ALL_FLAGS)
 
+tdms2h5:tdms2h5.c
+	echo $(ALL_FLAGS)
+	$(CCC) -o  tdms2h5 tdms2h5.c $(ALL_FLAGS) 
+
 clean:
-	rm stack
+	rm stack tdms2h5
