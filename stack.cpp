@@ -42,7 +42,8 @@ int chs_per_file = 201;
 std::string config_file = "./stack.config";
 
 //Output file name
-std::string xcorr_input_dir = "/clusterfs/bear/BinDong_DAS_Data/xcorr_examples_h5/";
+std::string xcorr_input_dir = "/Users/dbin/work/arrayudf-git-svn-test-on-bitbucket/examples/das/stacking_files/xcorr_examples_h5";
+//"/clusterfs/bear/BinDong_DAS_Data/xcorr_examples_h5/";
 std::string xcorr_input_dataset_name = "/xcoor";
 
 std::string stack_output_dir = "./";
@@ -75,15 +76,19 @@ AU::Array<double> *final_pwstack;
 
 double nStack = 0;
 
+double IO_Read_Time = 0, IO_Reduce_Time = 0, CPU_Time = 0, IO_Read_Time_Con = 0, DetMean_tim = 0, Subset_tim = 0, CausalityFlagging_tim = 0, instanPhaseEstimator_Time = 0, instanPhaseEstimator_Time2 = 0, sum_Time = 0, sum_micro = 0, sum_micro_sub = 0;
+double temp_time, temp_time_large, micro_time, micro_time_sub;
+
 inline Stencil<double>
 stack_udf(const Stencil<double> &iStencil)
 {
     nStack++;
-    //std::cout << "nStack: " << nStack++ << " at " << au_mpi_rank_global << "\n";
 
     std::vector<int> start_offset{0, 0}, end_offset{chs_per_file - 1, lts_per_file - 1};
-    //std::vector<double> ts = iStencil.Read(start_offset, end_offset);
-    //std::vector<double> ts(CHS * LTS);
+    std::vector<double> ts = iStencil.Read(start_offset, end_offset);
+    std::vector<std::vector<double>> ts2d = DasLib::Vector1D2D(lts_per_file, ts);
+
+    /*
     std::vector<std::vector<double>> ts2d;
     ts2d.resize(chs_per_file);
     for (int i = 0; i < chs_per_file; i++)
@@ -94,9 +99,12 @@ stack_udf(const Stencil<double> &iStencil)
             ts2d[i][j] = iStencil(i, j);
         }
     }
-    //PrintVV("ts2d at rank " + std::to_string(au_rank), ts2d);
+    */
 
     DasLib::DeleteMedian(ts2d);
+
+    DetMean_tim = DetMean_tim + (AU_WTIME - temp_time);
+    temp_time = AU_WTIME;
 
     //Remove the media
     for (int i = 0; i < chs_per_file; i++)
@@ -108,20 +116,18 @@ stack_udf(const Stencil<double> &iStencil)
     bool flag = DasLib::CausalityFlagging(ts2d, CausalityFlagging_tmin, CausalityFlagging_tmax, CausalityFlagging_fmax, sub_start_t, sub_end_t, sample_rate, CausalityFlagging_ButterLow_order, CausalityFlagging_ButterLow_fcf);
     if (flag == false)
     {
-        std::cout << "flipud  at channel " << nStack << "\n";
+        std::cout << "flipud  for the " << nStack << "th file  at process rank " << au_rank << "\n";
         for (int i = 0; i < chs_per_file; i++)
         {
             std::reverse(ts2d[i].begin(), ts2d[i].end());
         }
-        //PrintVector("Before reverse ts2d at " + std::to_string(nStack), ts2d[0]);
-        //PrintVector("After reverse ts2d at " + std::to_string(nStack), ts2d[0]);
     }
 
     size_t LTS_new = ts2d[0].size();
     std::vector<std::vector<double>> semblance_denom;
     std::vector<std::vector<std::complex<double>>> coherency;
     semblance_denom.resize(chs_per_file);
-    coherency.resize(chs_per_file);
+    //coherency.resize(chs_per_file);
     for (int i = 0; i < chs_per_file; i++)
     {
         semblance_denom[i].resize(LTS_new);
@@ -130,9 +136,12 @@ stack_udf(const Stencil<double> &iStencil)
         {
             semblance_denom[i][j] = ts2d[i][j] * ts2d[i][j];
         }
-
-        coherency[i] = DasLib::instanPhaseEstimator(ts2d[i]);
+        //coherency[i] = DasLib::instanPhaseEstimator(ts2d[i]);
     }
+    coherency = DasLib::instanPhaseEstimatorVector(ts2d);
+
+    CPU_Time = CPU_Time + (AU_WTIME - temp_time_large);
+    temp_time_large = AU_WTIME;
 
     std::vector<unsigned long long> H_start{0, 0}, H_end{static_cast<unsigned long long>(chs_per_file) - 1, static_cast<unsigned long long>(LTS_new) - 1};
     std::vector<double> semblance_denom_sum_v = semblance_denom_sum->ReadArray(H_start, H_end);
@@ -151,9 +160,6 @@ stack_udf(const Stencil<double> &iStencil)
             data_in_sum_v[offset] = data_in_sum_v[offset] + ts2d[i][j];
         }
     }
-
-    //PrintVector("coherency_sum_v (after)" + std::to_string(au_rank), coherency_sum_v);
-
     semblance_denom_sum->WriteArray(H_start, H_end, semblance_denom_sum_v);
     coherency_sum->WriteArray(H_start, H_end, coherency_sum_v);
     data_in_sum->WriteArray(H_start, H_end, data_in_sum_v);
@@ -245,7 +251,8 @@ int main(int argc, char *argv[])
 
     double TotalStack;
     AU_Reduce(&nStack, &TotalStack, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
-    std::cout << "Total nStack = " << TotalStack << "\n";
+    if (!au_rank)
+        std::cout << "Total nStack = " << TotalStack << "\n";
     //semblance_denom_sum->Nonvolatile("EP_HDF5:/Users/dbin/work/arrayudf-git-svn-test-on-bitbucket/examples/das/stacking_files/xcorr_examples_h5_stack_semblance_denom_sum.h5:/semblance_denom_sum");
     //coherency_sum->Nonvolatile("EP_HDF5:/Users/dbin/work/arrayudf-git-svn-test-on-bitbucket/examples/das/stacking_files/xcorr_examples_h5_stack_coherency_sum.h5:/coherency_sum");
 
@@ -299,6 +306,24 @@ int main(int argc, char *argv[])
     delete coherency_sum;
     delete data_in_sum;
     delete phaseWeight;
+
+    /*
+    PrintScalar("IO_Read_Time: ", IO_Read_Time);
+    PrintScalar("CPU_Time: ", CPU_Time);
+    PrintScalar("IO_Reduce_Time: ", IO_Reduce_Time);
+    PrintScalar("IO_Read/sum/Write_Time_Con: ", IO_Read_Time_Con);
+    // DetMean_tim = 0, Subset_tim = 0, CausalityFlagging_tim = 0, instanPhaseEstimator_Time = 0
+    PrintScalar("CUP_DetMean_tim :", DetMean_tim);
+    PrintScalar("CPU_Subset_tim :", Subset_tim);
+    PrintScalar("CPU_CausalityFlagging_tim :", CausalityFlagging_tim);
+    PrintScalar("CPU_instanPhaseEstimator_Time :", instanPhaseEstimator_Time);
+    PrintScalar("CPU_instanPhaseEstimator_Time2 :", instanPhaseEstimator_Time2);
+
+    PrintScalar("sum_Time :", sum_Time);
+
+    PrintScalar("sum_micro :", sum_micro);
+    PrintScalar("sum_micro_sub :", sum_micro_sub);
+    */
 
     AU_Finalize();
 
