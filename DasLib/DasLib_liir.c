@@ -40,7 +40,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
-#include "DasLib3rd.h"
+//#include "iir.h"
 
 /**********************************************************************
   binomial_mult - multiplies a series of binomials together and returns

@@ -32,20 +32,22 @@
 #include <math.h> /* ceil  and floor*/
 #include <cstring>
 #include <fftw3.h>
-#include "array_udf.h"
+#include "au.h"
 
 /*
  * Note that: das-fft.h contains all parameters & used variables & functions. 
  *            Go to "das-fft.h" to find more details
  */
-#include "das-fft.h"
+#include "xcorrelation.h"
 
 using namespace std;
+using namespace DasLib;
 
 // help functions
 void printf_help(char *cmd);
+int read_config_file(std::string file_name, int mpi_rank);
 
-inline std::vector<float> DEC_UDF(const Stencil<short> &c)
+inline Stencil<std::vector<float>> DEC_UDF(const Stencil<short> &c)
 {
     std::vector<float> dec_result(decimation_size * window_batch);
     std::vector<double> X_l(n0);
@@ -81,15 +83,18 @@ inline std::vector<float> DEC_UDF(const Stencil<short> &c)
         std::copy(X_l.begin(), X_l.end(), dec_result.begin() + decimation_size * bi);
     }
 
-    return dec_result;
+    Stencil<std::vector<float>> oStencil;
+    oStencil = dec_result;
+    return oStencil;
 }
+
 /*
  * This function describes the operation per channel
  *  The return value is a coorelation vector
  * See more details at das-fft.h
  */
 int debug_index = 0;
-inline std::vector<float> FFT_UDF(const Stencil<short> &c)
+inline Stencil<std::vector<float>> FFT_UDF(const Stencil<short> &c)
 {
     std::vector<double> X_l(n0);
     std::vector<double> C_l(nfft); //temp cache
@@ -231,7 +236,10 @@ inline std::vector<float> FFT_UDF(const Stencil<short> &c)
     }
     clear_vector(C_l);
 
-    return gatherXcorr_l;
+    Stencil<std::vector<float>> oStencil;
+    oStencil = gatherXcorr_l;
+    //return gatherXcorr_l;
+    return oStencil;
 }
 
 std::string i_file("./westSac_170802100007.h5");
@@ -307,7 +315,7 @@ int main(int argc, char *argv[])
         }
 
     //Do some intializatin work for parallel computing
-    MPI_Init(&argc, &argv);
+    AU_Init(argc, argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &mpi_rank);
     MPI_Comm_size(MPI_COMM_WORLD, &mpi_size);
 
@@ -322,8 +330,9 @@ int main(int argc, char *argv[])
         auto_chunk_dims_index = 1;
     }
     //Declare the input and output AU::Array
-    AU::Array<short> *IFILE = new AU::Array<short>(AU_NVS, AU_HDF5, i_file, i_group, i_dataset, auto_chunk_dims_index);
-    AU::Array<float> *OFILE = new AU::Array<float>(AU_COMPUTED, AU_HDF5, o_file, o_group, o_dataset, auto_chunk_dims_index);
+
+    AU::Array<short> *IFILE = new AU::Array<short>("EP_HDF5:" + i_file + ":" + i_dataset, auto_chunk_dims_index);
+    AU::Array<float> *OFILE = new AU::Array<float>("EP_HDF5:" + o_file + ":" + o_dataset, auto_chunk_dims_index);
 
     //Find and set chunks_size to split array for parallel processing
     std::vector<unsigned long long> i_file_dim;
@@ -331,12 +340,14 @@ int main(int argc, char *argv[])
     //SelectView must be called before ApplyStripSize
     if (enable_view_flag)
     {
-        IFILE->SelectView(view_start, view_count, view_os_size, auto_chunk_dims_index);
-        i_file_dim = view_count;
+        //IFILE->SelectView(view_start, view_count, view_os_size, auto_chunk_dims_index);
+        //i_file_dim = view_count;
+        std::cout << "No select view now ! \n";
     }
     else
     {
-        i_file_dim = IFILE->GetDimSize();
+        i_file_dim = IFILE->GetSize();
+        PrintVector("i_file_dim :", i_file_dim);
     }
 
     //After this step, n0 is the size of input time series
@@ -359,7 +370,7 @@ int main(int argc, char *argv[])
             IFILE->SetChunkSize(strip_size);
         }
         strip_size[0] = 1;
-        IFILE->SetApplyStripSize(strip_size);
+        IFILE->EnableApplyStride(strip_size);
     }
     else
     {
@@ -369,7 +380,7 @@ int main(int argc, char *argv[])
             IFILE->SetChunkSize(strip_size);
         }
         strip_size[1] = 1;
-        IFILE->SetApplyStripSize(strip_size);
+        IFILE->EnableApplyStride(strip_size);
     }
     int output_vector_size = nXCORR * window_batch;
     if (!decimation_flag)
@@ -382,11 +393,13 @@ int main(int argc, char *argv[])
     }
     if (row_major_flag == 0)
     {
-        IFILE->SetOutputVector(output_vector_size, 0); //output vector size
+        //IFILE->SetOutputVector(output_vector_size, 0); //output vector size
+        IFILE->SetVectorDirection(AU_FLAT_OUTPUT_COL);
     }
     else
     {
-        IFILE->SetOutputVector(output_vector_size, 1); //output vector size
+        //IFILE->SetOutputVector(output_vector_size, 1); //output vector size
+        IFILE->SetVectorDirection(AU_FLAT_OUTPUT_ROW);
     }
 
     //Get FFT of master vector
@@ -405,7 +418,7 @@ int main(int argc, char *argv[])
         ALLOCATE_FFT(master_fft, nfft * window_batch);
 
         //Dis enable collective IO  to only allow rank 0 to read data
-        IFILE->DisableCollO();
+        IFILE->DisableCollectiveIO();
         for (int bi = 0; bi < window_batch; bi++)
         {
             if (mpi_rank == 0)
@@ -430,7 +443,8 @@ int main(int argc, char *argv[])
                     master_end[1] = master_start[0] + n0 - 1;
                 }
                 //Get master chunk's data and store in double type vector
-                IFILE->ReadData(master_start, master_end, masterv);
+                //IFILE->ReadData(master_start, master_end, masterv);
+                IFILE->ReadEndpoint(master_start, master_end, static_cast<void *>(masterv.data()));
                 au_time_elap_no_mpi("  Read ch time : ");
             }
 
@@ -458,7 +472,7 @@ int main(int argc, char *argv[])
         }
         //Re enable collective IO  to make following read faster
 
-        IFILE->EnableCollIO(); //Comment out for VDS test on single node
+        IFILE->EnableCollectiveIO(); //Comment out for VDS test on single node
 
         //masterv_ppf.clear();
         //mastervf.clear();
@@ -491,7 +505,7 @@ int main(int argc, char *argv[])
 
     CLEAR_SPACE_OMP();
 
-    MPI_Finalize();
+    AU_Finalize();
     return 0;
 }
 
@@ -513,4 +527,158 @@ void printf_help(char *cmd)
           Example: mpirun -n 1 %s -i fft-test.h5 -o fft-test.arrayudf.h5  -g / -t /DataCT -x /Xcorr\n";
 
     fprintf(stdout, msg, cmd, cmd);
+}
+
+int read_config_file(std::string file_name, int mpi_rank)
+{
+    INIReader reader(file_name);
+
+    if (reader.ParseError() < 0)
+    {
+        std::cout << "Can't load [" << file_name << " ]\n";
+        return 1;
+    }
+
+    std::string temp_str;
+    temp_str = reader.Get("parameter", "z", "0, 0.5, 1, 1, 0.5, 0");
+    std::stringstream iss(temp_str);
+    double number;
+    std::vector<double> Z;
+    while (iss >> number)
+    {
+        Z.push_back(number);
+        if (iss.peek() == ',')
+            iss.ignore();
+    }
+    DT = reader.GetReal("parameter", "dt", 0.002);
+    DT_NEW = reader.GetReal("parameter", "dt_new", 0.008);
+    WINLEN_SEC = reader.GetReal("parameter", "winLen_sec", 0.5);
+    INTERP_Z = Z;
+    INTERP_ZF[0] = reader.GetReal("parameter", "F1", 0);
+    INTERP_ZF[1] = reader.GetReal("parameter", "F2", 0.002);
+    INTERP_ZF[2] = reader.GetReal("parameter", "F3", 0.006);
+    INTERP_ZF[3] = reader.GetReal("parameter", "F4", 14.5);
+    INTERP_ZF[4] = reader.GetReal("parameter", "F5", 15);
+
+    eCoeff = reader.GetReal("parameter", "eCoeff", 1.0);
+    MASTER_INDEX = reader.GetInteger("parameter", "master_index", 0);
+    if (!mpi_rank)
+    {
+        std::cout << "Parameters from file [" << file_name << "]: "
+                  << "\n           dt=" << reader.GetReal("parameter", "dt", 0.002)
+                  << "\n       dt_new=" << reader.GetReal("parameter", "dt_new", 0.002)
+                  << "\n   winLen_sec=" << reader.GetReal("parameter", "winLen_sec", 0.5)
+                  << "\n            z=";
+        for (int i = 0; i < INTERP_Z.size(); i++)
+        {
+            std::cout << INTERP_Z[i] << ", ";
+        }
+        std::cout << "\n           zf=";
+        for (int i = 0; i < INTERP_ZF.size(); i++)
+        {
+            std::cout << INTERP_ZF[i] << ", ";
+        }
+        std::cout << "\n            F1 = " << reader.GetReal("parameter", "F1", 0)
+                  << "\n            F2 = " << reader.GetReal("parameter", "F2", 0.002)
+                  << "\n            F3 = " << reader.GetReal("parameter", "F3", 0.006)
+                  << "\n            F4 = " << reader.GetReal("parameter", "F4", 14.5)
+                  << "\n            F5 = " << reader.GetReal("parameter", "F5", 15)
+                  << "\n        eCoeff = " << reader.GetReal("parameter", "eCoeff", 1.0)
+                  << "\n  master_index = " << reader.GetInteger("parameter", "master_index", 0);
+    }
+    std::string temp_str2 = reader.Get("parameter", "input_file", "UNKNOWN");
+    if (temp_str2 != "UNKNOWN")
+    {
+        i_file = temp_str2;
+        if (!mpi_rank)
+            std::cout << "\n        input_file = " << i_file;
+    }
+
+    std::string temp_str3 = reader.Get("parameter", "output_file", "UNKNOWN");
+    if (temp_str3 != "UNKNOWN")
+    {
+        o_file = temp_str3;
+        if (!mpi_rank)
+            std::cout << "\n       output_file = " << o_file;
+    }
+    std::string temp_str35 = reader.Get("parameter", "input_group", "UNKNOWN");
+    if (temp_str35 != "UNKNOWN")
+    {
+        i_group = temp_str35;
+        if (!mpi_rank)
+            std::cout << "\n       input_group = " << i_group;
+    }
+
+    std::string temp_str36 = reader.Get("parameter", "output_group", "UNKNOWN");
+    if (temp_str36 != "UNKNOWN")
+    {
+        o_group = temp_str36;
+        if (!mpi_rank)
+            std::cout << "\n      output_group = " << o_group;
+    }
+
+    std::string temp_str4 = reader.Get("parameter", "input_dataset", "UNKNOWN");
+    if (temp_str4 != "UNKNOWN")
+    {
+        i_dataset = temp_str4;
+        if (!mpi_rank)
+            std::cout << "\n     input_dataset = " << i_dataset;
+    }
+    std::string temp_str5 = reader.Get("parameter", "output_dataset", "UNKNOWN");
+    if (temp_str5 != "UNKNOWN")
+    {
+        o_dataset = temp_str5;
+        if (!mpi_rank)
+            std::cout << "\n    output_dataset = " << o_dataset << std::endl;
+    }
+
+    enable_view_flag = reader.GetBoolean("parameter", "view_enable_flag", false);
+    if (enable_view_flag)
+    {
+        if (!mpi_rank)
+            std::cout << "      View_enabled = true";
+        std::string temp_str_veiw_start = reader.Get("parameter", "view_start", "0,0");
+        std::stringstream iss(temp_str_veiw_start);
+        unsigned long long number;
+        std::vector<unsigned long long> Z;
+        while (iss >> number)
+        {
+            Z.push_back(number);
+            if (iss.peek() == ',')
+                iss.ignore();
+        }
+        view_start = Z;
+
+        std::string temp_str_veiw_count = reader.Get("parameter", "view_count", "30000, 11648");
+        std::stringstream iss2(temp_str_veiw_count);
+        unsigned long long number2;
+        std::vector<unsigned long long> C;
+        while (iss2 >> number2)
+        {
+            C.push_back(number2);
+            if (iss2.peek() == ',')
+                iss2.ignore();
+        }
+        view_count = C;
+
+        if (!mpi_rank)
+        {
+            std::cout << "\n        View_start = ";
+            for (int i = 0; i < view_start.size(); i++)
+            {
+                std::cout << view_start[i] << ", ";
+            }
+
+            std::cout << "\n        View_count = ";
+            for (int i = 0; i < view_count.size(); i++)
+            {
+                std::cout << view_count[i] << ", ";
+            }
+            std::cout << "\n\n";
+        }
+    }
+
+    fflush(stdout);
+
+    return 0;
 }

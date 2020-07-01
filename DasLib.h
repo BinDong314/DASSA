@@ -1,54 +1,24 @@
 #ifndef DASLIB_H
 #define DASLIB_H
 
-#include "DasLib3rd.h"
-#include "DasLib_filtfilt.h"
-#include "Tools3rd/INIReader.h"
-#include "Tools3rd/termcolor.hpp"
-
 #include <complex>
 #include <cmath>
 #include <fftw3.h>
 
 extern double micro_time, sum_micro, micro_time_sub, sum_micro_sub;
 
+#include "DasLib_filtfilt.h"
+#include "Tools3rd/INIReader.h"
+#include "Tools3rd/termcolor.hpp"
+#include "DasLib/DasLib_resample.h"
+#include "DasLib/DasLib_detrend.h"
+#include "DasLib/DasLib_interp1.h"
+#include "DasLib/DasLib_liir.c"
+
+//https://docs.microsoft.com/en-us/cpp/cpp/namespaces-cpp?redirectedfrom=MSDN&view=vs-2019
+#pragma once
 namespace DasLib
 {
-
-//double rms(double x[], int n)
-template <class T>
-inline T Rms(std::vector<T> &x)
-{
-    T sum = 0;
-    int n = x.size();
-    for (int i = 0; i < n; i++)
-        sum += pow(x[i], 2);
-
-    return sqrt(sum / n);
-}
-
-template <class T>
-inline T Mean(std::vector<T> &v)
-{
-    T sum = 0;
-    for (int i = 0; i < v.size(); i++)
-    {
-        sum = sum + v[i];
-    }
-    return sum / v.size();
-}
-// Function for calculating median
-template <class T>
-inline T Median(std::vector<T> &v)
-{
-    sort(v.begin(), v.end());
-    size_t n = v.size();
-    // check for even case
-    if (n % 2 != 0)
-        return v[n / 2];
-
-    return (v[(n - 1) / 2] + v[n / 2]) / 2.0;
-}
 
 // n = order of the filter
 // fc = filter cutoff frequency as a fraction of Pi [0,1]
@@ -106,6 +76,41 @@ int ButterLow(int n, double fcf, std::vector<double> &A, std::vector<double> &B)
     free(ccof);
 
     return 0;
+}
+
+//double rms(double x[], int n)
+template <class T>
+inline T Rms(std::vector<T> &x)
+{
+    T sum = 0;
+    int n = x.size();
+    for (int i = 0; i < n; i++)
+        sum += pow(x[i], 2);
+
+    return sqrt(sum / n);
+}
+
+template <class T>
+inline T Mean(std::vector<T> &v)
+{
+    T sum = 0;
+    for (int i = 0; i < v.size(); i++)
+    {
+        sum = sum + v[i];
+    }
+    return sum / v.size();
+}
+// Function for calculating median
+template <class T>
+inline T Median(std::vector<T> &v)
+{
+    sort(v.begin(), v.end());
+    size_t n = v.size();
+    // check for even case
+    if (n % 2 != 0)
+        return v[n / 2];
+
+    return (v[(n - 1) / 2] + v[n / 2]) / 2.0;
 }
 
 template <class T>
@@ -271,15 +276,15 @@ inline std::vector<std::complex<T>> Hilbert(std::vector<T> &in)
     fftw_complex *out_temp = (fftw_complex *)fftw_alloc_complex(sizeof(fftw_complex) * INN);
     //std::memset(out_temp, 0, sizeof(fftw_complex) * INN);
 
-    micro_time = AU_WTIME;
+    //micro_time = AU_WTIME;
     fftw_plan pf = fftw_plan_dft_1d(INN, in_temp, out_temp, FFTW_FORWARD, FFTW_ESTIMATE);
-    micro_time_sub = AU_WTIME;
+    //micro_time_sub = AU_WTIME;
     fftw_execute(pf);
-    sum_micro_sub = sum_micro_sub + (AU_WTIME - micro_time_sub);
+    //sum_micro_sub = sum_micro_sub + (AU_WTIME - micro_time_sub);
 
     fftw_destroy_plan(pf);
     //fftw_cleanup();
-    sum_micro = sum_micro + (AU_WTIME - micro_time);
+    //sum_micro = sum_micro + (AU_WTIME - micro_time);
 
     size_t HN = INN >> 1;
     size_t numRem = HN;
