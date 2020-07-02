@@ -601,6 +601,7 @@ int read_config_file(std::string file_name, int mpi_rank)
         if (!mpi_rank)
             std::cout << "\n       output_file = " << o_file;
     }
+    /*
     std::string temp_str35 = reader.Get("parameter", "input_group", "UNKNOWN");
     if (temp_str35 != "UNKNOWN")
     {
@@ -615,7 +616,7 @@ int read_config_file(std::string file_name, int mpi_rank)
         o_group = temp_str36;
         if (!mpi_rank)
             std::cout << "\n      output_group = " << o_group;
-    }
+    }*/
 
     std::string temp_str4 = reader.Get("parameter", "input_dataset", "UNKNOWN");
     if (temp_str4 != "UNKNOWN")

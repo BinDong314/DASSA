@@ -131,8 +131,7 @@ int user_window_size = 1;
 int set_window_size_flag = 0;
 int window_batch = 1;
 
-//Flag to have FFT in row-direction (first dimension)
-//By default, it work in column-direction (second dimension)
+//By default, it work in row-direction (first dimension)
 int row_major_flag = 1;
 
 //View's parameter
