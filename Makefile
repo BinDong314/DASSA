@@ -24,7 +24,7 @@ EIGEN3_FLAG=-I$(EIGEN3_DIR)
 ALL_FLAGS=$(AU_FLAG) $(HDF5_FLAG) $(FFTW_FLAG) $(OTHER_FLAGS) $(DASH_FLAG) $(EIGEN3_FLAG) 
 
 .PHONY:all
-all:stack tdms2h5 xcorrelation
+all:stack tdms2h5
 
 stack:stack.cpp
 	module load gcc/7.4.0 hdf5/1.10.5-gcc-p fftw; \
