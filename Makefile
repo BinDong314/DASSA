@@ -35,7 +35,7 @@ tdms2h5:tdms2h5.c
 	$(CCC) -o  tdms2h5 tdms2h5.c $(ALL_FLAGS) 
 
 xcorrelation:xcorrelation.cpp
-	module load gcc/7.4.0 hdf5/1.10.5-gcc-p fftw; \
+	module load gcc/7.4.0 hdf5/1.10.5-gcc-p fftw boost; \
 	$(CCC) -o xcorrelation xcorrelation.cpp  $(ALL_FLAGS) 
 	
 clean:
