@@ -27,7 +27,7 @@ ALL_FLAGS= $(OTHER_FLAGS) $(AU_FLAG) $(HDF5_FLAG) $(FFTW_FLAG)  $(DASH_FLAG) $(E
 all:stack tdms2h5 xcorrelation
 
 stack:stack.cpp
-	module load gcc/7.4.0 hdf5/1.10.5-gcc-p fftw; \
+	module load gcc/7.4.0 hdf5/1.10.5-gcc-p fftw boost; \
 	$(CCC) -o stack stack.cpp $(ALL_FLAGS)
 
 tdms2h5:tdms2h5.c
