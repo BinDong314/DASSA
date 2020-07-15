@@ -1,5 +1,8 @@
 #!/bin/bash
 
+#
+# ##Before are job script 
+# 
 # Job name:
 #SBATCH --job-name=xcorr
 #
@@ -21,8 +24,11 @@
 
 
 
-config_file=xcorrelation-test.config
-output_fn_header=./westSac_180103000031_Xcorr_MaterCH_
+ 
+config_file=xcorrelation-multi-channel.config
+output_fn_header=/global/scratch/dbin/westSac_180103000031_xcorr
+
+
 output_fn_tail=.h5
 
 ##More pattern to run loop
