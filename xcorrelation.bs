@@ -14,6 +14,10 @@
 # Wall clock limit:
 #SBATCH --time=00:30:00
 
+
+#SBATCH -e xcorrelation_%j.err
+#SBATCH -o xcorrelation_%j.out
+
 ## Run command
 module load gcc/7.4.0 hdf5/1.10.5-gcc-p fftw boost
 mpirun -n 64 ./xcorrelation -c xcorrelation.config

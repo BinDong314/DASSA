@@ -430,7 +430,7 @@ int main(int argc, char *argv[])
                         MASTER_INDEX = view_start[1] + MASTER_INDEX;
                     master_start[0] = 0 + bi * n0;
                     master_start[1] = MASTER_INDEX;
-                    master_end[0] = master_start[0] + n0 - 1;
+                    master_end[0] = n0 - 1;
                     master_end[1] = MASTER_INDEX;
                 }
                 else
@@ -440,12 +440,17 @@ int main(int argc, char *argv[])
                     master_start[0] = MASTER_INDEX;
                     master_start[1] = 0 + bi * n0;
                     master_end[0] = MASTER_INDEX;
-                    master_end[1] = master_start[0] + n0 - 1;
+                    master_end[1] = n0 - 1;
                 }
+
+                //PrintVector("master_start = ", master_start);
+                //PrintVector("master_end = ", master_end);
+
                 //Get master chunk's data and store in double type vector
                 //IFILE->ReadData(master_start, master_end, masterv);
                 IFILE->ReadEndpoint(master_start, master_end, static_cast<void *>(masterv.data()));
-                au_time_elap_no_mpi("  Read ch time : ");
+
+                //au_time_elap_no_mpi("  Read ch time : ");
             }
 
             //Only mpi_rank 0 to get the master channel
