@@ -1,0 +1,19 @@
+#!/bin/bash
+# Job name:
+#SBATCH --job-name=xcorr
+#
+# Partition:
+#SBATCH --partition=lr5
+#
+# QoS:
+#SBATCH --qos=lr_normal
+#
+# Processors:
+#SBATCH --ntasks=64
+#
+# Wall clock limit:
+#SBATCH --time=00:30:00
+
+## Run command
+module load gcc/7.4.0 hdf5/1.10.5-gcc-p fftw boost
+mpirun -n 64 ./xcorrelation -c xcorrelation.config
