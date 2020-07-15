@@ -31,9 +31,11 @@ stack:stack.cpp
 	$(CCC) -o stack stack.cpp $(ALL_FLAGS)
 
 tdms2h5:tdms2h5.c
+	module load gcc/7.4.0 hdf5/1.10.5-gcc-p fftw; \
 	$(CCC) -o  tdms2h5 tdms2h5.c $(ALL_FLAGS) 
 
 xcorrelation:xcorrelation.cpp
+	module load gcc/7.4.0 hdf5/1.10.5-gcc-p fftw; \
 	$(CCC) -o xcorrelation xcorrelation.cpp  $(ALL_FLAGS) 
 	
 clean:
