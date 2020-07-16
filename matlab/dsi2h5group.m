@@ -86,7 +86,7 @@ elseif(strcmp(type_str, 'float'))
 elseif(strcmp(type_str, 'double'))
     dsi_data = cell2mat(dsi_data_raw.dat);
 elseif(strcmp(type_str, 'int16'))
-    dsi_data =single(cell2mat(dsi_data_raw.dat));
+    dsi_data =int16(cell2mat(dsi_data_raw.dat));
 else
     disp('Not known type_str, I only understand single, int16, float, double.')
 end

@@ -27,8 +27,8 @@
 
 test_dsi_file='./fft-full-test/Dsi_30min_xcorr.mat';
 test_h5_file='./fft-full-test/Dsi_30min_xcorr.h5';
-test_h5_dset_name='DataTimeChannel'
-test_type_str = 'single'
+test_h5_dset_name='DataCT'
+test_type_str = 'int16'
 
 %importdata(test_dsi_file);
 dsi2h5(test_dsi_file, test_h5_file , test_h5_dset_name, test_type_str);
