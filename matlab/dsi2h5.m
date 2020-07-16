@@ -29,15 +29,16 @@ test_dsi_file='./fft-full-test/Dsi_30min_xcorr.mat';
 test_h5_file='./fft-full-test/Dsi_30min_xcorr.h5';
 test_h5_dset_name='DataCT'
 test_type_str = 'int16'
+transpose_flag = 1
 
 %importdata(test_dsi_file);
-dsi2h5(test_dsi_file, test_h5_file , test_h5_dset_name, test_type_str);
-
+dsi2h5(test_dsi_file, test_h5_file , test_h5_dset_name, test_type_str, transpose_flag);
 
 % Convert dsi_file to HDF5 file
 % type_str: only allow 'single' and 'int16'
-function dsi2h5(dsi_file, h5_file, h5_dataset, type_str)
-
+function dsi2h5(dsi_file, h5_file, h5_dataset, type_str, transpose_flag)
+dsi_file
+h5_file
 dsi_data_raw = importdata(dsi_file);
 
 fcpl = H5P.create('H5P_FILE_CREATE');
@@ -48,12 +49,20 @@ fid  = H5F.create(h5_file, 'H5F_ACC_TRUNC', fcpl, fapl);
 if(strcmp(type_str, 'single'))
     %Convert the "double" type to "single" type 
     dsi_data =single(cell2mat(dsi_data_raw.dat));
+elseif(strcmp(type_str, 'float'))
+    dsi_data =float(cell2mat(dsi_data_raw.dat));
+elseif(strcmp(type_str, 'double'))
+    dsi_data = cell2mat(dsi_data_raw.dat);
 elseif(strcmp(type_str, 'int16'))
-    dsi_data =single(cell2mat(dsi_data_raw.dat));
+    dsi_data =int16(cell2mat(dsi_data_raw.dat));
 else
-    disp('Not known type_str, I only understand single or int16.')
+    disp('Not known type_str, I only understand single, int16, float, double.')
 end
-        
+
+if(transpose_flag == 1)
+    dsi_data = transpose(dsi_data);
+end
+
 h5_dims = size(dsi_data);
  
 %Create the space size on disk /w size of float_data_set
@@ -73,6 +82,18 @@ elseif(strcmp(type_str, 'int16'))
     type_id = H5T.copy('H5T_NATIVE_SHORT');
     order = H5ML.get_constant_value('H5T_ORDER_BE');
     H5T.set_order(type_id,order);
+elseif(strcmp(type_str, 'float'))
+    %Convert the "double" type to "int16" type 
+    %It may have some warning, just ignore
+    type_id = H5T.copy('H5T_NATIVE_FLOAT');
+    order = H5ML.get_constant_value('H5T_ORDER_BE');
+    H5T.set_order(type_id,order);
+elseif(strcmp(type_str, 'double'))
+    %Convert the "double" type to "int16" type 
+    %It may have some warning, just ignore
+    type_id = H5T.copy('H5T_NATIVE_DOUBLE');
+    order = H5ML.get_constant_value('H5T_ORDER_BE');
+    H5T.set_order(type_id,order);
 else
     disp('Not known type_str, I only understand single or int16.')
 end
@@ -87,6 +108,13 @@ H5T.close(type_id);
 H5D.close(dset_id);
 H5F.close(fid);
 end
+
+
+
+
+
+
+
 
 
 
