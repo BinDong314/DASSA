@@ -25,18 +25,18 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%
 
-test_dsi_file='./fft-full-test/Dsi_30min_xcorr.mat';
-test_h5_file='./fft-full-test/Dsi_30min_xcorr.h5';
+test_dsi_file='../Dsi_30min_beforeTrain_170730024007_170730031007_ch2500_3500_NS_10chMedianStack.mat';
+test_h5_file='../Dsi_30min_beforeTrain_170730024007_170730031007_ch2500_3500_NS_10chMedianStack.h5';
 test_h5_dset_name='DataCT'
 test_type_str = 'int16'
 transpose_flag = 1
 
 %importdata(test_dsi_file);
-dsi2h5(test_dsi_file, test_h5_file , test_h5_dset_name, test_type_str, transpose_flag);
+dsi2h52(test_dsi_file, test_h5_file , test_h5_dset_name, test_type_str, transpose_flag);
 
 % Convert dsi_file to HDF5 file
 % type_str: only allow 'single' and 'int16'
-function dsi2h5(dsi_file, h5_file, h5_dataset, type_str, transpose_flag)
+function dsi2h52(dsi_file, h5_file, h5_dataset, type_str, transpose_flag)
 dsi_file
 h5_file
 dsi_data_raw = importdata(dsi_file);
