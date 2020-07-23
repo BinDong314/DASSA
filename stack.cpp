@@ -392,6 +392,7 @@ int stack_config_reader(std::string file_name, int mpi_rank)
         std::cout << termcolor::magenta << "\n        xcorr_input_dataset_name = " << termcolor::green << xcorr_input_dataset_name;
 
         std::cout << termcolor::blue << "\n\n Runtime parameters: ";
+        std::cout << termcolor::magenta << "\n\n        lts_per_file = " << termcolor::green << lts_per_file;
         std::cout << termcolor::magenta << "\n\n        chs_per_file = " << termcolor::green << chs_per_file;
         std::cout << termcolor::magenta << "\n        t_start = " << termcolor::green << t_start;
         std::cout << termcolor::magenta << "\n        t_end = " << termcolor::green << t_end;
