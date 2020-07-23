@@ -317,6 +317,7 @@ int main(int argc, char *argv[])
         //semblanceWeight->WriteArray(H_start, H_end, semblanceWeight_v);
         //phaseWeight->WriteArray(H_start, H_end, phaseWeight_v);
 
+        std::cout << "Store final_pwstack... \n ";
         final_pwstack->WriteArray(H_start, H_end, final_pwstack_v);
     }
     delete semblance_denom_sum;
