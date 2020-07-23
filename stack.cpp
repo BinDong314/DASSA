@@ -213,7 +213,8 @@ int main(int argc, char *argv[])
     coherency_sum = new AU::Array<std::complex<double>>("EP_MEMORY", sc_size);
     data_in_sum = new AU::Array<double>("EP_MEMORY", sc_size);
 
-    std::cout << "EP_HDF5:" + stack_output_dir + "/" + stack_output_file_final_pwstack + ":" + stack_output_file_dataset_name << "\n";
+    if (!au_rank)
+        std::cout << "EP_HDF5:" + stack_output_dir + "/" + stack_output_file_final_pwstack + ":" + stack_output_file_dataset_name << "\n";
 
     final_pwstack = new AU::Array<double>("EP_HDF5:" + stack_output_dir + "/" + stack_output_file_final_pwstack + ":" + stack_output_file_dataset_name, sc_size);
     semblanceWeight = new AU::Array<double>("EP_HDF5:" + stack_output_dir + "/" + stack_output_file_semblanceWeight + ":" + stack_output_file_dataset_name, sc_size);
