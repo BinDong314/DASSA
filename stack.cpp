@@ -309,10 +309,9 @@ int main(int argc, char *argv[])
             final_pwstack_v[i] = data_in_sum_v[i] * phaseWeight_v[i];
         }
 
-        data_in_sum->WriteArray(H_start, H_end, data_in_sum_v);
-
         std::cout << "Store data_in_sum... \n ";
 
+        data_in_sum->WriteArray(H_start, H_end, data_in_sum_v);
         data_in_sum->Nonvolatile("EP_HDF5:" + stack_output_dir + "/" + stack_output_file_data_in_sum_name + ":" + stack_output_file_dataset_name);
 
         std::cout << "Store semblanceWeight... \n ";
@@ -322,6 +321,7 @@ int main(int argc, char *argv[])
         // std::cout << "Store final_pwstack... \n ";
         final_pwstack->WriteArray(H_start, H_end, final_pwstack_v);
     }
+    MPI_Barrier(MPI_COMM_WORLD);
     delete semblance_denom_sum;
     delete coherency_sum;
     delete data_in_sum;
