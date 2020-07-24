@@ -289,8 +289,8 @@ int main(int argc, char *argv[])
 
         //PrintVector("semblance_denom_sum_v", semblance_denom_sum_v);
 
-        //std::cout << "Store: "
-        //          << "EP_HDF5:" + stack_output_dir + "/" + //stack_output_file_semblance_denom_sum + ":" + //stack_output_file_dataset_name << "\n";
+        std::cout << "Write ... EP_HDF5:" + stack_output_dir + "/" + stack_output_file_semblance_denom_sum + ":" + stack_output_file_dataset_name << "\n"
+                  << std::flush;
         semblance_denom_sum->Nonvolatile("EP_HDF5:" + stack_output_dir + "/" + stack_output_file_semblance_denom_sum + ":" + stack_output_file_dataset_name);
 
         for (int i = 0; i < chs_per_file * size_after_subset; i++)
@@ -311,11 +311,11 @@ int main(int argc, char *argv[])
 
         data_in_sum->WriteArray(H_start, H_end, data_in_sum_v);
 
-        //std::cout << "Store data_in_sum... \n ";
+        std::cout << "Store data_in_sum... \n ";
 
         data_in_sum->Nonvolatile("EP_HDF5:" + stack_output_dir + "/" + stack_output_file_data_in_sum_name + ":" + stack_output_file_dataset_name);
 
-        //std::cout << "Store semblanceWeight... \n ";
+        std::cout << "Store semblanceWeight... \n ";
 
         semblanceWeight->WriteArray(H_start, H_end, semblanceWeight_v);
         phaseWeight->WriteArray(H_start, H_end, phaseWeight_v);
