@@ -65,6 +65,8 @@ double CausalityFlagging_fmax = 10;
 double CausalityFlagging_ButterLow_order = 3;
 double CausalityFlagging_ButterLow_fcf = 0.16; //filter cutoff frequency
 
+bool is_flipud_flag = true;
+
 std::vector<unsigned long long> sc_size(2);
 AU::Array<double> *semblance_denom_sum;
 AU::Array<std::complex<double>> *coherency_sum;
@@ -113,13 +115,16 @@ stack_udf(const Stencil<double> &iStencil)
         ts2d[i] = DasLib::TimeSubset(ts2d[i], t_start, t_end, sub_start_t, sub_end_t, sample_rate);
     }
 
-    bool flag = DasLib::CausalityFlagging(ts2d, CausalityFlagging_tmin, CausalityFlagging_tmax, CausalityFlagging_fmax, sub_start_t, sub_end_t, sample_rate, CausalityFlagging_ButterLow_order, CausalityFlagging_ButterLow_fcf);
-    if (flag == false)
+    if (is_flipud_flag)
     {
-        std::cout << "flipud  for the " << nStack << "th file  at process rank " << au_rank << "\n";
-        for (int i = 0; i < chs_per_file; i++)
+        bool flag = DasLib::CausalityFlagging(ts2d, CausalityFlagging_tmin, CausalityFlagging_tmax, CausalityFlagging_fmax, sub_start_t, sub_end_t, sample_rate, CausalityFlagging_ButterLow_order, CausalityFlagging_ButterLow_fcf);
+        if (flag == false)
         {
-            std::reverse(ts2d[i].begin(), ts2d[i].end());
+            std::cout << "flipud  for the " << nStack << "th file  at process rank " << au_rank << "\n";
+            for (int i = 0; i < chs_per_file; i++)
+            {
+                std::reverse(ts2d[i].begin(), ts2d[i].end());
+            }
         }
     }
 
@@ -381,6 +386,16 @@ int stack_config_reader(std::string file_name, int mpi_rank)
 
     stack_output_dir = reader.Get("parameter", "stack_output_dir", "./");
 
+    std::string is_flipud_flag = reader.Get("parameter", "is_flipud", "true");
+    if (is_flipud_flag == "false")
+    {
+        is_flipud_flag = false;
+    }
+    else
+    {
+        is_flipud_flag = true;
+    }
+
     chs_per_file = reader.GetInteger("parameter", "chs_per_file", 201);
     lts_per_file = reader.GetInteger("parameter", "lts_per_file", 14999);
 
@@ -425,6 +440,7 @@ int stack_config_reader(std::string file_name, int mpi_rank)
         std::cout << termcolor::magenta << "\n        CausalityFlagging_ButterLow_order = " << termcolor::green << CausalityFlagging_ButterLow_order;
         std::cout << termcolor::magenta << "\n        CausalityFlagging_ButterLow_fcf = " << termcolor::green << CausalityFlagging_ButterLow_fcf;
         std::cout << termcolor::magenta << "\n        dsiStackFileSet_versatile_pow_u = " << termcolor::green << pow_u;
+        std::cout << termcolor::magenta << "\n        is_flipud_flag = " << termcolor::green << is_flipud_flag;
 
         std::cout << termcolor::blue << "\n\n Output parameters: ";
         std::cout << termcolor::magenta << "\n\n        stack_output_dir = " << termcolor::green << stack_output_dir;
