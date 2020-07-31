@@ -386,8 +386,8 @@ int stack_config_reader(std::string file_name, int mpi_rank)
 
     stack_output_dir = reader.Get("parameter", "stack_output_dir", "./");
 
-    std::string is_flipud_flag = reader.Get("parameter", "is_flipud", "true");
-    if (is_flipud_flag == "false")
+    std::string is_flipud_flag_str = reader.Get("parameter", "is_flipud", "true");
+    if (is_flipud_flag_str == "false")
     {
         is_flipud_flag = false;
     }
