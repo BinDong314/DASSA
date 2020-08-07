@@ -225,14 +225,14 @@ int main(int argc, char *argv[])
     semblanceWeight = new AU::Array<double>("EP_HDF5:" + stack_output_dir + "/" + stack_output_file_semblanceWeight + ":" + stack_output_file_dataset_name, sc_size);
     phaseWeight = new AU::Array<double>("EP_HDF5:" + stack_output_dir + "/" + stack_output_file_phaseWeight + ":" + stack_output_file_dataset_name, sc_size);
 
-    final_pwstack->EndpointControl(OP_DISABLE_MPI_IO, "");
-    final_pwstack->EndpointControl(OP_DISABLE_COLLECTIVE_IO, "");
+    final_pwstack->EndpointControl(OP_DISABLE_MPI_IO, std::vector<std::string>());
+    final_pwstack->EndpointControl(OP_DISABLE_COLLECTIVE_IO, std::vector<std::string>());
 
-    semblanceWeight->EndpointControl(OP_DISABLE_COLLECTIVE_IO, "");
-    semblanceWeight->EndpointControl(OP_DISABLE_MPI_IO, "");
+    semblanceWeight->EndpointControl(OP_DISABLE_COLLECTIVE_IO, std::vector<std::string>());
+    semblanceWeight->EndpointControl(OP_DISABLE_MPI_IO, std::vector<std::string>());
 
-    phaseWeight->EndpointControl(OP_DISABLE_COLLECTIVE_IO, "");
-    phaseWeight->EndpointControl(OP_DISABLE_MPI_IO, "");
+    phaseWeight->EndpointControl(OP_DISABLE_COLLECTIVE_IO, std::vector<std::string>());
+    phaseWeight->EndpointControl(OP_DISABLE_MPI_IO, std::vector<std::string>());
 
     //semblanceWeight->Nonvolatile("EP_HDF5:./xcorr_examples_h5_stack_semblanceWeight.h5:/data");
     //phaseWeight->Nonvolatile("EP_HDF5:./xcorr_examples_h5_stack_phaseWeight.h5:/data");

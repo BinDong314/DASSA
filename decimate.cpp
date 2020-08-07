@@ -1,288 +1,125 @@
+/**
+ *
+ * Author: Bin Dong
+ * Email questions to dbin@lbl.gov
+ * Scientific Data Management Research Group
+ * Lawrence Berkeley National Laboratory
+ *
+ */
+
 //
-// This ArrayUDF example code is for calculating the FFT/IFFT for DAS data
-// with a few pre-processing steps and post-porcessing steps.
-// The pre-proccsing steps include
+// This  example code is for decimating DAS data
 //     detread
 //     filtfilt
-//     esample
-//     MOVING_MEAN
-//     interp1
-//     Spectral whitening
-// The post-processing steps are:
-//     frequency domain cross-correlation
+//     resample
 //
-// All these steps are documented in "doc/preprocess.pdf" by Xin Xing
-// The das-fft.h contains the code for the these steps.
-//
-// The code below has following structure:
-//      TTF_UDF(){....}           : define function for each channel,
-//                                : include all pre-processing steps, FFT/IFFT, post-porcessing steps
-//      Array A( ...HDF5 file..)  : define pointer to DAS data in HDF5 file
-//      A->Apply(FFT_UDF)         : run TTF_UDF over all channels
-//
-// Please use the "-h" to get the usage information
-//
-//
-// Author: Bin Dong  2019 (Reviewed by Xin Xing)
-//
+
 #include <iostream>
 #include <stdarg.h>
 #include <vector>
 #include <stdlib.h>
-#include <math.h> /* ceil  and floor*/
-#include <cstring>
-#include "array_udf.h"
-
-/*
- * Note that: das-fft.h contains all parameters & used variables & functions. 
- *            Go to "das-fft.h" to find more details
- */
-#include "das-fft.h"
+#include "au.h"
 
 using namespace std;
+using namespace AU;
 
 // help functions
 void printf_help(char *cmd);
 
-/*
- * This function describes the operation per channel
- *  The return value is a coorelation vector
- * See more details at das-fft.h
- */
-inline std::vector<float> FFT_UDF(const Stencil<short> &c)
+bool is_result_multiple_files = false;
+int chunk_size_row = 11648;
+int chunk_size_col = 60000;
+
+double DT = 0.002;
+double DT_NEW = 0.008;
+int nPoint = ceil(chunk_size_col / (DT_NEW / DT));
+int nfft;
+FIND_M_POWER2(nPoint, nfft);
+
+//UDF One: duplicate the original data
+inline Stencil<std::vector<double>> udf_decimate(const Stencil<short> &iStencil)
 {
-    for (int bi = 0; bi < window_batch; bi++)
+    std::vector<int> start_offset{0, 0}, end_offset{chunk_size_row - 1, chunk_size_col - 1};
+    std::vector<double> ts = iStencil.Read(start_offset, end_offset);
+    std::vector<std::vector<double>> ts2d = DasLib::Vector1D2D(chunk_size_col, ts);
+    std::vector<double> ts_temp;
+
+    //Resample in time-domain
+    for (int i = 0; i < chunk_size_row; i++)
     {
-        au_time_start();
-        X.resize(n0);
-        TC.resize(nfft);
-        for (int i = 0; i < n0; i++)
-        {
-            if (row_major_flag == 0)
-            {
-                X[i] = (double)c(i + bi * n0, 0);
-            }
-            else
-            {
-                X[i] = (double)c(0, i + bi * n0);
-            }
-            //std::cout << X[i] << ", ";
-        }
+        //Detread
+        detrend(ts2d[i].data(), chunk_size_col);
 
-        //std::cout << "\n";
+        //filtfilt
+        filtfilt(BUTTER_A, BUTTER_B, ts2d[i], ts_temp);
 
-        au_time_elap("Read Stencil ");
-
-        //X is the input
-        //TC is a extra cache space for calculation
-        //gatherXcorr_per_batch is output
-        //master_fft is the FFT for master
-        //bi is the index of the current window
-        //nfft is the size of current window
-        FFT_PROCESSING(X, TC, gatherXcorr_per_batch, master_fft, bi, nfft);
-
-        au_time_elap("Run FFT ");
-
-        std::copy_n(gatherXcorr_per_batch.begin(), nXCORR, gatherXcorr.begin() + bi * nXCORR);
+        //resample
+        resample(1, DT_NEW / DT, ts_temp, ts2d[i]);
     }
-    return gatherXcorr;
+
+    ts_temp = Vector2D1D(ts2d);
+    Stencil<std::vector<double>> oStencil;
+    oStencil = ts_temp;
+    return oStencil;
 }
 
-std::string i_file("./westSac_170802100007.h5");
-std::string o_file("./westSac_170802100007_AF.h5");
-std::string i_group("/");
-std::string o_group("/");
-std::string i_dataset("DataTimeChannel");
-std::string o_dataset("Xcorr");
-int chunk_size_on_split_dim = 1;
 int main(int argc, char *argv[])
 {
-    int config_file_set_flag = 0;
-    char config_file[NAME_LENGTH] = "./das-fft-full.config";
+    //Init the MPICH, etc.
+    AU_Init(argc, argv);
 
-    int copt, mpi_rank, mpi_size;
-    while ((copt = getopt(argc, argv, "o:i:g:u:t:x:m:w:rhc:k:")) != -1)
-        switch (copt)
-        {
-        case 'o':
-            o_file.assign(optarg);
-            break;
-        case 'i':
-            i_file.assign(optarg);
-            break;
-        case 'g':
-            i_group.assign(optarg);
-            break;
-        case 'u':
-            o_group.assign(optarg);
-            break;
-        case 't':
-            i_dataset.assign(optarg);
-            break;
-        case 'x':
-            o_dataset.assign(optarg);
-            break;
-        case 'w':
-            set_window_size_flag = 1;
-            user_window_size = atoi(optarg);
-            break;
-        case 'm':
-            MASTER_INDEX = atoi(optarg);
-            break;
-        case 'k':
-            chunk_size_on_split_dim = atoi(optarg);
-            break;
-        case 'r':
-            row_major_flag = 1;
-            break;
-        case 'h':
-            printf_help(argv[0]);
-            exit(0);
-            break;
-        case 'c':
-            memset(config_file, 0, sizeof(config_file));
-            strcpy(config_file, optarg);
-            config_file_set_flag = 1;
-            break;
-        default:
-            printf("Wrong option [%c] for %s \n", copt, argv[0]);
-            printf_help(argv[0]);
-            exit(-1);
-            break;
-        }
+    // set up the chunk size and the overlap size
+    // 11648, 30000 for each dataset
+    std::vector<int> chunk_size(2);
+    chunk_size[0] = chunk_size_row;
+    chunk_size[1] = chunk_size_col;
+    std::vector<int> overlap_size = {0, 0};
 
-    //Do some intializatin work for parallel computing
-    MPI_Init(&argc, &argv);
-    MPI_Comm_rank(MPI_COMM_WORLD, &mpi_rank);
-    MPI_Comm_size(MPI_COMM_WORLD, &mpi_size);
+    //Input data
+    Array<short> *A = new Array<short>("EP_DIR:EP_TDMS:/Users/dbin/work/arrayudf-git-svn-test-on-bitbucket/examples/das/tdms-dir", chunk_size, overlap_size);
+    std::vector<std::string> aug_merge_index, aug_dir_sub_cmd, aug_input_search_rgx;
 
-    if (config_file_set_flag)
-        read_config_file(config_file, mpi_rank);
+    aug_merge_index.push_back("1");
+    aug_dir_sub_cmd.push_back("BINARY_ENABLE_TRANSPOSE_ON_READ");
+    aug_input_search_rgx.push_back("^(.*)[135]\\.tdms$");
 
-    //Declare the input and output AU::Array
-    AU::Array<short> *IFILE = new AU::Array<short>(AU_NVS, AU_HDF5, i_file, i_group, i_dataset, auto_chunk_dims_index);
-    AU::Array<float> *OFILE = new AU::Array<float>(AU_COMPUTED, AU_HDF5, o_file, o_group, o_dataset, auto_chunk_dims_index);
+    A->EndpointControl(DIR_MERGE_INDEX, aug_merge_index);
+    //A->EndpointControl(DIR_SUB_CMD_ARG, aug_dir_sub_cmd1); //Not needed
+    A->EndpointControl(DIR_SUB_CMD_ARG, aug_dir_sub_cmd);
+    A->EndpointControl(DIR_INPUT_SEARCH_RGX, aug_input_search_rgx);
 
-    //Find and set chunks_size to split array for parallel processing
-    std::vector<unsigned long long> i_file_dim;
+    //Result data
 
-    //SelectView must be called before ApplyStripSize
-    if (enable_view_flag)
+    Array<double> *B;
+    if (!is_result_multiple_files)
     {
-        IFILE->SelectView(view_start, view_count, view_os_size, auto_chunk_dims_index);
-        i_file_dim = view_count;
+        //Store into a single file
+        B = new Array<double>("EP_HDF5:./tdms-dir-dec/test.h5:/DataCT");
     }
     else
     {
-        i_file_dim = IFILE->GetDimSize();
+        //Store into multiple file
+        B = new Array<double>("EP_DIR:EP_HDF5:./tdms-dir-dec/:/DataCT");
+        //Use the below rgx pattern to name the file
+        std::vector<std::string> aug_output_replace_arg;
+        aug_output_replace_arg.push_back("^(.*)\\.tdms$");
+        aug_output_replace_arg.push_back("$1.h5");
+        B->EndpointControl(DIR_MERGE_INDEX, aug_merge_index);
+        B->EndpointControl(DIR_OUPUT_REPLACE_RGX, aug_output_replace_arg);
     }
 
-    //After this step, n0 is the size of input time series
-    INIT_PARS(mpi_rank, mpi_size, i_file_dim);
-    INIT_SPACE();
+    //Stride on execution
+    //Each chunk only runs the udf_decimate once
+    A->EnableApplyStride(chunk_size);
 
-    if (row_major_flag)
-    {
-        strip_size[0] = chunk_size_on_split_dim;
-        IFILE->SetChunkSize(strip_size);
-        strip_size[0] = 1;
-        IFILE->SetApplyStripSize(strip_size);
-    }
-    else
-    {
-        strip_size[1] = chunk_size_on_split_dim;
-        IFILE->SetChunkSize(strip_size);
-        strip_size[1] = 1;
-        IFILE->SetApplyStripSize(strip_size);
-    }
-    if (row_major_flag == 0)
-    {
-        IFILE->SetOutputVector(nXCORR * window_batch, 0); //output vector size
-    }
-    else
-    {
-        IFILE->SetOutputVector(nXCORR * window_batch, 1); //output vector size
-    }
+    //Run
+    A->Apply(udf_decimate, B);
 
-    //Get FFT of master vector
-    std::vector<short> masterv;
-    masterv.resize(n0);
-    std::vector<double> mastervf, masterv_ppf;
-    mastervf.resize(n0);
-    masterv_ppf.resize(nfft);
-    std::vector<unsigned long long> master_start, master_end;
-    master_start.resize(2);
-    master_end.resize(2);
-    for (int bi = 0; bi < window_batch; bi++)
-    {
-        if (row_major_flag == 0)
-        {
-            if (enable_view_flag)
-                MASTER_INDEX = view_start[1] + MASTER_INDEX;
-            master_start[0] = 0 + bi * n0;
-            master_start[1] = MASTER_INDEX;
-            master_end[0] = master_start[0] + n0 - 1;
-            master_end[1] = MASTER_INDEX;
-        }
-        else
-        {
-            if (enable_view_flag)
-                MASTER_INDEX = view_start[0] + MASTER_INDEX;
-            master_start[0] = MASTER_INDEX;
-            master_start[1] = 0 + bi * n0;
-            master_end[0] = MASTER_INDEX;
-            master_end[1] = master_start[0] + n0 - 1;
-        }
-        //Get master chunk's data and store in double type vector
-        IFILE->ReadData(master_start, master_end, masterv);
-        for (int i = 0; i < n0; i++)
-        {
-            mastervf[i] = (double)(masterv[i]);
-        }
-        FFT_PREPROCESSING(mastervf, masterv_ppf); //masterv_ppf is result
-        //master_processing(mastervf, masterv_ppf);
-        INIT_FFTW(fft_in, masterv_ppf, nPoint, nfft, fft_out);
-        FFT_HELP_W(nfft, fft_in, fft_out, FFTW_FORWARD);
-        for (int j = 0; j < nfft; j++)
-        {
-            master_fft[bi * nfft + j][0] = fft_out[j][0];
-            master_fft[bi * nfft + j][1] = fft_out[j][1];
-        }
-    }
-    masterv_ppf.clear();
-    mastervf.clear();
-    masterv.clear();
-    if (!mpi_rank)
-        std::cout << "Finish the processing on Master block \n";
+    //Clear
+    delete A;
+    delete B;
 
-    //Run FFT
-    IFILE->Apply(FFT_UDF, OFILE);
-    IFILE->ReportTime();
+    AU_Finalize();
 
-    delete IFILE;
-    delete OFILE;
-
-    CLEAR_SPACE();
-
-    MPI_Finalize();
     return 0;
-}
-
-void printf_help(char *cmd)
-{
-    char *msg = (char *)"Usage: %s [OPTION]\n\
-      	  -h help (--help)\n\
-          -i input file\n\
-          -o output file\n\
-	      -g group name (path) for input dataset \n\
-          -u group name (path) for output dataset \n\
-          -t dataset name for intput time series \n\
-          -x dataset name for output correlation \n\
-          -w window size (only used when window size is different from chunk_size[0]) \n\
-          -m index of Master channel (0 by default )\n\
-          -r FFT in [Row]-direction([Column]-direction by default) \n\
-          -c file for parameters (has high priority than commands if existing) \n\
-          Example: mpirun -n 1 %s -i fft-test.h5 -o fft-test.arrayudf.h5  -g / -t /DataCT -x /Xcorr\n";
-
-    fprintf(stdout, msg, cmd, cmd);
 }

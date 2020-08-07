@@ -208,6 +208,21 @@ inline std::vector<std::vector<T>> Vector1D2D(size_t cols, std::vector<T> &data1
 }
 
 template <class T>
+inline std::vector<std::vector<T>> Vector2D1D(std::vector<std::vector<T>> &data2d)
+{
+    std::vector<T> result;
+    size_t rows = data2d.size();
+    size_t cols = data2d[0].size();
+
+    for (std::size_t i = 0; i < rows; ++i)
+    {
+        copy(data2d[i].begin(), data2d[i].end(), back_inserter(result));
+    }
+    assert(result.size() == (rows * cols));
+    return result;
+}
+
+template <class T>
 inline bool CausalityFlagging(std::vector<std::vector<T>> &v, double tmin, double tmax, double fmax, double start_t, double end_t, double smaple_rate, double CausalityFlagging_ButterLow_order, double CausalityFlagging_ButterLow_fcf)
 {
     int N = v.size();
