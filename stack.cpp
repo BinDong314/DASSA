@@ -225,6 +225,9 @@ int main(int argc, char *argv[])
     semblanceWeight = new AU::Array<double>("EP_HDF5:" + stack_output_dir + "/" + stack_output_file_semblanceWeight + ":" + stack_output_file_dataset_name, sc_size);
     phaseWeight = new AU::Array<double>("EP_HDF5:" + stack_output_dir + "/" + stack_output_file_phaseWeight + ":" + stack_output_file_dataset_name, sc_size);
 
+    if (!au_rank)
+        std::cout << "init  final_pwstack all"
+                  << "\n";
     final_pwstack->EndpointControl(OP_DISABLE_MPI_IO, "");
     final_pwstack->EndpointControl(OP_DISABLE_COLLECTIVE_IO, "");
 
