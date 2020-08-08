@@ -234,6 +234,10 @@ int main(int argc, char *argv[])
     phaseWeight->EndpointControl(OP_DISABLE_COLLECTIVE_IO, "");
     phaseWeight->EndpointControl(OP_DISABLE_MPI_IO, "");
 
+    if (!au_rank)
+        std::cout << "disable collective IO"
+                  << "\n";
+
     //semblanceWeight->Nonvolatile("EP_HDF5:./xcorr_examples_h5_stack_semblanceWeight.h5:/data");
     //phaseWeight->Nonvolatile("EP_HDF5:./xcorr_examples_h5_stack_phaseWeight.h5:/data");
     //Input data,
@@ -256,6 +260,9 @@ int main(int argc, char *argv[])
     data_in_sum->Clone();
     //std::cout << "Pre apply \n";
 
+    if (!au_rank)
+        std::cout << "Run apply"
+                  << "\n";
     //Run
     A->Apply(stack_udf);
 
