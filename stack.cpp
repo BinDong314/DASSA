@@ -222,12 +222,24 @@ int main(int argc, char *argv[])
         std::cout << "EP_HDF5:" + stack_output_dir + "/" + stack_output_file_final_pwstack + ":" + stack_output_file_dataset_name << "\n";
 
     final_pwstack = new AU::Array<double>("EP_HDF5:" + stack_output_dir + "/" + stack_output_file_final_pwstack + ":" + stack_output_file_dataset_name, sc_size);
-    semblanceWeight = new AU::Array<double>("EP_HDF5:" + stack_output_dir + "/" + stack_output_file_semblanceWeight + ":" + stack_output_file_dataset_name, sc_size);
-    phaseWeight = new AU::Array<double>("EP_HDF5:" + stack_output_dir + "/" + stack_output_file_phaseWeight + ":" + stack_output_file_dataset_name, sc_size);
-
     if (!au_rank)
         std::cout << "init  final_pwstack all"
                   << "\n";
+
+    semblanceWeight = new AU::Array<double>("EP_HDF5:" + stack_output_dir + "/" + stack_output_file_semblanceWeight + ":" + stack_output_file_dataset_name, sc_size);
+    if (!au_rank)
+        std::cout << "init  semblanceWeight "
+                  << "\n";
+
+    phaseWeight = new AU::Array<double>("EP_HDF5:" + stack_output_dir + "/" + stack_output_file_phaseWeight + ":" + stack_output_file_dataset_name, sc_size);
+    if (!au_rank)
+        std::cout << "init  phaseWeight "
+                  << "\n";
+
+    if (!au_rank)
+        std::cout << "init   all"
+                  << "\n";
+
     final_pwstack->EndpointControl(OP_DISABLE_MPI_IO, "");
     final_pwstack->EndpointControl(OP_DISABLE_COLLECTIVE_IO, "");
 
