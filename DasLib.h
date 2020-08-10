@@ -395,7 +395,7 @@ inline std::vector<std::vector<std::complex<T>>> HilbertVector(std::vector<std::
     //sum_micro_sub = sum_micro_sub + (AU_WTIME - micro_time_sub);
 
     fftw_destroy_plan(pf);
-    //fftw_cleanup();
+    fftw_cleanup();
     //sum_micro = sum_micro + (AU_WTIME - micro_time);
 
     size_t HN = INN_COL >> 1;
