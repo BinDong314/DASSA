@@ -439,6 +439,8 @@ inline std::vector<std::vector<std::complex<T>>> HilbertVector(std::vector<std::
 
     std::vector<std::vector<std::complex<T>>> out;
 
+    fftw_free(out_temp);
+
     out.resize(INN_ROW);
     for (size_t i = 0; i < INN_ROW; ++i)
     {
@@ -450,8 +452,122 @@ inline std::vector<std::vector<std::complex<T>>> HilbertVector(std::vector<std::
         }
     }
 
-    fftw_free(out_temp);
     fftw_free(in_temp);
+    fftw_cleanup();
+
+    return out;
+}
+
+//In-place version
+template <class T>
+inline std::vector<std::vector<std::complex<T>>> HilbertVectorIP(const std::vector<std::vector<T>> &in)
+{
+    size_t INN_ROW = in.size();
+    size_t INN_COL = in[0].size();
+    size_t INN_TOTOAL = INN_ROW * INN_COL;
+    int rank, col, howmany, istride, idist, ostride, odist;
+
+    //std::cout << "INN =" << INN << "\n";
+    //fftw_complex *in_temp = (fftw_complex *)fftw_alloc_complex(sizeof(fftw_complex) * INN_TOTOAL);
+    //std::memset(in_temp, 0, sizeof(fftw_complex) * INN);
+    fftw_complex *out_temp = (fftw_complex *)fftw_alloc_complex(sizeof(fftw_complex) * INN_TOTOAL);
+    if (out_temp == NULL)
+    {
+        AU_EXIT("not enough memory !");
+    }
+
+    size_t temp_index = 0;
+    for (size_t i = 0; i < INN_ROW; i++)
+    {
+        for (size_t j = 0; j < INN_COL; j++)
+        {
+            out_temp[temp_index][0] = in[i][j];
+            out_temp[temp_index][1] = 0;
+            temp_index++;
+        }
+    }
+
+    //std::memset(out_temp, 0, sizeof(fftw_complex) * INN);
+
+    //micro_time = AU_WTIME;
+    //    fftw_plan pf = fftw_plan_dft_1d(INN, in_temp, out_temp, FFTW_FORWARD, FFTW_ESTIMATE);
+    rank = 1;
+    howmany = INN_ROW;
+    istride = 1;
+    idist = INN_COL;
+    ostride = 1;
+    odist = INN_COL;
+    col = INN_COL;
+
+    fftw_plan pf = fftw_plan_many_dft(rank, &col, howmany,
+                                      out_temp, NULL,
+                                      istride, idist,
+                                      out_temp, NULL,
+                                      ostride, odist,
+                                      FFTW_FORWARD, FFTW_ESTIMATE);
+    //micro_time_sub = AU_WTIME;
+    fftw_execute(pf);
+    //sum_micro_sub = sum_micro_sub + (AU_WTIME - micro_time_sub);
+
+    fftw_destroy_plan(pf);
+    fftw_cleanup();
+    //sum_micro = sum_micro + (AU_WTIME - micro_time);
+
+    size_t HN = INN_COL >> 1;
+    size_t numRem = HN;
+    size_t start_offset;
+    for (size_t row = 0; row < INN_ROW; row++)
+    {
+        start_offset = row * INN_COL;
+        for (size_t i = 1; i < HN; ++i)
+        {
+            out_temp[start_offset + i][0] *= 2;
+            out_temp[start_offset + i][1] *= 2;
+        }
+
+        if (INN_COL % 2 == 0)
+        {
+            numRem--;
+        }
+        else if (INN_COL > 1)
+        {
+            out_temp[start_offset + HN][0] *= 2;
+            out_temp[start_offset + HN][1] *= 2;
+        }
+
+        memset(&out_temp[start_offset + HN + 1][0], 0, numRem * sizeof(fftw_complex));
+    }
+
+    //std::memset(in_temp, 0, sizeof(fftw_complex) * INN);
+    //fftw_plan pf2 = fftw_plan_dft_1d(INN, out_temp, in_temp, FFTW_BACKWARD, FFTW_ESTIMATE);
+
+    fftw_plan pf2 = fftw_plan_many_dft(rank, &col, howmany,
+                                       out_temp, NULL,
+                                       istride, idist,
+                                       out_temp, NULL,
+                                       ostride, odist,
+                                       FFTW_BACKWARD, FFTW_ESTIMATE);
+
+    fftw_execute(pf2);
+    fftw_destroy_plan(pf2);
+    //std::cout << "INN 2 =" << INN << "\n";
+
+    std::vector<std::vector<std::complex<T>>> out;
+
+    out.resize(INN_ROW);
+    for (size_t i = 0; i < INN_ROW; ++i)
+    {
+        out[i].resize(INN_COL);
+        for (size_t j = 0; j < INN_COL; ++j)
+        {
+            out[i][j].real(out_temp[INN_COL * i + j][0] / INN_COL);
+            out[i][j].imag(out_temp[INN_COL * i + j][1] / INN_COL);
+        }
+    }
+
+    fftw_free(out_temp);
+
+    //fftw_free(in_temp);
     fftw_cleanup();
 
     return out;
@@ -462,7 +578,9 @@ inline std::vector<std::vector<std::complex<T>>> instanPhaseEstimatorVector(std:
 {
     std::vector<std::vector<std::complex<T>>> ov;
     //micro_time = AU_WTIME;
-    ov = HilbertVector(v);
+    //ov = HilbertVector(v);
+
+    ov = HilbertVectorIP(v);
     //sum_micro = sum_micro + (AU_WTIME - micro_time);
 
     size_t N_ROW = ov.size(), N_COL = ov[0].size();
