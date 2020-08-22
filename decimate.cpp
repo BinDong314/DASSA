@@ -59,7 +59,13 @@ inline Stencil<std::vector<double>> udf_decimate(const Stencil<short> &iStencil)
 
     ts_temp = Vector2D1D(ts2d);
     Stencil<std::vector<double>> oStencil;
+
+    std::vector<size_t> vector_shape(2);
+    vector_shape[0] = ts2d.size();
+    vector_shape[1] = ts2d[0].size();
+    oStencil.SetOutputVectorShape(vector_shape);
     oStencil = ts_temp;
+
     return oStencil;
 }
 
@@ -111,6 +117,8 @@ int main(int argc, char *argv[])
     //Stride on execution
     //Each chunk only runs the udf_decimate once
     A->EnableApplyStride(chunk_size);
+
+    A->SetVectorDirection(AU_FLAT_OUTPUT_ROW);
 
     //Run
     A->Apply(udf_decimate, B);
