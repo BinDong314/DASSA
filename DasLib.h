@@ -208,7 +208,7 @@ inline std::vector<std::vector<T>> Vector1D2D(size_t cols, std::vector<T> &data1
 }
 
 template <class T>
-inline std::vector<std::vector<T>> Vector2D1D(std::vector<std::vector<T>> &data2d)
+inline std::vector<T> Convert2DVTo1DV(std::vector<std::vector<T>> &data2d)
 {
     std::vector<T> result;
     size_t rows = data2d.size();
@@ -219,6 +219,26 @@ inline std::vector<std::vector<T>> Vector2D1D(std::vector<std::vector<T>> &data2
         copy(data2d[i].begin(), data2d[i].end(), back_inserter(result));
     }
     assert(result.size() == (rows * cols));
+    return result;
+}
+
+template <class T>
+inline std::vector<T> SpaceMoveMean(std::vector<std::vector<T>> &data2d, int start_rows, int end_rows)
+{
+    std::vector<T> result;
+    size_t rows = data2d.size();
+    size_t cols = data2d[0].size();
+
+    T sum_temp;
+    for (std::size_t j = 0; j < cols; j++)
+    {
+        sum_temp = 0;
+        for (std::size_t i = start_rows; i < end_rows; i++)
+        {
+            sum_temp = sum_temp + data2d[i][j]
+        }
+        result.push_back(sum_temp / (end_rows - start_rows + 1));
+    }
     return result;
 }
 
