@@ -235,7 +235,7 @@ inline std::vector<T> SpaceMoveMean(std::vector<std::vector<T>> &data2d, int sta
         sum_temp = 0;
         for (std::size_t i = start_rows; i < end_rows; i++)
         {
-            sum_temp = sum_temp + data2d[i][j]
+            sum_temp = sum_temp + data2d[i][j];
         }
         result.push_back(sum_temp / (end_rows - start_rows + 1));
     }

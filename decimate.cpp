@@ -19,13 +19,15 @@
 #include <vector>
 #include <stdlib.h>
 
-#include "au.h"
+#include "ft.h"
 #include "DasLib.h"
 
 using namespace std;
 using namespace AU;
 using namespace DasLib;
-// help functions
+
+int read_config_file(std::string file_name, int mpi_rank);
+std::string config_file = "./decimate.config";
 
 std::string input_dir = "/Users/dbin/work/arrayudf-git-svn-test-on-bitbucket/examples/das/tdms-dir";
 std::string input_file_type = "EP_TDMS";
@@ -57,7 +59,7 @@ double DT_NEW = 0.008;
 void printf_help(char *cmd);
 
 //
-int nPoint = ceil(chunk_size_col / (DT_NEW / DT));
+int nPoint = ceil(lts_per_file / (DT_NEW / DT));
 
 vector<double> BUTTER_A;
 vector<double> BUTTER_B;
@@ -78,28 +80,30 @@ void InitDecimate()
 
 inline Stencil<std::vector<double>> udf_decimate(const Stencil<short> &iStencil)
 {
-    std::vector<int> start_offset{0, 0}, end_offset{chunk_size_row - 1, chunk_size_col - 1};
+    std::vector<int> start_offset{0, 0}, end_offset{chs_per_file - 1, lts_per_file - 1};
     std::vector<short> ts_short = iStencil.Read(start_offset, end_offset);
     std::vector<double> ts(ts_short.begin(), ts_short.end());
-    std::vector<std::vector<double>> ts2d = DasLib::Vector1D2D(chunk_size_col, ts), ts2d_ma;
+    std::vector<std::vector<double>> ts2d = DasLib::Vector1D2D(lts_per_file, ts), ts2d_ma;
+
+    std::vector<double> ts_temp2;
     //Resample in time-domain
-    for (int i = 0; i < chunk_size_row; i++)
+    for (int i = 0; i < chs_per_file; i++)
     {
-        detrend(ts2d[i].data(), chunk_size_col);        //Detread
-        filtfilt(BUTTER_A, BUTTER_B, ts2d[i], ts_temp); //filtfilt
-        resample(1, DT_NEW / DT, ts_temp, ts2d[i]);     //resample
+        detrend(ts2d[i].data(), lts_per_file);           //Detread
+        filtfilt(BUTTER_A, BUTTER_B, ts2d[i], ts_temp2); //filtfilt
+        resample(1, DT_NEW / DT, ts_temp2, ts2d[i]);     //resample
     }
     if (is_space_decimate)
     {
         //Moving mean in space-domain
-        int ma_batches = chunk_size_row / rows_to_mean, ma_batches_remainder = chunk_size_row % rows_to_mean;
+        int ma_batches = chs_per_file / space_decimate_rows, ma_batches_remainder = chs_per_file % space_decimate_rows;
         for (int i = 0; i < ma_batches; i++)
         {
-            ts2d_ma.push_back(SpaceMoveMean(ts2d, i * rows_to_mean, (i + 1) * rows_to_mean - 1));
+            ts2d_ma.push_back(SpaceMoveMean(ts2d, i * space_decimate_rows, (i + 1) * space_decimate_rows - 1));
         }
         if (ma_batches_remainder != 0)
         {
-            ts2d_ma.push_back(SpaceMoveMean(ts2d, chunk_size_row - ma_batches_remainder, chunk_size_row - 1));
+            ts2d_ma.push_back(SpaceMoveMean(ts2d, chs_per_file - ma_batches_remainder, chs_per_file - 1));
         }
     }
     else
@@ -118,8 +122,30 @@ inline Stencil<std::vector<double>> udf_decimate(const Stencil<short> &iStencil)
 
 int main(int argc, char *argv[])
 {
+    int copt;
+    bool has_config_file_flag = false;
+    while ((copt = getopt(argc, argv, "c:h")) != -1)
+        switch (copt)
+        {
+        case 'c':
+            config_file.assign(optarg);
+            has_config_file_flag = true;
+            break;
+        case 'h':
+            printf_help(argv[0]);
+            exit(0);
+        default:
+            printf("Wrong option [%c] for %s \n", copt, argv[0]);
+            printf_help(argv[0]);
+            exit(-1);
+            break;
+        }
+
     //Init the MPICH, etc.
     AU_Init(argc, argv);
+
+    if (has_config_file_flag)
+        read_config_file(config_file, au_rank);
 
     // set up the chunk size and the overlap size
     // 11648, 30000 for each dataset
@@ -128,6 +154,7 @@ int main(int argc, char *argv[])
     chunk_size[1] = lts_per_file * time_decimate_files;
     std::vector<int> overlap_size = {0, 0};
 
+    std::cout << "EP_DIR:" + input_file_type + ":" + input_dir << "\n";
     //Input data
     AU::Array<short> *A = new AU::Array<short>("EP_DIR:" + input_file_type + ":" + input_dir, chunk_size, overlap_size);
 
@@ -247,9 +274,9 @@ int read_config_file(std::string file_name, int mpi_rank)
 
     if (is_dir_output_match_replace_rgx)
     {
-        output_file_regex_match = reader.Get("parameter", "output_file_regex_match", "^(.*)\\.tdms$");
+        dir_output_match_rgx = reader.Get("parameter", "output_file_regex_match", "^(.*)\\.tdms$");
 
-        output_file_regex_replace = reader.Get("parameter", "output_file_regex_replace", "$1.h5");
+        dir_output_replace_rgx = reader.Get("parameter", "output_file_regex_replace", "$1.h5");
     }
 
     temp_str = reader.Get("parameter", "is_space_decimate", "false");
@@ -267,5 +294,51 @@ int read_config_file(std::string file_name, int mpi_rank)
     DT = reader.GetReal("parameter", "dt", 0.002);
 
     DT_NEW = reader.GetReal("parameter", "dt_new", 0.008);
+
+    if (!mpi_rank)
+    {
+        std::cout << "\n\n";
+        std::cout << termcolor::red << "Parameters to run the Decimate: ";
+
+        std::cout << termcolor::blue << "\n\n Input parameters: ";
+        std::cout << termcolor::magenta << "\n        input_dir = " << termcolor::green << input_dir;
+        std::cout << termcolor::magenta << "\n        input_file_type = " << termcolor::green << input_file_type;
+
+        if (is_input_search_rgx)
+        {
+            std::cout << termcolor::magenta << "\n        input_search_rgx = " << termcolor::green << input_search_rgx;
+        }
+        std::cout << termcolor::blue << "\n\n Runtime parameters: ";
+        std::cout << termcolor::magenta << "\n\n        lts_per_file = " << termcolor::green << lts_per_file;
+        std::cout << termcolor::magenta << "\n        chs_per_file = " << termcolor::green << chs_per_file;
+        std::cout << termcolor::magenta << "\n        time_decimate_files = " << termcolor::green << time_decimate_files;
+
+        std::cout << termcolor::magenta << "\n        is_space_decimate = " << termcolor::green << is_space_decimate;
+
+        std::cout << termcolor::magenta << "\n        space_decimate_rows = " << termcolor::green << space_decimate_rows;
+
+        std::cout << termcolor::magenta << "\n        space_decimate_operation = " << termcolor::green << space_decimate_operation;
+
+        std::cout << termcolor::magenta << "\n        DT = " << termcolor::green << DT;
+
+        std::cout << termcolor::magenta << "\n        DT_NEW = " << termcolor::green << DT_NEW;
+
+        std::cout << termcolor::blue << "\n\n Output parameters: ";
+
+        std::cout << termcolor::magenta << "\n        is_output_single_file = " << termcolor::green << is_output_single_file;
+        std::cout << termcolor::magenta << "\n        output_type = " << termcolor::green << output_type;
+        std::cout << termcolor::magenta << "\n        output_file_dir = " << termcolor::green << output_file_dir;
+        std::cout << termcolor::magenta << "\n        output_dataset = " << termcolor::green << output_dataset;
+
+        if (is_dir_output_match_replace_rgx)
+        {
+            std::cout << termcolor::magenta << "\n        dir_output_match_rgx = " << termcolor::green << dir_output_match_rgx;
+            std::cout << termcolor::magenta << "\n        dir_output_replace_rgx = " << termcolor::green << dir_output_replace_rgx;
+        }
+
+        std::cout << termcolor::reset << "\n\n";
+    }
+    fflush(stdout);
+
     return 0;
 }
