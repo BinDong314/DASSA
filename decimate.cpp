@@ -41,7 +41,7 @@ int time_decimate_files = 2;
 bool is_output_single_file = true;
 std::string output_type = "EP_HDF5";
 std::string output_file_dir = "./tdms-dir-dec/test.h5";
-std::string output_dataset = "/DataCT";
+std::string output_dataset = "/dat";
 
 bool is_dir_output_match_replace_rgx = false;
 
@@ -59,7 +59,7 @@ double DT_NEW = 0.008;
 void printf_help(char *cmd);
 
 //
-int nPoint = ceil(lts_per_file / (DT_NEW / DT));
+int nPoint = ceil(lts_per_file * time_decimate_files / (DT_NEW / DT));
 
 vector<double> BUTTER_A;
 vector<double> BUTTER_B;
@@ -75,35 +75,38 @@ void InitDecimate()
     cut_frequency_low = (0.5 / DT_NEW) / (0.5 / DT);
     ButterLow(butter_order, cut_frequency_low, BUTTER_A, BUTTER_B);
     if (!au_rank)
-        std::cout << " nPoint = " << nPoint << "\n";
+        std::cout << "After decimate, nPoint = " << nPoint << "\n";
 }
 
 inline Stencil<std::vector<double>> udf_decimate(const Stencil<short> &iStencil)
 {
-    std::vector<int> start_offset{0, 0}, end_offset{chs_per_file - 1, lts_per_file - 1};
-    std::vector<short> ts_short = iStencil.Read(start_offset, end_offset);
+    std::vector<int> max_offset_upper = iStencil.GetMaxOffsetUpper();
+    PrintVector("max_offset_upper = ", max_offset_upper);
+    int chs_per_file_udf = max_offset_upper[0] + 1, lts_per_file_udf = max_offset_upper[1] + 1;
+    std::vector<int> start_offset{0, 0}, end_offset{chs_per_file_udf - 1, lts_per_file_udf - 1};
+    std::vector<short> ts_short = iStencil.ReadHood(start_offset, end_offset);
     std::vector<double> ts(ts_short.begin(), ts_short.end());
-    std::vector<std::vector<double>> ts2d = DasLib::Vector1D2D(lts_per_file, ts), ts2d_ma;
+    std::vector<std::vector<double>> ts2d = DasLib::Vector1D2D(lts_per_file_udf, ts), ts2d_ma;
 
     std::vector<double> ts_temp2;
     //Resample in time-domain
-    for (int i = 0; i < chs_per_file; i++)
+    for (int i = 0; i < chs_per_file_udf; i++)
     {
-        detrend(ts2d[i].data(), lts_per_file);           //Detread
+        detrend(ts2d[i].data(), lts_per_file_udf);       //Detread
         filtfilt(BUTTER_A, BUTTER_B, ts2d[i], ts_temp2); //filtfilt
         resample(1, DT_NEW / DT, ts_temp2, ts2d[i]);     //resample
     }
     if (is_space_decimate)
     {
         //Moving mean in space-domain
-        int ma_batches = chs_per_file / space_decimate_rows, ma_batches_remainder = chs_per_file % space_decimate_rows;
+        int ma_batches = chs_per_file_udf / space_decimate_rows, ma_batches_remainder = chs_per_file_udf % space_decimate_rows;
         for (int i = 0; i < ma_batches; i++)
         {
             ts2d_ma.push_back(SpaceMoveMean(ts2d, i * space_decimate_rows, (i + 1) * space_decimate_rows - 1));
         }
         if (ma_batches_remainder != 0)
         {
-            ts2d_ma.push_back(SpaceMoveMean(ts2d, chs_per_file - ma_batches_remainder, chs_per_file - 1));
+            ts2d_ma.push_back(SpaceMoveMean(ts2d, chs_per_file_udf - ma_batches_remainder, chs_per_file_udf - 1));
         }
     }
     else
@@ -115,7 +118,7 @@ inline Stencil<std::vector<double>> udf_decimate(const Stencil<short> &iStencil)
     std::vector<size_t> vector_shape(2);
     vector_shape[0] = ts2d_ma.size();
     vector_shape[1] = ts2d_ma[0].size();
-    oStencil.SetOutputVectorShape(vector_shape);
+    oStencil.SetShape(vector_shape);
     oStencil = ts_temp;
     return oStencil;
 }

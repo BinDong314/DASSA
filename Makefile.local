@@ -39,5 +39,5 @@ decimate:decimate.cpp
 	$(CCC) -o decimate decimate.cpp  $(ALL_FLAGS)
 
 clean:
-	rm stack tdms2h5 xcorrelation
+	rm stack tdms2h5 xcorrelation decimate
 

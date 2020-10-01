@@ -87,7 +87,7 @@ stack_udf(const Stencil<double> &iStencil)
     nStack++;
 
     std::vector<int> start_offset{0, 0}, end_offset{chs_per_file - 1, lts_per_file - 1};
-    std::vector<double> ts = iStencil.Read(start_offset, end_offset);
+    std::vector<double> ts = iStencil.ReadHood(start_offset, end_offset);
     std::vector<std::vector<double>> ts2d = DasLib::Vector1D2D(lts_per_file, ts);
 
     /*
