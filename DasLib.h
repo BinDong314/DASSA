@@ -80,7 +80,7 @@ int ButterLow(int n, double fcf, std::vector<double> &A, std::vector<double> &B)
 
 //double rms(double x[], int n)
 template <class T>
-inline T Rms(std::vector<T> &x)
+inline T Rms(const std::vector<T> &x)
 {
     T sum = 0;
     int n = x.size();
@@ -222,22 +222,72 @@ inline std::vector<T> Convert2DVTo1DV(std::vector<std::vector<T>> &data2d)
     return result;
 }
 
+/**
+ * @brief perform the decimate from "start_row" to "end_row"
+ * 
+ * @tparam T 
+ * @param data2d 
+ * @param start_row
+ * @param end_row
+ * @param operator 
+ * @return std::vector<T> 
+ */
 template <class T>
-inline std::vector<T> SpaceMoveMean(std::vector<std::vector<T>> &data2d, int start_rows, int end_rows)
+inline std::vector<T> spacedecimate(const std::vector<std::vector<T>> &data2d, const int start_row, const int end_row, const std::string stat_operator_str)
 {
     std::vector<T> result;
     size_t rows = data2d.size();
     size_t cols = data2d[0].size();
 
-    T sum_temp;
+    T stat_temp;
     for (std::size_t j = 0; j < cols; j++)
     {
-        sum_temp = 0;
-        for (std::size_t i = start_rows; i < end_rows; i++)
+        if (stat_operator_str == "mean" || stat_operator_str == "average" || stat_operator_str == "ave")
         {
-            sum_temp = sum_temp + data2d[i][j];
+            stat_temp = 0;
+            for (std::size_t i = start_row; i <= end_row; i++)
+            {
+                stat_temp = stat_temp + data2d[i][j];
+            }
+            stat_temp = stat_temp / (end_row - start_row + 1);
         }
-        result.push_back(sum_temp / (end_rows - start_rows + 1));
+        else if (stat_operator_str == "maximum" || stat_operator_str == "max")
+        {
+            stat_temp = data2d[start_row][j];
+            for (std::size_t i = start_row + 1; i <= end_row; i++)
+            {
+                if (data2d[i][j] > stat_temp)
+                    stat_temp = data2d[i][j];
+            }
+        }
+        else if (stat_operator_str == "minumum" || stat_operator_str == "min")
+        {
+            stat_temp = data2d[start_row][j];
+            for (std::size_t i = start_row + 1; i <= end_row; i++)
+            {
+                if (data2d[i][j] < stat_temp)
+                    stat_temp = data2d[i][j];
+            }
+        }
+        else if (stat_operator_str == "median" || stat_operator_str == "med")
+        {
+            std::vector<T> median_vec_temp;
+            for (std::size_t i = start_row; i <= end_row; i++)
+            {
+                median_vec_temp.push_back(data2d[i][j]);
+            }
+            stat_temp = Median(median_vec_temp);
+        }
+        else if (stat_operator_str == "summary" || stat_operator_str == "sum")
+        {
+            stat_temp = 0;
+            for (std::size_t i = start_row; i <= end_row; i++)
+            {
+                stat_temp = stat_temp + data2d[i][j];
+            }
+        }
+
+        result.push_back(stat_temp);
     }
     return result;
 }

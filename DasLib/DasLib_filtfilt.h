@@ -87,7 +87,7 @@ void filter(vectord B, vectord A, const vectord &X, vectord &Y, vectord &Zi)
     Zi.resize(filter_order - 1);
 }
 
-void filtfilt(vectord B, vectord A, const vectord &X, vectord &Y)
+void filtfilt(vectord B, vectord A, vectord &X, vectord &Y)
 {
     int len = X.size(); // length of input
     int na = A.size();

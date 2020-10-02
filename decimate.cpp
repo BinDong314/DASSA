@@ -51,7 +51,16 @@ std::string dir_output_replace_rgx = "$1.h5";
 
 bool is_space_decimate = false;
 int space_decimate_rows = 32;
-std::string space_decimate_operation = "mean"; //"ave", "min", "max"
+/**
+ * 
+ * Name convertion for the space_decimate_operation
+*     ave, average, mean
+*     med, median
+*     max, maximum
+*     min, minimum
+*     sum, summary
+ */
+std::string space_decimate_operation = "ave"; //"median", "min", "max"
 
 double DT = 0.002;
 double DT_NEW = 0.008;
@@ -59,8 +68,6 @@ double DT_NEW = 0.008;
 void printf_help(char *cmd);
 
 //
-int nPoint = ceil(lts_per_file * time_decimate_files / (DT_NEW / DT));
-
 vector<double> BUTTER_A;
 vector<double> BUTTER_B;
 
@@ -72,6 +79,7 @@ double cut_frequency_low = 0.25;
 
 void InitDecimate()
 {
+    int nPoint = ceil(lts_per_file * time_decimate_files / (DT_NEW / DT));
     cut_frequency_low = (0.5 / DT_NEW) / (0.5 / DT);
     ButterLow(butter_order, cut_frequency_low, BUTTER_A, BUTTER_B);
     if (!au_rank)
@@ -98,15 +106,14 @@ inline Stencil<std::vector<double>> udf_decimate(const Stencil<short> &iStencil)
     }
     if (is_space_decimate)
     {
-        //Moving mean in space-domain
-        int ma_batches = chs_per_file_udf / space_decimate_rows, ma_batches_remainder = chs_per_file_udf % space_decimate_rows;
+        //decimate in space-domain
+        int ma_batches = (chs_per_file_udf % space_decimate_rows) ? (chs_per_file_udf / space_decimate_rows) : (chs_per_file_udf / space_decimate_rows + 1);
+        int start_row, end_row;
         for (int i = 0; i < ma_batches; i++)
         {
-            ts2d_ma.push_back(SpaceMoveMean(ts2d, i * space_decimate_rows, (i + 1) * space_decimate_rows - 1));
-        }
-        if (ma_batches_remainder != 0)
-        {
-            ts2d_ma.push_back(SpaceMoveMean(ts2d, chs_per_file_udf - ma_batches_remainder, chs_per_file_udf - 1));
+            start_row = i * space_decimate_rows;
+            end_row = (((i + 1) * space_decimate_rows - 1) < chs_per_file_udf) ? ((i + 1) * space_decimate_rows - 1) : chs_per_file_udf;
+            ts2d_ma.push_back(spacedecimate(ts2d, start_row, end_row, space_decimate_operation));
         }
     }
     else
@@ -206,8 +213,9 @@ int main(int argc, char *argv[])
     A->SetVectorDirection(AU_FLAT_OUTPUT_ROW);
 
     //Run
-    A->Apply(udf_decimate, B);
+    A->Transform(udf_decimate, B);
 
+    A->ReportTime();
     //Clear
     delete A;
     delete B;
