@@ -32,7 +32,7 @@
 #include <math.h> /* ceil  and floor*/
 #include <cstring>
 #include <fftw3.h>
-#include "au.h"
+#include "ft.h"
 
 /*
  * Note that: das-fft.h contains all parameters & used variables & functions. 

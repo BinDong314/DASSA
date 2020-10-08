@@ -18,12 +18,12 @@
 #include <vector>
 #include <stdlib.h>
 #include <math.h>
-#include "au.h"
+#include "ft.h"
 #include "DasLib.h"
 #include <stdlib.h>
 
 using namespace std;
-using namespace AU;
+using namespace FT;
 
 /**
  * @brief some help function at the end
@@ -68,13 +68,13 @@ double CausalityFlagging_ButterLow_fcf = 0.16; //filter cutoff frequency
 bool is_flipud_flag = true;
 
 std::vector<unsigned long long> sc_size(2);
-AU::Array<double> *semblance_denom_sum;
-AU::Array<std::complex<double>> *coherency_sum;
-AU::Array<double> *data_in_sum;
-AU::Array<double> *phaseWeight;
-AU::Array<double> *semblanceWeight;
+FT::Array<double> *semblance_denom_sum;
+FT::Array<std::complex<double>> *coherency_sum;
+FT::Array<double> *data_in_sum;
+FT::Array<double> *phaseWeight;
+FT::Array<double> *semblanceWeight;
 
-AU::Array<double> *final_pwstack;
+FT::Array<double> *final_pwstack;
 
 double nStack = 0;
 
@@ -87,7 +87,7 @@ stack_udf(const Stencil<double> &iStencil)
     nStack++;
 
     std::vector<int> start_offset{0, 0}, end_offset{chs_per_file - 1, lts_per_file - 1};
-    std::vector<double> ts = iStencil.Read(start_offset, end_offset);
+    std::vector<double> ts = iStencil.ReadHood(start_offset, end_offset);
     std::vector<std::vector<double>> ts2d = DasLib::Vector1D2D(lts_per_file, ts);
 
     /*
@@ -199,7 +199,7 @@ int main(int argc, char *argv[])
         }
 
     //Init the MPICH, etc.
-    AU_Init(argc, argv);
+    FT_Init(argc, argv);
 
     if (has_config_file_flag)
         stack_config_reader(config_file, au_rank);
@@ -214,9 +214,9 @@ int main(int argc, char *argv[])
 
     std::cout << "size_after_subset = " << size_after_subset << "\n";
 
-    semblance_denom_sum = new AU::Array<double>("EP_MEMORY", sc_size);
-    coherency_sum = new AU::Array<std::complex<double>>("EP_MEMORY", sc_size);
-    data_in_sum = new AU::Array<double>("EP_MEMORY", sc_size);
+    semblance_denom_sum = new FT::Array<double>("EP_MEMORY", sc_size);
+    coherency_sum = new FT::Array<std::complex<double>>("EP_MEMORY", sc_size);
+    data_in_sum = new FT::Array<double>("EP_MEMORY", sc_size);
 
     if (!au_rank)
         std::cout << "EP_HDF5:" + stack_output_dir + "/" + stack_output_file_final_pwstack + ":" + stack_output_file_dataset_name << "\n";
@@ -240,14 +240,14 @@ int main(int argc, char *argv[])
         std::cout << "init   all"
                   << "\n";
 
-    final_pwstack->EndpointControl(OP_DISABLE_MPI_IO, "");
-    final_pwstack->EndpointControl(OP_DISABLE_COLLECTIVE_IO, "");
+    final_pwstack->EndpointControl(OP_DISABLE_MPI_IO, std::vector<std::string>());
+    final_pwstack->EndpointControl(OP_DISABLE_COLLECTIVE_IO, std::vector<std::string>());
 
-    semblanceWeight->EndpointControl(OP_DISABLE_COLLECTIVE_IO, "");
-    semblanceWeight->EndpointControl(OP_DISABLE_MPI_IO, "");
+    semblanceWeight->EndpointControl(OP_DISABLE_COLLECTIVE_IO, std::vector<std::string>());
+    semblanceWeight->EndpointControl(OP_DISABLE_MPI_IO, std::vector<std::string>());
 
-    phaseWeight->EndpointControl(OP_DISABLE_COLLECTIVE_IO, "");
-    phaseWeight->EndpointControl(OP_DISABLE_MPI_IO, "");
+    phaseWeight->EndpointControl(OP_DISABLE_COLLECTIVE_IO, std::vector<std::string>());
+    phaseWeight->EndpointControl(OP_DISABLE_MPI_IO, std::vector<std::string>());
 
     if (!au_rank)
         std::cout << "disable collective IO"
@@ -257,7 +257,7 @@ int main(int argc, char *argv[])
     //phaseWeight->Nonvolatile("EP_HDF5:./xcorr_examples_h5_stack_phaseWeight.h5:/data");
     //Input data,
 
-    AU::Array<double> *A = new AU::Array<double>("EP_DIR:EP_HDF5:" + xcorr_input_dir + ":" + xcorr_input_dataset_name, chunk_size, overlap_size);
+    FT::Array<double> *A = new FT::Array<double>("EP_DIR:EP_HDF5:" + xcorr_input_dir + ":" + xcorr_input_dataset_name, chunk_size, overlap_size);
 
     std::vector<int> skip_size = {chs_per_file, lts_per_file};
     A->EnableApplyStride(skip_size);
@@ -372,7 +372,7 @@ int main(int argc, char *argv[])
     PrintScalar("sum_micro_sub :", sum_micro_sub);
     */
 
-    AU_Finalize();
+    FT_Finalize();
 
     return 0;
 }
