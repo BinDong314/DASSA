@@ -92,7 +92,7 @@ inline Stencil<std::vector<double>> udf_decimate(const Stencil<short> &iStencil)
     PrintVector("max_offset_upper = ", max_offset_upper);
     int chs_per_file_udf = max_offset_upper[0] + 1, lts_per_file_udf = max_offset_upper[1] + 1;
     std::vector<int> start_offset{0, 0}, end_offset{chs_per_file_udf - 1, lts_per_file_udf - 1};
-    std::vector<short> ts_short = iStencil.ReadHood(start_offset, end_offset);
+    std::vector<short> ts_short = iStencil.ReadNeighbors(start_offset, end_offset);
     std::vector<double> ts(ts_short.begin(), ts_short.end());
     std::vector<std::vector<double>> ts2d = DasLib::Vector1D2D(lts_per_file_udf, ts), ts2d_ma;
 
