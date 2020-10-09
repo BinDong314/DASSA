@@ -81,6 +81,15 @@ double nStack = 0;
 double IO_Read_Time = 0, IO_Reduce_Time = 0, CPU_Time = 0, IO_Read_Time_Con = 0, DetMean_tim = 0, Subset_tim = 0, CausalityFlagging_tim = 0, instanPhaseEstimator_Time = 0, instanPhaseEstimator_Time2 = 0, sum_Time = 0, sum_micro = 0, sum_micro_sub = 0;
 double temp_time, temp_time_large, micro_time, micro_time_sub;
 
+bool is_ml_weight = false;
+std::string ml_weight_file = "ml_wight.txt";
+int n_weighted_to_stack = -1; // -1 mean to stack all
+std::vector<double> ml_weight;
+std::vector<size_t> sorted_indexes; //sorted index
+std::string sorted_indexes_str;     //string of sort_indexes after cut to n_weighted_to_stack
+
+void read_ml_weight(const std::string ml_weight_file_p, std::vector<double> &ml_weight_p, std::vector<size_t> &sort_indexes_p);
+
 inline Stencil<double>
 stack_udf(const Stencil<double> &iStencil)
 {
@@ -204,6 +213,32 @@ int main(int argc, char *argv[])
     if (has_config_file_flag)
         stack_config_reader(config_file, au_rank);
 
+    if (is_ml_weight)
+    {
+        cout.precision(17);
+        read_ml_weight(ml_weight_file, ml_weight, sorted_indexes);
+        cout << "ml_weight.size() = " << ml_weight.size() << "\n";
+        for (int i = 0; i < ml_weight.size(); i++)
+        {
+            cout << sorted_indexes[i] << ", " << ml_weight[i] << "\n";
+        }
+        std::vector<size_t> sorted_indexes_cut;
+        if (n_weighted_to_stack > 0 && n_weighted_to_stack <= ml_weight.size())
+        {
+            for (int i = 0; i < n_weighted_to_stack; i++)
+            {
+                sorted_indexes_cut.push_back(sorted_indexes[i]);
+            }
+        }
+        else
+        {
+            sorted_indexes_cut = sorted_indexes;
+        }
+        sorted_indexes_str = Vector2String(sorted_indexes_cut);
+
+        std::cout << " sorted_indexes_str =" << sorted_indexes_str << "\n";
+    }
+
     // set up the chunk size and the overlap size
     std::vector<int> chunk_size = {chs_per_file, lts_per_file};
     std::vector<int> overlap_size = {0, 0};
@@ -261,7 +296,13 @@ int main(int argc, char *argv[])
 
     std::vector<int> skip_size = {chs_per_file, lts_per_file};
     A->EnableApplyStride(skip_size);
+    if (is_ml_weight)
+    {
+        std::vector<std::string> index_param;
+        index_param.push_back(sorted_indexes_str);
 
+        A->EndpointControl(DIR_FILE_SORT_INDEXES, index_param);
+    }
     //std::cout << "Pre clone \n";
     //Clone to create local copy
     //std::complex<double> complex_zero(0, 0);
@@ -377,6 +418,30 @@ int main(int argc, char *argv[])
     return 0;
 }
 
+void read_ml_weight(const std::string ml_weight_file_p, std::vector<double> &ml_weight_p, std::vector<size_t> &sort_indexes_p)
+{
+    std::string filename_str;
+    ifstream inf;
+    inf.open(ml_weight_file_p, std::ifstream::in);
+    if (!inf)
+    {
+        AU_EXIT("failed to open weight file : " + ml_weight_file_p);
+    }
+    string line;
+    double val;
+    while (getline(inf, line))
+    {
+        if (line.length() > 1)
+        {
+            istringstream iss(line);
+            iss >> filename_str; //drop the file name
+            iss >> val;
+            ml_weight_p.push_back(val);
+        }
+    }
+    sort_indexes_p = DasLib::sort_indexes(ml_weight_p);
+}
+
 void printf_help(char *cmd)
 {
     char *msg = (char *)"Usage: %s [OPTION]\n\
@@ -405,6 +470,22 @@ int stack_config_reader(std::string file_name, int mpi_rank)
     //xcorr_input_dir = xcorr_input_dir_temp;
 
     xcorr_input_dataset_name = reader.Get("parameter", "xcorr_input_dataset_name", "/xcoor");
+
+    std::string is_ml_weight_str = reader.Get("parameter", "is_ml_weight", "false");
+    if (is_ml_weight_str == "false" || is_ml_weight_str == "0")
+    {
+        is_ml_weight = false;
+    }
+    else
+    {
+        is_ml_weight = true;
+    }
+
+    if (is_ml_weight)
+    {
+        ml_weight_file = reader.Get("parameter", "ml_weight_file", "false");
+        n_weighted_to_stack = reader.GetInteger("parameter", "n_weighted_to_stack", -1);
+    }
 
     stack_output_dir = reader.Get("parameter", "stack_output_dir", "./");
 
@@ -447,7 +528,12 @@ int stack_config_reader(std::string file_name, int mpi_rank)
         std::cout << termcolor::blue << "\n\n Input parameters: ";
         std::cout << termcolor::magenta << "\n        xcorr_input_dir = " << termcolor::green << xcorr_input_dir;
         std::cout << termcolor::magenta << "\n        xcorr_input_dataset_name = " << termcolor::green << xcorr_input_dataset_name;
-
+        std::cout << termcolor::magenta << "\n        is_ml_weight = " << termcolor::green << is_ml_weight;
+        if (is_ml_weight)
+        {
+            std::cout << termcolor::magenta << "\n        ml_weight_file = " << termcolor::green << ml_weight_file;
+            std::cout << termcolor::magenta << "\n        n_weighted_to_stack = " << termcolor::green << n_weighted_to_stack;
+        }
         std::cout << termcolor::blue << "\n\n Runtime parameters: ";
         std::cout << termcolor::magenta << "\n\n        lts_per_file = " << termcolor::green << lts_per_file;
         std::cout << termcolor::magenta << "\n\n        chs_per_file = " << termcolor::green << chs_per_file;

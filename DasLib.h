@@ -20,6 +20,28 @@ extern double micro_time, sum_micro, micro_time_sub, sum_micro_sub;
 namespace DasLib
 {
 
+//https://stackoverflow.com/questions/1577475/c-sorting-and-keeping-track-of-indexes?answertab=votes#tab-top
+#include <numeric>   // std::iota
+#include <algorithm> // std::sort, std::stable_sort
+
+template <typename T>
+vector<size_t> sort_indexes(const vector<T> &v)
+{
+
+    // initialize original index locations
+    vector<size_t> idx(v.size());
+    iota(idx.begin(), idx.end(), 0);
+
+    // sort indexes based on comparing values in v
+    // using std::stable_sort instead of std::sort
+    // to avoid unnecessary index re-orderings
+    // when v contains elements of equal values
+    stable_sort(idx.begin(), idx.end(),
+                [&v](size_t i1, size_t i2) { return v[i1] > v[i2]; });
+
+    return idx;
+}
+
 // n = order of the filter
 // fc = filter cutoff frequency as a fraction of Pi [0,1]
 int ButterLow(int n, double fcf, std::vector<double> &A, std::vector<double> &B)
