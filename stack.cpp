@@ -85,6 +85,7 @@ bool is_ml_weight = false;
 std::string ml_weight_file = "ml_wight.txt";
 int n_weighted_to_stack = -1; // -1 mean to stack all
 std::vector<double> ml_weight;
+double ml_weight_sum;
 std::vector<size_t> sorted_indexes; //sorted index
 std::string sorted_indexes_str;     //string of sort_indexes after cut to n_weighted_to_stack
 
@@ -137,6 +138,9 @@ stack_udf(const Stencil<double> &iStencil)
         }
     }
 
+    //cout << "Current Chunk ID: =" << iStencil.GetChunkID() << "\n";
+
+    size_t chunk_chunk_id = iStencil.GetChunkID();
     size_t LTS_new = ts2d[0].size();
     std::vector<std::vector<double>> semblance_denom;
     std::vector<std::vector<std::complex<double>>> coherency;
@@ -148,6 +152,11 @@ stack_udf(const Stencil<double> &iStencil)
         //coherency[i].resize(LTS_new);
         for (int j = 0; j < LTS_new; j++)
         {
+            if (is_ml_weight)
+            {
+                ts2d[i][j] = ts2d[i][j] * ml_weight[chunk_chunk_id];
+            }
+
             semblance_denom[i][j] = ts2d[i][j] * ts2d[i][j];
         }
         //coherency[i] = DasLib::instanPhaseEstimator(ts2d[i]);
@@ -217,26 +226,31 @@ int main(int argc, char *argv[])
     {
         cout.precision(17);
         read_ml_weight(ml_weight_file, ml_weight, sorted_indexes);
-        cout << "ml_weight.size() = " << ml_weight.size() << "\n";
-        for (int i = 0; i < ml_weight.size(); i++)
-        {
-            cout << sorted_indexes[i] << ", " << ml_weight[i] << "\n";
-        }
         std::vector<size_t> sorted_indexes_cut;
+        ml_weight_sum = 0;
+
         if (n_weighted_to_stack > 0 && n_weighted_to_stack <= ml_weight.size())
         {
             for (int i = 0; i < n_weighted_to_stack; i++)
             {
+                //std::cout << ml_weight[sorted_indexes[i]] << "\n";
+                ml_weight_sum = ml_weight_sum + ml_weight[sorted_indexes[i]];
                 sorted_indexes_cut.push_back(sorted_indexes[i]);
             }
         }
         else
         {
             sorted_indexes_cut = sorted_indexes;
+            for (int i = 0; i < ml_weight.size(); i++)
+            {
+                //std::cout << ml_weight[sorted_indexes[i]] << "\n";
+                ml_weight_sum = ml_weight_sum + ml_weight[sorted_indexes[i]];
+            }
         }
         sorted_indexes_str = Vector2String(sorted_indexes_cut);
 
         std::cout << " sorted_indexes_str =" << sorted_indexes_str << "\n";
+        std::cout << " sum of weight =" << ml_weight_sum << "\n";
     }
 
     // set up the chunk size and the overlap size
@@ -357,8 +371,8 @@ int main(int argc, char *argv[])
 
         //PrintVector("semblance_denom_sum_v", semblance_denom_sum_v);
 
-        std::cout << "Write ... EP_HDF5:" + stack_output_dir + "/" + stack_output_file_semblance_denom_sum + ":" + stack_output_file_dataset_name << "\n"
-                  << std::flush;
+        //std::cout << "Write ... EP_HDF5:" + stack_output_dir + "/" + stack_output_file_semblance_denom_sum + ":" + stack_output_file_dataset_name << "\n"
+        //          << std::flush;
         semblance_denom_sum->Nonvolatile("EP_HDF5:" + stack_output_dir + "/" + stack_output_file_semblance_denom_sum + ":" + stack_output_file_dataset_name);
 
         for (int i = 0; i < chs_per_file * size_after_subset; i++)
@@ -373,7 +387,14 @@ int main(int argc, char *argv[])
         final_pwstack_v.resize(data_in_sum_v.size());
         for (int i = 0; i < data_in_sum_v.size(); i++)
         {
-            data_in_sum_v[i] = data_in_sum_v[i] / TotalStack;
+            if (!is_ml_weight)
+            {
+                data_in_sum_v[i] = data_in_sum_v[i] / TotalStack;
+            }
+            else
+            {
+                data_in_sum_v[i] = data_in_sum_v[i] / ml_weight_sum;
+            }
             final_pwstack_v[i] = data_in_sum_v[i] * phaseWeight_v[i];
         }
 
