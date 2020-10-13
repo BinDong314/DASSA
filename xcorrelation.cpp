@@ -84,6 +84,10 @@ inline Stencil<std::vector<float>> DEC_UDF(const Stencil<short> &c)
     }
 
     Stencil<std::vector<float>> oStencil;
+    std::vector<size_t> vector_shape(2);
+    vector_shape[0] = 1;
+    vector_shape[1] = vector_shape.size();
+    oStencil.SetShape(vector_shape);
     oStencil = dec_result;
     return oStencil;
 }
@@ -237,6 +241,12 @@ inline Stencil<std::vector<float>> FFT_UDF(const Stencil<short> &c)
     clear_vector(C_l);
 
     Stencil<std::vector<float>> oStencil;
+
+    std::vector<size_t> vector_shape(2);
+    vector_shape[0] = 1;
+    vector_shape[1] = gatherXcorr_l.size();
+    oStencil.SetShape(vector_shape);
+
     oStencil = gatherXcorr_l;
     //return gatherXcorr_l;
     return oStencil;
