@@ -23,9 +23,9 @@
 
 %%
 % Convert dsi_file to HDF5 file
-% type_str: only allow 'single', 'int16', 'int32' 'float', and 'double'
+% h5_type_str: only allow 'single', 'int16', 'int32' 'float', and 'double'
 
-function dsi2h5(dsi_file, h5_file, h5_dataset, type_str, transpose_flag)
+function dsi2h5(dsi_file, h5_file, h5_dataset, h5_type_str, transpose_flag)
 dsi_data_raw = importdata(dsi_file);
 
 fcpl = H5P.create('H5P_FILE_CREATE');
@@ -34,18 +34,18 @@ fid  = H5F.create(h5_file, 'H5F_ACC_TRUNC', fcpl, fapl);
 
 %Get the data and its size, type, etc.
 %Force to use the  single/float/double/int16 type 
-if(strcmp(type_str, 'single'))
+if(strcmp(h5_type_str, 'single'))
     dsi_data =single(cell2mat(dsi_data_raw.dat));
-elseif(strcmp(type_str, 'float'))
+elseif(strcmp(h5_type_str, 'float'))
     dsi_data =float(cell2mat(dsi_data_raw.dat));
-elseif(strcmp(type_str, 'double'))
+elseif(strcmp(h5_type_str, 'double'))
     dsi_data = double(cell2mat(dsi_data_raw.dat));
-elseif(strcmp(type_str, 'int16'))
+elseif(strcmp(h5_type_str, 'int16'))
     dsi_data =int16(cell2mat(dsi_data_raw.dat));
-elseif(strcmp(type_str, 'int32'))
+elseif(strcmp(h5_type_str, 'int32'))
     dsi_data =int32(cell2mat(dsi_data_raw.dat));
 else
-    disp('Not known type_str, I only understand single, int16, int, float, double.')
+    disp('Not known h5_type_str, I only understand single, int16, int32, float, double.')
 end
 
 if(transpose_flag == 1)
@@ -60,23 +60,23 @@ space_id = H5S.create_simple(2, h5_dims, h5_dims);
 
 %Create the actual dataset to store the 2D data
 %Get the data and its size, type, etc.
-if(strcmp(type_str, 'single'))
+if(strcmp(h5_type_str, 'single'))
     type_id = H5T.copy('H5T_NATIVE_FLOAT');
     order = H5ML.get_constant_value('H5T_ORDER_BE');
     H5T.set_order(type_id,order);
-elseif(strcmp(type_str, 'int16'))
+elseif(strcmp(h5_type_str, 'int16'))
     type_id = H5T.copy('H5T_NATIVE_SHORT');
     order = H5ML.get_constant_value('H5T_ORDER_BE');
     H5T.set_order(type_id,order);
-elseif(strcmp(type_str, 'int32'))
+elseif(strcmp(h5_type_str, 'int32'))
     type_id = H5T.copy('H5T_NATIVE_INT');
     order = H5ML.get_constant_value('H5T_ORDER_BE');
     H5T.set_order(type_id,order);
-elseif(strcmp(type_str, 'float'))
+elseif(strcmp(h5_type_str, 'float'))
     type_id = H5T.copy('H5T_NATIVE_FLOAT');
     order = H5ML.get_constant_value('H5T_ORDER_BE');
     H5T.set_order(type_id,order);
-elseif(strcmp(type_str, 'double'))
+elseif(strcmp(h5_type_str, 'double'))
     type_id = H5T.copy('H5T_NATIVE_DOUBLE');
     order = H5ML.get_constant_value('H5T_ORDER_BE');
     H5T.set_order(type_id,order);

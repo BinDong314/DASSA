@@ -1,6 +1,7 @@
 %
-% User's intput
+% Users intput
 %
+
 dsi_dir = "/Users/dbin/work/dassa/vincent-stack-debug/test-dsi/"
 dsi_dir_filter_pattern="*.mat"
 
