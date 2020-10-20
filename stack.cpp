@@ -97,7 +97,8 @@ stack_udf(const Stencil<double> &iStencil)
     nStack++;
 
     std::vector<int> start_offset{0, 0}, end_offset{chs_per_file - 1, lts_per_file - 1};
-    std::vector<double> ts = iStencil.ReadNeighbors(start_offset, end_offset);
+    std::vector<double> ts;
+    iStencil.ReadNeighbors(start_offset, end_offset, ts);
     std::vector<std::vector<double>> ts2d = DasLib::Vector1D2D(lts_per_file, ts);
 
     //PrintVV("ts2d ", ts2d);
@@ -173,9 +174,15 @@ stack_udf(const Stencil<double> &iStencil)
     temp_time_large = AU_WTIME;
 
     std::vector<unsigned long long> H_start{0, 0}, H_end{static_cast<unsigned long long>(chs_per_file) - 1, static_cast<unsigned long long>(LTS_new) - 1};
-    std::vector<double> semblance_denom_sum_v = semblance_denom_sum->ReadArray(H_start, H_end);
-    std::vector<std::complex<double>> coherency_sum_v = coherency_sum->ReadArray(H_start, H_end);
-    std::vector<double> data_in_sum_v = data_in_sum->ReadArray(H_start, H_end);
+
+    std::vector<double> semblance_denom_sum_v;
+    semblance_denom_sum->ReadArray(H_start, H_end, semblance_denom_sum_v);
+
+    std::vector<std::complex<double>> coherency_sum_v;
+    coherency_sum->ReadArray(H_start, H_end, coherency_sum_v);
+
+    std::vector<double> data_in_sum_v;
+    data_in_sum->ReadArray(H_start, H_end, data_in_sum_v);
 
     //PrintVector("coherency_sum_v (before) " + std::to_string(au_rank), data_in_sum_v);
     int offset;
@@ -344,8 +351,9 @@ int main(int argc, char *argv[])
     //Run
     A->Apply(stack_udf);
 
-    std::vector<unsigned long long> H_start_test{0, 0}, H_end_test{static_cast<unsigned long long>(chs_per_file) - 1, static_cast<unsigned long long>(size_after_subset) - 1};
-    std::vector<double> data_in_sum_v_test = data_in_sum->ReadArray(H_start_test, H_end_test);
+    //std::vector<unsigned long long> H_start_test{0, 0}, H_end_test{static_cast<unsigned long long>(chs_per_file) - 1, static_cast<unsigned long long>(size_after_subset) - 1};
+    //std::vector<double> data_in_sum_v_test;
+    //data_in_sum->ReadArray(H_start_test, H_end_test, data_in_sum_v_test);
     //PrintVector("data_in_sum_v_test", data_in_sum_v_test);
 
     semblance_denom_sum->Merge(AU_SUM);
@@ -366,9 +374,12 @@ int main(int argc, char *argv[])
     {
         std::vector<unsigned long long> H_start{0, 0}, H_end{static_cast<unsigned long long>(chs_per_file) - 1, static_cast<unsigned long long>(size_after_subset) - 1};
 
-        std::vector<double> semblance_denom_sum_v = semblance_denom_sum->ReadArray(H_start, H_end);
-        std::vector<std::complex<double>> coherency_sum_v = coherency_sum->ReadArray(H_start, H_end);
-        std::vector<double> data_in_sum_v = data_in_sum->ReadArray(H_start, H_end);
+        std::vector<double> semblance_denom_sum_v;
+        semblance_denom_sum->ReadArray(H_start, H_end, semblance_denom_sum_v);
+        std::vector<std::complex<double>> coherency_sum_v;
+        coherency_sum->ReadArray(H_start, H_end, coherency_sum_v);
+        std::vector<double> data_in_sum_v;
+        data_in_sum->ReadArray(H_start, H_end, data_in_sum_v);
 
         std::vector<double> phaseWeight_v(coherency_sum_v.size());
         std::vector<double> semblanceWeight_v(coherency_sum_v.size());
