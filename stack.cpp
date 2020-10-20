@@ -100,6 +100,7 @@ stack_udf(const Stencil<double> &iStencil)
     std::vector<double> ts = iStencil.ReadNeighbors(start_offset, end_offset);
     std::vector<std::vector<double>> ts2d = DasLib::Vector1D2D(lts_per_file, ts);
 
+    //PrintVV("ts2d ", ts2d);
     /*
     std::vector<std::vector<double>> ts2d;
     ts2d.resize(chs_per_file);
@@ -138,9 +139,12 @@ stack_udf(const Stencil<double> &iStencil)
         }
     }
 
-    //cout << "Current Chunk ID: =" << iStencil.GetChunkID() << "\n";
+    //PrintVV("ts2d after flipud ", ts2d);
 
     size_t chunk_chunk_id = iStencil.GetChunkID();
+
+    //cout << "Current Chunk ID: =" << chunk_chunk_id << ", ml weight: " << ml_weight[chunk_chunk_id] << "\n";
+
     size_t LTS_new = ts2d[0].size();
     std::vector<std::vector<double>> semblance_denom;
     std::vector<std::vector<std::complex<double>>> coherency;
@@ -162,6 +166,8 @@ stack_udf(const Stencil<double> &iStencil)
         //coherency[i] = DasLib::instanPhaseEstimator(ts2d[i]);
     }
     coherency = DasLib::instanPhaseEstimatorVector(ts2d);
+
+    //PrintVV("ts2d after add ml weight ", ts2d);
 
     CPU_Time = CPU_Time + (AU_WTIME - temp_time_large);
     temp_time_large = AU_WTIME;
@@ -225,32 +231,34 @@ int main(int argc, char *argv[])
     if (is_ml_weight)
     {
         cout.precision(17);
-        read_ml_weight(ml_weight_file, ml_weight, sorted_indexes);
+        std::vector<double> ml_weight_temp;
+        read_ml_weight(ml_weight_file, ml_weight_temp, sorted_indexes);
         std::vector<size_t> sorted_indexes_cut;
         ml_weight_sum = 0;
 
-        if (n_weighted_to_stack > 0 && n_weighted_to_stack <= ml_weight.size())
+        if (n_weighted_to_stack > 0 && n_weighted_to_stack <= ml_weight_temp.size())
         {
             for (int i = 0; i < n_weighted_to_stack; i++)
             {
-                //std::cout << ml_weight[sorted_indexes[i]] << "\n";
-                ml_weight_sum = ml_weight_sum + ml_weight[sorted_indexes[i]];
+                ml_weight.push_back(ml_weight_temp[sorted_indexes[i]]);
+                ml_weight_sum = ml_weight_sum + ml_weight_temp[sorted_indexes[i]];
                 sorted_indexes_cut.push_back(sorted_indexes[i]);
             }
         }
         else
         {
             sorted_indexes_cut = sorted_indexes;
-            for (int i = 0; i < ml_weight.size(); i++)
+            for (int i = 0; i < ml_weight_temp.size(); i++)
             {
-                //std::cout << ml_weight[sorted_indexes[i]] << "\n";
-                ml_weight_sum = ml_weight_sum + ml_weight[sorted_indexes[i]];
+                ml_weight.push_back(ml_weight_temp[sorted_indexes[i]]);
+                ml_weight_sum = ml_weight_sum + ml_weight_temp[sorted_indexes[i]];
             }
         }
         sorted_indexes_str = Vector2String(sorted_indexes_cut);
 
         std::cout << " sorted_indexes_str =" << sorted_indexes_str << "\n";
         std::cout << " sum of weight =" << ml_weight_sum << "\n";
+        PrintVector("  ml_weight(ordered): ", ml_weight);
     }
 
     // set up the chunk size and the overlap size
