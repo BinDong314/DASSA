@@ -82,6 +82,7 @@ double IO_Read_Time = 0, IO_Reduce_Time = 0, CPU_Time = 0, IO_Read_Time_Con = 0,
 double temp_time, temp_time_large, micro_time, micro_time_sub;
 
 bool is_ml_weight = false;
+bool is_ml_weight_ordered = true;
 std::string ml_weight_file = "ml_wight.txt";
 int n_weighted_to_stack = -1; // -1 mean to stack all
 std::vector<double> ml_weight;
@@ -479,7 +480,16 @@ void read_ml_weight(const std::string ml_weight_file_p, std::vector<double> &ml_
             ml_weight_p.push_back(val);
         }
     }
-    sort_indexes_p = DasLib::sort_indexes(ml_weight_p);
+    if (is_ml_weight_ordered)
+    {
+        sort_indexes_p = DasLib::sort_indexes(ml_weight_p);
+    }
+    else
+    {
+        //fill 0, ... ml_weight_p.size()
+        sort_indexes_p.resize(ml_weight_p.size());
+        std::iota(sort_indexes_p.begin(), sort_indexes_p.end(), 0);
+    }
 }
 
 void printf_help(char *cmd)
@@ -525,6 +535,16 @@ int stack_config_reader(std::string file_name, int mpi_rank)
     {
         ml_weight_file = reader.Get("parameter", "ml_weight_file", "false");
         n_weighted_to_stack = reader.GetInteger("parameter", "n_weighted_to_stack", -1);
+        std::string is_ml_weight_ordered_str = reader.Get("parameter", "is_ml_weight_ordered", "true");
+        //std::cout << "is_ml_weight_ordered_str =" << is_ml_weight_ordered_str << "\n";
+        if (is_ml_weight_ordered_str == "false" || is_ml_weight_ordered_str == "0")
+        {
+            is_ml_weight_ordered = false;
+        }
+        else
+        {
+            is_ml_weight_ordered = true;
+        }
     }
 
     stack_output_dir = reader.Get("parameter", "stack_output_dir", "./");
@@ -573,6 +593,7 @@ int stack_config_reader(std::string file_name, int mpi_rank)
         {
             std::cout << termcolor::magenta << "\n        ml_weight_file = " << termcolor::green << ml_weight_file;
             std::cout << termcolor::magenta << "\n        n_weighted_to_stack = " << termcolor::green << n_weighted_to_stack;
+            std::cout << termcolor::magenta << "\n        is_ml_weight_ordered = " << termcolor::green << is_ml_weight_ordered;
         }
         std::cout << termcolor::blue << "\n\n Runtime parameters: ";
         std::cout << termcolor::magenta << "\n\n        lts_per_file = " << termcolor::green << lts_per_file;
