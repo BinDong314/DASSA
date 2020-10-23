@@ -24,7 +24,7 @@ EIGEN3_FLAG=-I$(EIGEN3_DIR)
 ALL_FLAGS= $(OTHER_FLAGS) $(AU_FLAG) $(HDF5_FLAG) $(FFTW_FLAG)  $(DASH_FLAG) $(EIGEN3_FLAG) 
 
 .PHONY:all
-all:stack tdms2h5 xcorrelation
+all:stack tdms2h5 xcorrelation decimate
 
 stack:stack.cpp
 	module load gcc/7.4.0 hdf5/1.10.5-gcc-p fftw boost; \
@@ -37,7 +37,11 @@ tdms2h5:tdms2h5.c
 xcorrelation:xcorrelation.cpp
 	module load gcc/7.4.0 hdf5/1.10.5-gcc-p fftw boost; \
 	$(CCC) -o xcorrelation xcorrelation.cpp  $(ALL_FLAGS) 
-	
+
+decimate:decimate.cpp
+	module load gcc/7.4.0 hdf5/1.10.5-gcc-p fftw boost; \
+	$(CCC) -o decimate decimate.cpp  $(ALL_FLAGS)
+
 clean:
-	rm stack tdms2h5 xcorrelation
+	rm stack tdms2h5 xcorrelation decimate
 
