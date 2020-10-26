@@ -305,14 +305,15 @@ int main(int argc, char *argv[])
         std::cout << "init   all"
                   << "\n";
 
-    final_pwstack->EndpointControl(OP_DISABLE_MPI_IO, std::vector<std::string>());
-    final_pwstack->EndpointControl(OP_DISABLE_COLLECTIVE_IO, std::vector<std::string>());
+    std::vector<std::string> ft_null_str;
+    final_pwstack->ControlEndpoint(OP_DISABLE_MPI_IO, ft_null_str);
+    final_pwstack->ControlEndpoint(OP_DISABLE_COLLECTIVE_IO, ft_null_str);
 
-    semblanceWeight->EndpointControl(OP_DISABLE_COLLECTIVE_IO, std::vector<std::string>());
-    semblanceWeight->EndpointControl(OP_DISABLE_MPI_IO, std::vector<std::string>());
+    semblanceWeight->ControlEndpoint(OP_DISABLE_COLLECTIVE_IO, ft_null_str);
+    semblanceWeight->ControlEndpoint(OP_DISABLE_MPI_IO, ft_null_str);
 
-    phaseWeight->EndpointControl(OP_DISABLE_COLLECTIVE_IO, std::vector<std::string>());
-    phaseWeight->EndpointControl(OP_DISABLE_MPI_IO, std::vector<std::string>());
+    phaseWeight->ControlEndpoint(OP_DISABLE_COLLECTIVE_IO, ft_null_str);
+    phaseWeight->ControlEndpoint(OP_DISABLE_MPI_IO, ft_null_str);
 
     if (!au_rank)
         std::cout << "disable collective IO"
@@ -331,7 +332,7 @@ int main(int argc, char *argv[])
         std::vector<std::string> index_param;
         index_param.push_back(sorted_indexes_str);
 
-        A->EndpointControl(DIR_FILE_SORT_INDEXES, index_param);
+        A->ControlEndpoint(DIR_FILE_SORT_INDEXES, index_param);
     }
     //std::cout << "Pre clone \n";
     //Clone to create local copy
