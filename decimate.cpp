@@ -114,7 +114,7 @@ inline Stencil<std::vector<double>> udf_decimate(const Stencil<short> &iStencil)
         {
             start_row = i * space_decimate_rows;
             end_row = (((i + 1) * space_decimate_rows - 1) < chs_per_file_udf) ? ((i + 1) * space_decimate_rows - 1) : chs_per_file_udf;
-            std::cout << "ma_batches =" << ma_batches << ", start_row = " << start_row << ", end_row =  " << end_row << "\n";
+            //std::cout << "ma_batches =" << ma_batches << ", start_row = " << start_row << ", end_row =  " << end_row << "\n";
             ts2d_ma.push_back(spacedecimate(ts2d, start_row, end_row, space_decimate_operation));
         }
     }
