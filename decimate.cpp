@@ -97,6 +97,8 @@ inline Stencil<std::vector<double>> udf_decimate(const Stencil<short> &iStencil)
     //std::vector<double> ts(ts_short.begin(), ts_short.end());
     std::vector<std::vector<double>> ts2d = DasLib::Vector1D2D<short, double>(lts_per_file_udf, ts_short), ts2d_ma;
 
+    if (!au_rank)
+        std::cout << "Got data ! \n";
     std::vector<double> ts_temp2;
     //Resample in time-domain
     for (int i = 0; i < chs_per_file_udf; i++)
@@ -106,6 +108,9 @@ inline Stencil<std::vector<double>> udf_decimate(const Stencil<short> &iStencil)
         resample(1, DT_NEW / DT, ts_temp2, ts2d[i]);     //resample
     }
     DasLib::clear_vector(ts_temp2);
+    if (!au_rank)
+        std::cout << "Finish time-domain decimate ! \n";
+
     if (is_space_decimate)
     {
         //decimate in space-domain
@@ -124,6 +129,9 @@ inline Stencil<std::vector<double>> udf_decimate(const Stencil<short> &iStencil)
         ts2d_ma = ts2d;
     }
     DasLib::clear_vector(ts2d);
+    if (!au_rank)
+        std::cout << "Finish space-domain decimate ! \n";
+
     std::vector<double> ts_temp = Convert2DVTo1DV(ts2d_ma);
     Stencil<std::vector<double>> oStencil;
     std::vector<size_t> vector_shape(2);
