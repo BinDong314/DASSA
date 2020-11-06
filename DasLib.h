@@ -721,6 +721,13 @@ inline std::vector<std::vector<std::complex<T>>> instanPhaseEstimatorVector(std:
     return ov;
 }
 
+template <class T>
+inline void clear_vector(std::vector<T> &v)
+{
+    v.clear();
+    std::vector<T>().swap(v);
+}
+
 } // namespace DasLib
 
 #endif

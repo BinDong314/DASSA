@@ -105,6 +105,7 @@ inline Stencil<std::vector<double>> udf_decimate(const Stencil<short> &iStencil)
         filtfilt(BUTTER_A, BUTTER_B, ts2d[i], ts_temp2); //filtfilt
         resample(1, DT_NEW / DT, ts_temp2, ts2d[i]);     //resample
     }
+    DasLib::clear_vector(ts_temp2);
     if (is_space_decimate)
     {
         //decimate in space-domain
@@ -122,6 +123,7 @@ inline Stencil<std::vector<double>> udf_decimate(const Stencil<short> &iStencil)
     {
         ts2d_ma = ts2d;
     }
+    DasLib::clear_vector(ts2d);
     std::vector<double> ts_temp = Convert2DVTo1DV(ts2d_ma);
     Stencil<std::vector<double>> oStencil;
     std::vector<size_t> vector_shape(2);
