@@ -212,6 +212,23 @@ inline size_t InferTimeSubsetSize(double start_t, double end_t, double sub_start
 
 typedef std::vector<std::vector<double>> DoubleVector2D;
 
+template <class T1, class T2>
+inline std::vector<std::vector<T2>> Vector1D2D(size_t cols, const std::vector<T1> &data1d)
+{
+    std::vector<std::vector<T2>> result;
+    size_t rows = data1d.size() / cols;
+    result.resize(rows);
+    for (std::size_t i = 0; i < rows; ++i)
+    {
+        result[i].resize(cols);
+        for (std::size_t j = 0; j < cols; ++j)
+        {
+            result[i][j] = data1d[i * cols + j];
+        }
+    }
+    return result;
+}
+/*
 template <class T>
 inline std::vector<std::vector<T>> Vector1D2D(size_t cols, std::vector<T> &data1d)
 {
@@ -227,7 +244,7 @@ inline std::vector<std::vector<T>> Vector1D2D(size_t cols, std::vector<T> &data1
         }
     }
     return result;
-}
+}*/
 
 template <class T>
 inline std::vector<T> Convert2DVTo1DV(std::vector<std::vector<T>> &data2d)

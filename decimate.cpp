@@ -94,8 +94,8 @@ inline Stencil<std::vector<double>> udf_decimate(const Stencil<short> &iStencil)
     int chs_per_file_udf = max_offset_upper[0] + 1, lts_per_file_udf = max_offset_upper[1] + 1;
     std::vector<int> start_offset{0, 0}, end_offset{chs_per_file_udf - 1, lts_per_file_udf - 1};
     std::vector<short> ts_short = iStencil.ReadNeighbors(start_offset, end_offset);
-    std::vector<double> ts(ts_short.begin(), ts_short.end());
-    std::vector<std::vector<double>> ts2d = DasLib::Vector1D2D(lts_per_file_udf, ts), ts2d_ma;
+    //std::vector<double> ts(ts_short.begin(), ts_short.end());
+    std::vector<std::vector<double>> ts2d = DasLib::Vector1D2D<short, double>(lts_per_file_udf, ts_short), ts2d_ma;
 
     std::vector<double> ts_temp2;
     //Resample in time-domain
