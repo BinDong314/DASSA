@@ -395,9 +395,9 @@ int convert_file(char *filename_output, char *filename_input, int compression_fl
       case tdsTypeU8:
          properties_value = malloc(properties_value_length * sizeof(uint8_t));
          fread(properties_value, sizeof(uint8_t), properties_value_length, fp);
-         uint32_t temp_bool_value;
-         temp_bool_value = *((uint8_t *)properties_value);
-         attach_attribute_non_string(file_id, properties_name, H5T_STD_U32BE, H5T_NATIVE_UINT, &temp_bool_value);
+         uint32_t temp_u8_value;
+         temp_u8_value = *((uint8_t *)properties_value);
+         attach_attribute_non_string(file_id, properties_name, H5T_STD_U32BE, H5T_NATIVE_UINT, &temp_u8_value);
 #ifdef OUTPUT_META_TO_SCREEN
          printf("Boolean: %s : %d  \n", properties_name, *((uint8_t *)properties_value));
 #endif
