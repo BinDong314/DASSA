@@ -11,7 +11,7 @@
 #include <assert.h>
 #include <time.h>
 
-#define OUTPUT_META_TO_SCREEN 1
+//#define OUTPUT_META_TO_SCREEN 1
 //#define DEBUG_OUTPUT 1
 
 //Don't change below values

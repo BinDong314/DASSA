@@ -353,10 +353,11 @@ int main(int argc, char *argv[])
         //IFILE->SelectView(view_start, view_count, view_os_size, auto_chunk_dims_index);
         //i_file_dim = view_count;
         std::cout << "No select view now ! \n";
+        exit(-1);
     }
     else
     {
-        i_file_dim = IFILE->GetSize();
+        i_file_dim = IFILE->GetArraySize();
         PrintVector("i_file_dim :", i_file_dim);
     }
 

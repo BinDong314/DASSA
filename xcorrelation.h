@@ -684,12 +684,13 @@ void master_processing(std::vector<double> XPP, std::vector<double> &YPP)
     fftw_free(fft_out_temp);
 }
 
+/*
 template <class T>
 inline void clear_vector(std::vector<T> &v)
 {
     v.clear();
     std::vector<T>().swap(v);
-}
+}*/
 
 double au_timer_global__inside_use = 0;
 void au_time_start()
