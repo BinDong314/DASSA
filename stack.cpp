@@ -100,7 +100,7 @@ stack_udf(const Stencil<double> &iStencil)
     std::vector<int> start_offset{0, 0}, end_offset{chs_per_file - 1, lts_per_file - 1};
     std::vector<double> ts;
     iStencil.ReadNeighbors(start_offset, end_offset, ts);
-    std::vector<std::vector<double>> ts2d = DasLib::Vector1D2D(lts_per_file, ts);
+    std::vector<std::vector<double>> ts2d = DasLib::Vector1D2D<double, double>(lts_per_file, ts);
 
     //PrintVV("ts2d ", ts2d);
     /*
