@@ -357,7 +357,7 @@ int main(int argc, char *argv[])
     }
     else
     {
-        i_file_dim = IFILE->GetArraySize();
+        IFILE->GetArraySize(i_file_dim);
         PrintVector("i_file_dim :", i_file_dim);
     }
 
