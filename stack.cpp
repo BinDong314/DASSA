@@ -81,10 +81,14 @@ double nStack = 0;
 double IO_Read_Time = 0, IO_Reduce_Time = 0, CPU_Time = 0, IO_Read_Time_Con = 0, DetMean_tim = 0, Subset_tim = 0, CausalityFlagging_tim = 0, instanPhaseEstimator_Time = 0, instanPhaseEstimator_Time2 = 0, sum_Time = 0, sum_micro = 0, sum_micro_sub = 0;
 double temp_time, temp_time_large, micro_time, micro_time_sub;
 
+bool is_file_range = false;
+int file_range_start_index = 0;
+int file_range_end_index = 1;
+
 bool is_ml_weight = false;
 bool is_ml_weight_ordered = true;
 std::string ml_weight_file = "ml_wight.txt";
-int n_weighted_to_stack = -1; // -1 mean to stack all
+//int n_weighted_to_stack = -1; // -1 mean to stack all
 std::vector<double> ml_weight;
 double ml_weight_sum;
 std::vector<size_t> sorted_indexes; //sorted index
@@ -244,9 +248,10 @@ int main(int argc, char *argv[])
         std::vector<size_t> sorted_indexes_cut;
         ml_weight_sum = 0;
 
-        if (n_weighted_to_stack > 0 && n_weighted_to_stack <= ml_weight_temp.size())
+        //if (n_weighted_to_stack > 0 && n_weighted_to_stack <= ml_weight_temp.size())
+        if (is_file_range && file_range_start_index >= 0 && file_range_end_index <= ml_weight_temp.size())
         {
-            for (int i = 0; i < n_weighted_to_stack; i++)
+            for (int i = file_range_start_index; i <= file_range_end_index; i++)
             {
                 ml_weight.push_back(ml_weight_temp[sorted_indexes[i]]);
                 ml_weight_sum = ml_weight_sum + ml_weight_temp[sorted_indexes[i]];
@@ -267,6 +272,16 @@ int main(int argc, char *argv[])
         std::cout << " sorted_indexes_str =" << sorted_indexes_str << "\n";
         std::cout << " sum of weight =" << ml_weight_sum << "\n";
         PrintVector("  ml_weight(ordered): ", ml_weight);
+    }
+    else if (is_file_range)
+    {
+        std::vector<size_t> file_range_index;
+        for (size_t i = file_range_start_index; i <= file_range_end_index; i++)
+        {
+            file_range_index.push_back(i);
+        }
+        sorted_indexes_str = Vector2String(file_range_index);
+        std::cout << " sorted_indexes_str =" << sorted_indexes_str << "\n";
     }
 
     // set up the chunk size and the overlap size
@@ -327,7 +342,7 @@ int main(int argc, char *argv[])
 
     std::vector<int> skip_size = {chs_per_file, lts_per_file};
     A->EnableApplyStride(skip_size);
-    if (is_ml_weight)
+    if (is_ml_weight || is_file_range)
     {
         std::vector<std::string> index_param;
         index_param.push_back(sorted_indexes_str);
@@ -520,44 +535,76 @@ int stack_config_reader(std::string file_name, int mpi_rank)
     //free(real_path);
     //xcorr_input_dir = xcorr_input_dir_temp;
 
-    xcorr_input_dataset_name = reader.Get("parameter", "xcorr_input_dataset_name", "/xcoor");
+    xcorr_input_dataset_name = reader.Get("parameter", "xcorr_input_dataset_name", "/xcorr");
+
+    std::string is_file_range_str = reader.Get("parameter", "is_file_range", "false");
+    if (is_file_range_str == "false" || is_file_range_str == "0")
+    {
+        is_file_range = false;
+    }
+    else if (is_file_range_str == "true" || is_file_range_str == "1")
+    {
+        is_file_range = true;
+    }
+    else
+    {
+        AU_EXIT("Don't read the is_file_range's value " + is_file_range_str);
+    }
+
+    if (is_file_range)
+    {
+        file_range_start_index = reader.GetInteger("parameter", "file_range_start_index", 0);
+        file_range_end_index = reader.GetInteger("parameter", "file_range_end_index", 1);
+    }
 
     std::string is_ml_weight_str = reader.Get("parameter", "is_ml_weight", "false");
     if (is_ml_weight_str == "false" || is_ml_weight_str == "0")
     {
         is_ml_weight = false;
     }
-    else
+    else if (is_ml_weight_str == "true" || is_ml_weight_str == "1")
     {
         is_ml_weight = true;
+    }
+    else
+    {
+        AU_EXIT("Don't read the is_ml_weight's value " + is_ml_weight_str);
     }
 
     if (is_ml_weight)
     {
         ml_weight_file = reader.Get("parameter", "ml_weight_file", "false");
-        n_weighted_to_stack = reader.GetInteger("parameter", "n_weighted_to_stack", -1);
+        //n_weighted_to_stack = reader.GetInteger("parameter", "n_weighted_to_stack", -1);
         std::string is_ml_weight_ordered_str = reader.Get("parameter", "is_ml_weight_ordered", "true");
         //std::cout << "is_ml_weight_ordered_str =" << is_ml_weight_ordered_str << "\n";
         if (is_ml_weight_ordered_str == "false" || is_ml_weight_ordered_str == "0")
         {
             is_ml_weight_ordered = false;
         }
-        else
+        else if (is_ml_weight_ordered_str == "true" || is_ml_weight_ordered_str == "1")
         {
             is_ml_weight_ordered = true;
+        }
+        else
+        {
+            AU_EXIT("Don't read the is_ml_weight_ordered's value " + is_ml_weight_ordered_str);
         }
     }
 
     stack_output_dir = reader.Get("parameter", "stack_output_dir", "./");
 
     std::string is_flipud_flag_str = reader.Get("parameter", "is_flipud", "true");
-    if (is_flipud_flag_str == "false")
+    if (is_flipud_flag_str == "false" || is_flipud_flag_str == "0")
     {
         is_flipud_flag = false;
     }
-    else
+    else if (is_flipud_flag_str == "true" || is_flipud_flag_str == "1")
     {
         is_flipud_flag = true;
+    }
+    else
+    {
+        AU_EXIT("Don't read the is_flipud's value " + is_flipud_flag_str);
     }
 
     chs_per_file = reader.GetInteger("parameter", "chs_per_file", 201);
@@ -589,11 +636,18 @@ int stack_config_reader(std::string file_name, int mpi_rank)
         std::cout << termcolor::blue << "\n\n Input parameters: ";
         std::cout << termcolor::magenta << "\n        xcorr_input_dir = " << termcolor::green << xcorr_input_dir;
         std::cout << termcolor::magenta << "\n        xcorr_input_dataset_name = " << termcolor::green << xcorr_input_dataset_name;
+        std::cout << termcolor::magenta << "\n        is_ml_weight = " << termcolor::green << is_file_range;
+        if (is_file_range)
+        {
+            std::cout << termcolor::magenta << "\n        file_range_start_index = " << termcolor::green << file_range_start_index;
+            std::cout << termcolor::magenta << "\n        file_range_start_index = " << termcolor::green << file_range_end_index;
+        }
+
         std::cout << termcolor::magenta << "\n        is_ml_weight = " << termcolor::green << is_ml_weight;
         if (is_ml_weight)
         {
             std::cout << termcolor::magenta << "\n        ml_weight_file = " << termcolor::green << ml_weight_file;
-            std::cout << termcolor::magenta << "\n        n_weighted_to_stack = " << termcolor::green << n_weighted_to_stack;
+            //std::cout << termcolor::magenta << "\n        n_weighted_to_stack = " << termcolor::green << n_weighted_to_stack;
             std::cout << termcolor::magenta << "\n        is_ml_weight_ordered = " << termcolor::green << is_ml_weight_ordered;
         }
         std::cout << termcolor::blue << "\n\n Runtime parameters: ";
