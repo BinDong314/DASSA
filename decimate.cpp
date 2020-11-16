@@ -77,6 +77,10 @@ vector<double> BUTTER_B;
 int butter_order = 3;
 double cut_frequency_low = 0.25;
 
+int is_channel_range = false;
+int channel_range_start = 0;
+int channel_range_end = 1;
+
 void InitDecimate()
 {
     int nPoint = ceil(lts_per_file * time_decimate_files / (DT_NEW / DT));
@@ -91,11 +95,25 @@ inline Stencil<std::vector<double>> udf_decimate(const Stencil<short> &iStencil)
     std::vector<int> max_offset_upper;
     iStencil.GetOffsetUpper(max_offset_upper);
     PrintVector("max_offset_upper = ", max_offset_upper);
+
     int chs_per_file_udf = max_offset_upper[0] + 1, lts_per_file_udf = max_offset_upper[1] + 1;
-    std::vector<int> start_offset{0, 0}, end_offset{chs_per_file_udf - 1, lts_per_file_udf - 1};
+    std::vector<int> start_offset = {0, 0};
+    std::vector<int> end_offset = {chs_per_file_udf - 1, lts_per_file_udf - 1};
+
+    if (is_channel_range)
+    {
+        assert(channel_range_end - channel_range_start + 1 <= chs_per_file_udf);
+        chs_per_file_udf = channel_range_end - channel_range_start + 1;
+        start_offset[0] = channel_range_start;
+        end_offset[0] = channel_range_end;
+        PrintVector("start_offset = ", start_offset);
+        PrintVector("end_offset = ", end_offset);
+    }
+
     std::vector<short> ts_short = iStencil.ReadNeighbors(start_offset, end_offset);
     //std::vector<double> ts(ts_short.begin(), ts_short.end());
-    std::vector<std::vector<double>> ts2d = DasLib::Vector1D2D<short, double>(lts_per_file_udf, ts_short), ts2d_ma;
+    std::vector<std::vector<double>> ts2d = DasLib::Vector1D2D<short, double>(lts_per_file_udf, ts_short);
+    std::vector<std::vector<double>> ts2d_ma;
 
     if (!au_rank)
         std::cout << "Got data ! \n";
@@ -278,6 +296,15 @@ int read_config_file(std::string file_name, int mpi_rank)
 
     chs_per_file = reader.GetInteger("parameter", "chs_per_file", 11648);
     lts_per_file = reader.GetInteger("parameter", "lts_per_file", 30000);
+
+    temp_str = reader.Get("parameter", "is_channel_range", "false");
+
+    is_channel_range = (temp_str == "false" || temp_str == "0") ? false : true;
+    if (is_channel_range)
+    {
+        channel_range_start = reader.GetInteger("parameter", "channel_range_start", 0);
+        channel_range_end = reader.GetInteger("parameter", "channel_range_end", 1);
+    }
 
     time_decimate_files = reader.GetInteger("parameter", "time_decimate_files", 2);
 
