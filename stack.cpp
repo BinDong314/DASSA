@@ -94,6 +94,8 @@ double ml_weight_sum;
 std::vector<size_t> sorted_indexes; //sorted index
 std::string sorted_indexes_str;     //string of sort_indexes after cut to n_weighted_to_stack
 
+bool is_delete_median = false;
+
 void read_ml_weight(const std::string ml_weight_file_p, std::vector<double> &ml_weight_p, std::vector<size_t> &sort_indexes_p);
 
 inline Stencil<double>
@@ -120,7 +122,12 @@ stack_udf(const Stencil<double> &iStencil)
     }
     */
 
-    DasLib::DeleteMedian(ts2d);
+    if (is_delete_median)
+    {
+        DasLib::DeleteMedian(ts2d);
+        if (!au_rank)
+            std::cout << "Disable DeleteMedian ! \n";
+    }
 
     DetMean_tim = DetMean_tim + (AU_WTIME - temp_time);
     temp_time = AU_WTIME;
@@ -605,6 +612,20 @@ int stack_config_reader(std::string file_name, int mpi_rank)
     else
     {
         AU_EXIT("Don't read the is_flipud's value " + is_flipud_flag_str);
+    }
+
+    std::string is_delete_median_str = reader.Get("parameter", "is_delete_median", "true");
+    if (is_delete_median_str == "false" || is_delete_median_str == "0")
+    {
+        is_delete_median = false;
+    }
+    else if (is_delete_median_str == "true" || is_delete_median_str == "1")
+    {
+        is_delete_median = true;
+    }
+    else
+    {
+        AU_EXIT("Don't read the is_delete_median's value " + is_flipud_flag_str);
     }
 
     chs_per_file = reader.GetInteger("parameter", "chs_per_file", 201);
