@@ -29,8 +29,8 @@ all:stack tdms2h5 xcorrelation decimate similarity
 stack:stack.cpp
 	$(CCC) -o stack stack.cpp $(ALL_FLAGS)
 
-tdms2h5:tdms2h5.c
-	$(CCC) -o  tdms2h5 tdms2h5.c $(ALL_FLAGS) 
+tdms2h5:tdms2h5.cpp
+	$(CCC) -o  tdms2h5 tdms2h5.cpp $(ALL_FLAGS) 
 
 xcorrelation:xcorrelation.cpp
 	$(CCC) -o xcorrelation xcorrelation.cpp  $(ALL_FLAGS) 

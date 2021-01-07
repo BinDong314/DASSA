@@ -7,6 +7,8 @@
 
 extern double micro_time, sum_micro, micro_time_sub, sum_micro_sub;
 
+using namespace std;
+
 #include "DasLib_filtfilt.h"
 #include "Tools3rd/INIReader.h"
 #include "Tools3rd/termcolor.hpp"
@@ -14,15 +16,15 @@ extern double micro_time, sum_micro, micro_time_sub, sum_micro_sub;
 #include "DasLib/DasLib_detrend.h"
 #include "DasLib/DasLib_interp1.h"
 #include "DasLib/DasLib_liir.c"
+//https://stackoverflow.com/questions/1577475/c-sorting-and-keeping-track-of-indexes?answertab=votes#tab-top
+#include <numeric>   // std::iota
+#include <algorithm> // std::sort, std::stable_sort
+#include <fstream>   // std::ifstream
 
 //https://docs.microsoft.com/en-us/cpp/cpp/namespaces-cpp?redirectedfrom=MSDN&view=vs-2019
 #pragma once
 namespace DasLib
 {
-
-//https://stackoverflow.com/questions/1577475/c-sorting-and-keeping-track-of-indexes?answertab=votes#tab-top
-#include <numeric>   // std::iota
-#include <algorithm> // std::sort, std::stable_sort
 
 template <typename T>
 vector<size_t> sort_indexes(const vector<T> &v)

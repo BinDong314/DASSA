@@ -77,10 +77,11 @@ vector<double> BUTTER_B;
 int butter_order = 3;
 double cut_frequency_low = 0.25;
 
-int is_channel_range = false;
+bool is_channel_range = false;
 int channel_range_start = 0;
 int channel_range_end = 1;
-
+bool is_many_files = false;
+int many_files_split_n = 10;
 void InitDecimate()
 {
     int nPoint = ceil(lts_per_file * time_decimate_files / (DT_NEW / DT));
@@ -110,8 +111,22 @@ inline Stencil<std::vector<double>> udf_decimate(const Stencil<short> &iStencil)
         PrintVector("end_offset = ", end_offset);
     }
 
+    if (is_many_files)
+    {
+        if (is_space_decimate)
+        {
+            many_files_split_n = space_decimate_rows;
+        }
+        else
+        {
+            many_files_split_n = chs_per_file_udf / time_decimate_files;
+        }
+
+        if (!au_rank)
+            std::cout << "Using the is_many_files, many_files_split_n = " << many_files_split_n << " \n";
+    }
+
     std::vector<short> ts_short = iStencil.ReadNeighbors(start_offset, end_offset);
-    //std::vector<double> ts(ts_short.begin(), ts_short.end());
     std::vector<std::vector<double>> ts2d = DasLib::Vector1D2D<short, double>(lts_per_file_udf, ts_short);
     std::vector<std::vector<double>> ts2d_ma;
 
