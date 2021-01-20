@@ -126,12 +126,15 @@ inline Stencil<std::vector<double>> udf_decimate(const Stencil<short> &iStencil)
             std::cout << "Using the is_many_files, many_files_split_n = " << many_files_split_n << " \n";
     }
 
-    std::vector<short> ts_short = iStencil.ReadNeighbors(start_offset, end_offset);
+    std::vector<short> ts_short;
+    iStencil.ReadNeighbors(start_offset, end_offset, ts_short);
     std::vector<std::vector<double>> ts2d = DasLib::Vector1D2D<short, double>(lts_per_file_udf, ts_short);
     std::vector<std::vector<double>> ts2d_ma;
 
-    if (!au_rank)
-        std::cout << "Got data ! \n";
+    std::cout << "ts2d.size() = " << ts2d.size() << ",ts2d[0].size() = " << ts2d[0].size() << ", lts_per_file_udf =" << lts_per_file_udf << ", ts_short.size() = " << ts_short.size() << "\n";
+
+    std::cout << "Got data ! at rank " << au_rank << " \n";
+
     std::vector<double> ts_temp2;
     //Resample in time-domain
     for (int i = 0; i < chs_per_file_udf; i++)
@@ -170,6 +173,9 @@ inline Stencil<std::vector<double>> udf_decimate(const Stencil<short> &iStencil)
     std::vector<size_t> vector_shape(2);
     vector_shape[0] = ts2d_ma.size();
     vector_shape[1] = ts2d_ma[0].size();
+    PrintVector("vector_shape: ", vector_shape);
+    std::cout << "vector_shape[0] = " << vector_shape[0] << ",vector_shape[1] = " << vector_shape[1] << "\n";
+    DasLib::clear_vector(ts2d_ma);
     oStencil.SetShape(vector_shape);
     oStencil = ts_temp;
     return oStencil;
