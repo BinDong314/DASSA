@@ -205,14 +205,13 @@ int main(int argc, char *argv[])
     //Init the MPICH, etc.
     AU_Init(argc, argv);
 
-  char processor_name[MPI_MAX_PROCESSOR_NAME];
-  int numprocs, rank, namelen;	
-  MPI_Comm_size(MPI_COMM_WORLD, &numprocs);
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  
-  MPI_Get_processor_name(processor_name, &namelen);
-  printf("Process %d on %s out of %d\n", rank, processor_name, numprocs);
+    char processor_name[MPI_MAX_PROCESSOR_NAME];
+    int numprocs, rank, namelen;
+    MPI_Comm_size(MPI_COMM_WORLD, &numprocs);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
+    MPI_Get_processor_name(processor_name, &namelen);
+    printf("Process %d on %s out of %d\n", rank, processor_name, numprocs);
 
     if (has_config_file_flag)
         read_config_file(config_file, au_rank);
