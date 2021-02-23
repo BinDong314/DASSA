@@ -47,8 +47,6 @@ using namespace DasLib;
 void printf_help(char *cmd);
 int read_config_file(std::string file_name, int mpi_rank);
 
-
-
 inline Stencil<std::vector<float>> DEC_UDF(const Stencil<short> &c)
 {
     std::vector<float> dec_result(decimation_size * window_batch);
