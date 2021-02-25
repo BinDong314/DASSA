@@ -95,6 +95,8 @@ std::vector<double> INTERP_ZF{0, 0.002, 0.006, 14.5, 15, fNyquist};
 double df;
 double eCoeff = 1.0;
 
+bool is_test_flag = false;
+
 void init_xcorr()
 {
     int nPoint = ceil(lts_per_file * time_decimate_files / (DT_NEW / DT));
@@ -207,6 +209,7 @@ inline Stencil<std::vector<double>> udf_xcorr(const Stencil<short> &iStencil)
         ts2d_ma = ts2d;
     }
     DasLib::clear_vector(ts2d);
+
     if (!au_rank)
         std::cout << "Finish space-domain decimate ! \n";
 
@@ -284,7 +287,7 @@ int main(int argc, char *argv[])
 {
     int copt;
     bool has_config_file_flag = false;
-    while ((copt = getopt(argc, argv, "c:h")) != -1)
+    while ((copt = getopt(argc, argv, "c:ht")) != -1)
         switch (copt)
         {
         case 'c':
@@ -387,13 +390,8 @@ void printf_help(char *cmd)
 {
     char *msg = (char *)"Usage: %s [OPTION]\n\
       	  -h help (--help)\n\
-          -i input dir\n\
-          -o output file name \n\
-	      -t dataset name for intput time series \n\
-          -d dataset name for output decimation \n\
-          -r chunk size row \n\
-          -l chunk size col \n\
           -c config file for parameters (has high priority than commands if existing) \n\
+          -t do a quick test with a short input\n\
           Example: mpirun -n 1 %s -i  -o fft-test.arrayudf.h5  -g / -t /DataCT -x /Xcorr\n";
 
     fprintf(stdout, msg, cmd, cmd);
