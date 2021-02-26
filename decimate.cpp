@@ -87,7 +87,7 @@ void InitDecimate()
     int nPoint = ceil(lts_per_file * time_decimate_files / (DT_NEW / DT));
     cut_frequency_low = (0.5 / DT_NEW) / (0.5 / DT);
     ButterLow(butter_order, cut_frequency_low, BUTTER_A, BUTTER_B);
-    if (!au_rank)
+    if (!ft_rank)
         std::cout << "After decimate, nPoint = " << nPoint << "\n";
 }
 
@@ -122,7 +122,7 @@ inline Stencil<std::vector<double>> udf_decimate(const Stencil<short> &iStencil)
             many_files_split_n = chs_per_file_udf / time_decimate_files;
         }
 
-        if (!au_rank)
+        if (!ft_rank)
             std::cout << "Using the is_many_files, many_files_split_n = " << many_files_split_n << " \n";
     }
 
@@ -133,7 +133,7 @@ inline Stencil<std::vector<double>> udf_decimate(const Stencil<short> &iStencil)
 
     std::cout << "ts2d.size() = " << ts2d.size() << ",ts2d[0].size() = " << ts2d[0].size() << ", lts_per_file_udf =" << lts_per_file_udf << ", ts_short.size() = " << ts_short.size() << "\n";
 
-    std::cout << "Got data ! at rank " << au_rank << " \n";
+    std::cout << "Got data ! at rank " << ft_rank << " \n";
 
     std::vector<double> ts_temp2;
     //Resample in time-domain
@@ -144,7 +144,7 @@ inline Stencil<std::vector<double>> udf_decimate(const Stencil<short> &iStencil)
         resample(1, DT_NEW / DT, ts_temp2, ts2d[i]);     //resample
     }
     DasLib::clear_vector(ts_temp2);
-    if (!au_rank)
+    if (!ft_rank)
         std::cout << "Finish time-domain decimate ! \n";
 
     if (is_space_decimate)
@@ -165,7 +165,7 @@ inline Stencil<std::vector<double>> udf_decimate(const Stencil<short> &iStencil)
         ts2d_ma = ts2d;
     }
     DasLib::clear_vector(ts2d);
-    if (!au_rank)
+    if (!ft_rank)
         std::cout << "Finish space-domain decimate ! \n";
 
     std::vector<double> ts_temp = Convert2DVTo1DV(ts2d_ma);
@@ -214,7 +214,7 @@ int main(int argc, char *argv[])
     printf("Process %d on %s out of %d\n", rank, processor_name, numprocs);
 
     if (has_config_file_flag)
-        read_config_file(config_file, au_rank);
+        read_config_file(config_file, ft_rank);
 
     // set up the chunk size and the overlap size
     // 11648, 30000 for each dataset

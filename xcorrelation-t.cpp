@@ -29,8 +29,9 @@ using namespace DasLib;
 int read_config_file(std::string file_name, int mpi_rank);
 std::string config_file = "./decimate.config";
 
-std::string input_dir = "/Users/dbin/work/arrayudf-git-svn-test-on-bitbucket/examples/das/tdms-dir";
-std::string input_file_type = "EP_TDMS";
+std::string input_dir = "./test-data/dir";
+std::string input_h5_dataset = "/dat";
+std::string input_file_type = "EP_HDF5";
 bool is_input_search_rgx = false;
 std::string input_search_rgx = "^(.*)[1234]\\.tdms$";
 
@@ -102,8 +103,8 @@ void init_xcorr()
     int nPoint = ceil(lts_per_file * time_decimate_files / (DT_NEW / DT));
     cut_frequency_low = (0.5 / DT_NEW) / (0.5 / DT);
     ButterLow(butter_order, cut_frequency_low, BUTTER_A, BUTTER_B);
-    if (!au_rank)
-        std::cout << "After decimate, nPoint = " << nPoint << "\n";
+    if (!ft_rank)
+        std::cout << "After decimate, nPoint = " << nPoint << ", lts_per_file =" << lts_per_file << ", DT_NEW = " << DT_NEW << ", DT =  " << DT << "\n";
 
     nPoint_hal_win = floor((2 * floor(WINLEN_SEC / DT_NEW / 2) + 1) / 2);
 
@@ -166,7 +167,7 @@ inline Stencil<std::vector<double>> udf_xcorr(const Stencil<short> &iStencil)
             many_files_split_n = chs_per_file_udf / time_decimate_files;
         }
 
-        if (!au_rank)
+        if (!ft_rank)
             std::cout << "Using the is_many_files, many_files_split_n = " << many_files_split_n << " \n";
     }
 
@@ -177,7 +178,7 @@ inline Stencil<std::vector<double>> udf_xcorr(const Stencil<short> &iStencil)
 
     std::cout << "ts2d.size() = " << ts2d.size() << ",ts2d[0].size() = " << ts2d[0].size() << ", lts_per_file_udf =" << lts_per_file_udf << ", ts_short.size() = " << ts_short.size() << "\n";
 
-    std::cout << "Got data ! at rank " << au_rank << " \n";
+    std::cout << "Got data ! at rank " << ft_rank << " \n";
 
     std::vector<double> ts_temp2;
     //Resample in time-domain
@@ -188,7 +189,7 @@ inline Stencil<std::vector<double>> udf_xcorr(const Stencil<short> &iStencil)
         resample(1, DT_NEW / DT, ts_temp2, ts2d[i]);     //resample
     }
     DasLib::clear_vector(ts_temp2);
-    if (!au_rank)
+    if (!ft_rank)
         std::cout << "Finish time-domain decimate ! \n";
 
     if (is_space_decimate)
@@ -210,7 +211,7 @@ inline Stencil<std::vector<double>> udf_xcorr(const Stencil<short> &iStencil)
     }
     DasLib::clear_vector(ts2d);
 
-    if (!au_rank)
+    if (!ft_rank)
         std::cout << "Finish space-domain decimate ! \n";
 
     //***************
@@ -316,31 +317,41 @@ int main(int argc, char *argv[])
     printf("Process %d on %s out of %d\n", rank, processor_name, numprocs);
 
     if (has_config_file_flag)
-        read_config_file(config_file, au_rank);
+        read_config_file(config_file, ft_rank);
 
     // set up the chunk size and the overlap size
     // 11648, 30000 for each dataset
     std::vector<int> chunk_size(2);
-    chunk_size[0] = chs_per_file;
-    chunk_size[1] = lts_per_file * time_decimate_files;
+    //chunk_size[0] = chs_per_file;
+    //chunk_size[1] = lts_per_file * time_decimate_files;
     std::vector<int> overlap_size = {0, 0};
 
-    std::cout << "EP_DIR:" + input_file_type + ":" + input_dir << "\n";
+    std::cout << "EP_DIR:" + input_file_type + ":" + input_dir << ":" << input_h5_dataset << "\n";
     //Input data
-    AU::Array<short> *A = new AU::Array<short>("EP_DIR:" + input_file_type + ":" + input_dir, chunk_size, overlap_size);
+    AU::Array<short> *A = new AU::Array<short>("EP_DIR:" + input_file_type + ":" + input_dir + ":" + input_h5_dataset);
+    std::vector<std::string> file_size_str;
+    A->EndpointControl(DIR_GET_FILE_SIZE, file_size_str);
+
+    String2Vector(file_size_str[0], chunk_size);
+    chs_per_file = chunk_size[0];
+    lts_per_file = chunk_size[1];
+    A->SetChunkSize(chunk_size);
+    A->SetOverlapSize(overlap_size);
+
+    std::cout << "chunk_size = " << chunk_size[0] << " , " << chunk_size[1] << " \n";
 
     ///Users/dbin/work/arrayudf-git-svn-test-on-bitbucket/examples/das/tdms-dir", chunk_size, overlap_size);
 
-    std::vector<std::string> aug_merge_index, aug_dir_sub_cmd, aug_input_search_rgx;
+    std::vector<std::string> aug_merge_index, aug_input_search_rgx;
 
     aug_merge_index.push_back("1");
-    aug_dir_sub_cmd.push_back("BINARY_ENABLE_TRANSPOSE_ON_READ");
+    //aug_dir_sub_cmd.push_back("BINARY_ENABLE_TRANSPOSE_ON_READ");
 
     aug_input_search_rgx.push_back(input_search_rgx);
 
     A->EndpointControl(DIR_MERGE_INDEX, aug_merge_index);
     //A->EndpointControl(DIR_SUB_CMD_ARG, aug_dir_sub_cmd1); //Not needed
-    A->EndpointControl(DIR_SUB_CMD_ARG, aug_dir_sub_cmd);
+    //A->EndpointControl(DIR_SUB_CMD_ARG, aug_dir_sub_cmd);
     if (is_input_search_rgx)
         A->EndpointControl(DIR_INPUT_SEARCH_RGX, aug_input_search_rgx);
 

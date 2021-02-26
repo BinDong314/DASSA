@@ -33,8 +33,8 @@ using namespace FT;
 void printf_help(char *cmd);
 int stack_config_reader(std::string file_name, int mpi_rank);
 
-extern int au_size;
-extern int au_rank;
+extern int ft_size;
+extern int ft_rank;
 
 int lts_per_file = 14999;
 int chs_per_file = 201;
@@ -125,7 +125,7 @@ stack_udf(const Stencil<double> &iStencil)
     if (is_delete_median)
     {
         DasLib::DeleteMedian(ts2d);
-        if (!au_rank)
+        if (!ft_rank)
             std::cout << "Disable DeleteMedian ! \n";
     }
 
@@ -144,7 +144,7 @@ stack_udf(const Stencil<double> &iStencil)
         bool flag = DasLib::CausalityFlagging(ts2d, CausalityFlagging_tmin, CausalityFlagging_tmax, CausalityFlagging_fmax, sub_start_t, sub_end_t, sample_rate, CausalityFlagging_ButterLow_order, CausalityFlagging_ButterLow_fcf);
         if (flag == false)
         {
-            std::cout << "flipud  for the " << nStack << "th file  at process rank " << au_rank << "\n";
+            std::cout << "flipud  for the " << nStack << "th file  at process rank " << ft_rank << "\n";
             for (int i = 0; i < chs_per_file; i++)
             {
                 std::reverse(ts2d[i].begin(), ts2d[i].end());
@@ -196,7 +196,7 @@ stack_udf(const Stencil<double> &iStencil)
     std::vector<double> data_in_sum_v;
     data_in_sum->ReadArray(H_start, H_end, data_in_sum_v);
 
-    //PrintVector("coherency_sum_v (before) " + std::to_string(au_rank), data_in_sum_v);
+    //PrintVector("coherency_sum_v (before) " + std::to_string(ft_rank), data_in_sum_v);
     int offset;
     for (int i = 0; i < chs_per_file; i++)
     {
@@ -245,7 +245,7 @@ int main(int argc, char *argv[])
     FT_Init(argc, argv);
 
     if (has_config_file_flag)
-        stack_config_reader(config_file, au_rank);
+        stack_config_reader(config_file, ft_rank);
 
     if (is_ml_weight)
     {
@@ -305,25 +305,25 @@ int main(int argc, char *argv[])
     coherency_sum = new FT::Array<std::complex<double>>("EP_MEMORY", sc_size);
     data_in_sum = new FT::Array<double>("EP_MEMORY", sc_size);
 
-    if (!au_rank)
+    if (!ft_rank)
         std::cout << "EP_HDF5:" + stack_output_dir + "/" + stack_output_file_final_pwstack + ":" + stack_output_file_dataset_name << "\n";
 
     final_pwstack = new AU::Array<double>("EP_HDF5:" + stack_output_dir + "/" + stack_output_file_final_pwstack + ":" + stack_output_file_dataset_name, sc_size);
-    if (!au_rank)
+    if (!ft_rank)
         std::cout << "init  final_pwstack all"
                   << "\n";
 
     semblanceWeight = new AU::Array<double>("EP_HDF5:" + stack_output_dir + "/" + stack_output_file_semblanceWeight + ":" + stack_output_file_dataset_name, sc_size);
-    if (!au_rank)
+    if (!ft_rank)
         std::cout << "init  semblanceWeight "
                   << "\n";
 
     phaseWeight = new AU::Array<double>("EP_HDF5:" + stack_output_dir + "/" + stack_output_file_phaseWeight + ":" + stack_output_file_dataset_name, sc_size);
-    if (!au_rank)
+    if (!ft_rank)
         std::cout << "init  phaseWeight "
                   << "\n";
 
-    if (!au_rank)
+    if (!ft_rank)
         std::cout << "init   all"
                   << "\n";
 
@@ -337,7 +337,7 @@ int main(int argc, char *argv[])
     phaseWeight->ControlEndpoint(OP_DISABLE_COLLECTIVE_IO, ft_null_str);
     phaseWeight->ControlEndpoint(OP_DISABLE_MPI_IO, ft_null_str);
 
-    if (!au_rank)
+    if (!ft_rank)
         std::cout << "disable collective IO"
                   << "\n";
 
@@ -369,7 +369,7 @@ int main(int argc, char *argv[])
     data_in_sum->Clone();
     //std::cout << "Pre apply \n";
 
-    if (!au_rank)
+    if (!ft_rank)
         std::cout << "Run apply"
                   << "\n";
     //Run
@@ -386,7 +386,7 @@ int main(int argc, char *argv[])
 
     double TotalStack;
     AU_Reduce(&nStack, &TotalStack, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
-    if (!au_rank)
+    if (!ft_rank)
         std::cout << "Total nStack = " << TotalStack << "\n";
     //semblance_denom_sum->Nonvolatile("EP_HDF5:/Users/dbin/work/arrayudf-git-svn-test-on-bitbucket/examples/das/stacking_files/xcorr_examples_h5_stack_semblance_denom_sum.h5:/semblance_denom_sum");
     //coherency_sum->Nonvolatile("EP_HDF5:/Users/dbin/work/arrayudf-git-svn-test-on-bitbucket/examples/das/stacking_files/xcorr_examples_h5_stack_coherency_sum.h5:/coherency_sum");
@@ -394,7 +394,7 @@ int main(int argc, char *argv[])
     //Clear
     delete A;
 
-    if (!au_rank)
+    if (!ft_rank)
     {
         std::vector<unsigned long long> H_start{0, 0}, H_end{static_cast<unsigned long long>(chs_per_file) - 1, static_cast<unsigned long long>(size_after_subset) - 1};
 

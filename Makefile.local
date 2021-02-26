@@ -1,9 +1,10 @@
 #Bin's Mac
-AU_DIR=/Users/dbin/work/test-fasttensor/fasttensor/build
-HDF5_DIR=/Users/dbin/work/test-fasttensor/hdf5-1.12.0/build
+AU_DIR=/Users/dbin/work/fastensor/build
+HDF5_DIR=/Users/dbin/work/soft/hdf5-1.12.0/build
 FFTW_DIR=/Users/dbin/work/soft/fftw-3.3.9/build
 DASH_DIR=/Users/dbin/work/soft/dash/build/install
-EIGEN3_DIR=/Users/dbin/work/test-fasttensor/fasttensor/examples/dassa/Tools3rd
+EIGEN3_DIR=/Users/dbin/work/dassa/Tools3rd
+
 
 #Lawrencium
 #AU_DIR=/clusterfs/bear/BinDong_DAS_Data/fasttensor/build
@@ -16,7 +17,7 @@ SHELL:=/bin/bash
 CCC=mpicxx
 OTHER_FLAGS=-O3  -std=c++17 -I./DasLib/
 
-AU_FLAG=-I$(AU_DIR)/include -L$(AU_DIR)/lib -lArrayUDF
+AU_FLAG=-I$(AU_DIR)/include -L$(AU_DIR)/lib -lFastensor
 HDF5_FLAG=-I$(HDF5_DIR)/include -L$(HDF5_DIR)/lib -lhdf5  -lhdf5_hl -lz
 FFTW_FLAG=-I$(FFTW_DIR)/include -L$(FFTW_DIR)/lib -lfftw3 
 DASH_FLAG=-I$(DASH_DIR)/include -L$(DASH_DIR)/lib -ldash-mpi -ldart-mpi -ldart-base -lpthread -DDASH_ENABLE_HDF5 -DDASH_MPI_IMPL_ID='mpich'
