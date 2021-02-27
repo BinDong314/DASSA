@@ -39,16 +39,16 @@ int chs_per_file = 11648;
 int lts_per_file = 30000;
 int time_decimate_files = 1;
 
-bool is_output_single_file = true;
+bool is_output_single_file = false;
 std::string output_type = "EP_HDF5";
-std::string output_file_dir = "./tdms-dir-dec/test.h5";
+std::string output_file_dir = "./test-data/dir-output/";
 std::string output_dataset = "/dat";
 
-bool is_dir_output_match_replace_rgx = false;
+bool is_dir_output_match_replace_rgx = true;
 
-std::string dir_output_match_rgx = "^(.*)\\.tdms$";
+std::string dir_output_match_rgx = "^(.*)\\.h5$";
 
-std::string dir_output_replace_rgx = "$1.h5";
+std::string dir_output_replace_rgx = "$1-xcorr.h5";
 
 bool is_space_decimate = false;
 int space_decimate_rows = 32;
@@ -97,14 +97,13 @@ double df;
 double eCoeff = 1.0;
 
 bool is_test_flag = false;
+std::vector<int> output_chunk_size(2);
 
 void init_xcorr()
 {
     int nPoint = ceil(lts_per_file * time_decimate_files / (DT_NEW / DT));
     cut_frequency_low = (0.5 / DT_NEW) / (0.5 / DT);
     ButterLow(butter_order, cut_frequency_low, BUTTER_A, BUTTER_B);
-    if (!ft_rank)
-        std::cout << "After decimate, nPoint = " << nPoint << ", lts_per_file =" << lts_per_file << ", DT_NEW = " << DT_NEW << ", DT =  " << DT << "\n";
 
     nPoint_hal_win = floor((2 * floor(WINLEN_SEC / DT_NEW / 2) + 1) / 2);
 
@@ -113,6 +112,9 @@ void init_xcorr()
     shapingFilt.resize(nfft);
     fNyquist = 0.5 / DT_NEW;
     INTERP_ZF[5] = fNyquist;
+
+    if (!ft_rank)
+        std::cout << "After decimate, nPoint = " << nPoint << ", lts_per_file =" << lts_per_file << ", DT_NEW = " << DT_NEW << ", DT =  " << DT << " , nfft = " << nfft << "\n";
 
     df = 2.0 * fNyquist / (double)nfft;
 
@@ -176,6 +178,8 @@ inline Stencil<std::vector<double>> udf_xcorr(const Stencil<short> &iStencil)
     std::vector<std::vector<double>> ts2d = DasLib::Vector1D2D<short, double>(lts_per_file_udf, ts_short);
     std::vector<std::vector<double>> ts2d_ma;
 
+    PrintVV("ts2d :", ts2d);
+
     std::cout << "ts2d.size() = " << ts2d.size() << ",ts2d[0].size() = " << ts2d[0].size() << ", lts_per_file_udf =" << lts_per_file_udf << ", ts_short.size() = " << ts_short.size() << "\n";
 
     std::cout << "Got data ! at rank " << ft_rank << " \n";
@@ -184,10 +188,14 @@ inline Stencil<std::vector<double>> udf_xcorr(const Stencil<short> &iStencil)
     //Resample in time-domain
     for (int i = 0; i < chs_per_file_udf; i++)
     {
-        detrend(ts2d[i].data(), lts_per_file_udf);       //Detread
+        detrend(ts2d[i].data(), lts_per_file_udf); //Detread
+        PrintVector("ts2d[i] = ", ts2d[i]);
         filtfilt(BUTTER_A, BUTTER_B, ts2d[i], ts_temp2); //filtfilt
         resample(1, DT_NEW / DT, ts_temp2, ts2d[i]);     //resample
     }
+
+    PrintVV("ts2d :", ts2d);
+
     DasLib::clear_vector(ts_temp2);
     if (!ft_rank)
         std::cout << "Finish time-domain decimate ! \n";
@@ -221,18 +229,20 @@ inline Stencil<std::vector<double>> udf_xcorr(const Stencil<short> &iStencil)
     ts2d.resize(ts2d_ma.size());
     std::vector<std::complex<double>> fft_out, fft_in, master_fft;
     size_t nPoint_before_fft;
+    double temp_real, temp_imag, temp_f;
     for (int i_row = 0; i_row < ts2d_ma.size(); i_row++)
     {
         moving_mean(ts2d_ma[i_row], ts2d[i_row], nPoint_hal_win);
         nPoint_before_fft = ts2d[i_row].size();
         fftv_forward_p2(ts2d[i_row], fft_out);
-
+        fft_in.resize(fft_out.size());
         for (int ii = 0; ii < fft_out.size(); ii++)
         {
-            double temp_f;
             temp_f = pow(sqrt(fft_out[ii].real() * fft_out[ii].real() + fft_out[ii].imag() * fft_out[ii].imag()), eCoeff) + 0.001;
-            fft_in[ii].real((fft_out[ii].real() + 0.001) / temp_f * shapingFilt[ii]);
-            fft_in[ii].imag((fft_out[ii].imag()) / temp_f * shapingFilt[ii]);
+            temp_real = (fft_out[ii].real() + 0.001) / temp_f * shapingFilt[ii];
+            fft_in[ii].real(temp_real);
+            temp_imag = (fft_out[ii].imag()) / temp_f * shapingFilt[ii];
+            fft_in[ii].imag(temp_imag);
         }
         fftv_backward(fft_in, fft_out);
 
