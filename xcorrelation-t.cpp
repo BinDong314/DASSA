@@ -257,26 +257,36 @@ inline Stencil<std::vector<double>> udf_xcorr(const Stencil<short> &iStencil)
         if (i_row == 0)
         {
             master_fft = fft_out;
+            for (int ij = 0; ij < master_fft.size(); ij++)
+            {
+                std::cout << " master_fft [" << ij << "] =  " << master_fft[ij] << " \n";
+            }
         }
 
+        fft_in.clear();
         fft_in.resize(fft_out.size());
         for (int j = 0; j < fft_out.size(); j++)
         {
             fft_in[j].real(master_fft[j].real() * fft_out[j].real() + master_fft[j].imag() * fft_out[j].imag());
             fft_in[j].imag(master_fft[j].imag() * fft_out[j].real() - master_fft[j].real() * fft_out[j].imag());
+
+            std::cout << " fft_in [" << j << "] =  " << fft_in[j] << " \n";
         }
 
         fftv_backward(fft_in, fft_out);
 
         ts2d_ma[i_row].resize(2 * nPoint_before_fft - 1);
+        int ts2d_ma_index = 0;
         for (int k = fft_out.size() - nPoint_before_fft + 1; k < fft_out.size(); k++)
         {
-            ts2d_ma[i_row][k] = fft_out[k].real();
+            ts2d_ma[i_row][ts2d_ma_index] = fft_out[k].real();
+            ts2d_ma_index++;
         }
 
         for (int l = 0; l < nPoint_before_fft; l++)
         {
-            ts2d_ma[i_row][l] = fft_out[l].real();
+            ts2d_ma[i_row][ts2d_ma_index] = fft_out[l].real();
+            ts2d_ma_index++;
         }
     }
 

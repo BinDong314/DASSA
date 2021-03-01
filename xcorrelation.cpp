@@ -193,6 +193,7 @@ inline Stencil<std::vector<float>> FFT_UDF(const Stencil<short> &c)
             fft_in_l[j][1] = master_fft[j + bi * nfft][1] * fft_out_l[j][0] - master_fft[j + bi * nfft][0] * fft_out_l[j][1];
             fft_out_l[j][0] = 0;
             fft_out_l[j][1] = 0;
+            std::cout << " fft_in_l = " << fft_in_l[j][0] << " , " << fft_in_l[j][1] << "\n";
 #else
             fft_in_l[j].r = master_fft[j + bi * nfft][0] * fft_out_l[j].r + master_fft[j + bi * nfft][1] * fft_out_l[j].i;
             fft_in_l[j].i = master_fft[j + bi * nfft][1] * fft_out_l[j].r - master_fft[j + bi * nfft][0] * fft_out_l[j].i;
@@ -484,8 +485,10 @@ int main(int argc, char *argv[])
             {
                 master_fft[bi * nfft + j][0] = fft_out[j][0];
                 master_fft[bi * nfft + j][1] = fft_out[j][1];
+                std::cout << " master_fft [" << j << "] real = " << fft_out[j][0] << " , imag= " << fft_out[j][1] << "\n";
             }
         }
+
         //Re enable collective IO  to make following read faster
 
         IFILE->EnableCollectiveIO(); //Comment out for VDS test on single node
