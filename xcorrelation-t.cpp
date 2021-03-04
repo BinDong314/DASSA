@@ -301,6 +301,20 @@ inline Stencil<std::vector<double>> udf_xcorr(const Stencil<short> &iStencil)
     DasLib::clear_vector(ts2d_ma);
     oStencil.SetShape(vector_shape);
     oStencil = ts_temp;
+
+    //
+    // Deal with tag
+    //
+
+    if (iStencil.HasTagMap())
+    {
+        std::map<std::string, std::string> tag_map;
+        iStencil.GetTagMap(tag_map);
+        for (std::map<std::string, std::string>::iterator it = tag_map.begin(); it != tag_map.end(); ++it)
+        {
+            std::cout << " key : " << it->first << ", value:" << it->second << " \n";
+        }
+    }
     return oStencil;
 }
 
@@ -351,6 +365,8 @@ int main(int argc, char *argv[])
     AU::Array<short> *A = new AU::Array<short>("EP_DIR:" + input_file_type + ":" + input_dir + ":" + input_h5_dataset);
     std::vector<std::string> file_size_str;
     A->EndpointControl(DIR_GET_FILE_SIZE, file_size_str);
+
+    A->GetStencilTag();
 
     String2Vector(file_size_str[0], chunk_size);
     chs_per_file = chunk_size[0];
