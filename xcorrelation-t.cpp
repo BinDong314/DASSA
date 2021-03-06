@@ -314,7 +314,9 @@ inline Stencil<std::vector<double>> udf_xcorr(const Stencil<short> &iStencil)
         {
             std::cout << " key : " << it->first << ", value:" << it->second << " \n";
         }
+        oStencil.SetTagMap(tag_map);
     }
+
     return oStencil;
 }
 
