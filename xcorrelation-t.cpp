@@ -29,7 +29,8 @@ using namespace DasLib;
 int read_config_file(std::string file_name, int mpi_rank);
 std::string config_file = "./decimate.config";
 
-std::string input_dir = "./test-data/dir";
+bool is_input_single_file = false;
+std::string input_dir_file = "./test-data/dir";
 std::string input_h5_dataset = "/dat";
 std::string input_file_type = "EP_HDF5";
 bool is_input_search_rgx = false;
@@ -37,7 +38,7 @@ std::string input_search_rgx = "^(.*)[1234]\\.tdms$";
 
 int chs_per_file = 11648;
 int lts_per_file = 30000;
-int time_decimate_files = 1;
+int n_files_time_decimate = 1;
 
 bool is_output_single_file = false;
 std::string output_type = "EP_HDF5";
@@ -96,12 +97,14 @@ std::vector<double> INTERP_ZF{0, 0.002, 0.006, 14.5, 15, fNyquist};
 double df;
 double eCoeff = 1.0;
 
+unsigned long long MASTER_INDEX = 0;
+
 bool is_test_flag = false;
 std::vector<int> output_chunk_size(2);
 
 void init_xcorr()
 {
-    int nPoint = ceil(lts_per_file * time_decimate_files / (DT_NEW / DT));
+    int nPoint = ceil(lts_per_file * n_files_time_decimate / (DT_NEW / DT));
     cut_frequency_low = (0.5 / DT_NEW) / (0.5 / DT);
     ButterLow(butter_order, cut_frequency_low, BUTTER_A, BUTTER_B);
 
@@ -166,7 +169,7 @@ inline Stencil<std::vector<double>> udf_xcorr(const Stencil<short> &iStencil)
         }
         else
         {
-            many_files_split_n = chs_per_file_udf / time_decimate_files;
+            many_files_split_n = chs_per_file_udf / n_files_time_decimate;
         }
 
         if (!ft_rank)
@@ -178,7 +181,7 @@ inline Stencil<std::vector<double>> udf_xcorr(const Stencil<short> &iStencil)
     std::vector<std::vector<double>> ts2d = DasLib::Vector1D2D<short, double>(lts_per_file_udf, ts_short);
     std::vector<std::vector<double>> ts2d_ma;
 
-    PrintVV("ts2d :", ts2d);
+    //PrintVV("ts2d :", ts2d);
 
     std::cout << "ts2d.size() = " << ts2d.size() << ",ts2d[0].size() = " << ts2d[0].size() << ", lts_per_file_udf =" << lts_per_file_udf << ", ts_short.size() = " << ts_short.size() << "\n";
 
@@ -189,12 +192,12 @@ inline Stencil<std::vector<double>> udf_xcorr(const Stencil<short> &iStencil)
     for (int i = 0; i < chs_per_file_udf; i++)
     {
         detrend(ts2d[i].data(), lts_per_file_udf); //Detread
-        PrintVector("ts2d[i] = ", ts2d[i]);
+        //PrintVector("ts2d[i] = ", ts2d[i]);
         filtfilt(BUTTER_A, BUTTER_B, ts2d[i], ts_temp2); //filtfilt
         resample(1, DT_NEW / DT, ts_temp2, ts2d[i]);     //resample
     }
 
-    PrintVV("ts2d :", ts2d);
+    //PrintVV("ts2d :", ts2d);
 
     DasLib::clear_vector(ts_temp2);
     if (!ft_rank)
@@ -212,15 +215,15 @@ inline Stencil<std::vector<double>> udf_xcorr(const Stencil<short> &iStencil)
             //std::cout << "ma_batches =" << ma_batches << ", start_row = " << start_row << ", end_row =  " << end_row << "\n";
             ts2d_ma.push_back(spacedecimate(ts2d, start_row, end_row, space_decimate_operation));
         }
+
+        if (!ft_rank)
+            std::cout << "Finish space-domain decimate ! \n";
     }
     else
     {
         ts2d_ma = ts2d;
     }
     DasLib::clear_vector(ts2d);
-
-    if (!ft_rank)
-        std::cout << "Finish space-domain decimate ! \n";
 
     //***************
     //Move Aveage
@@ -254,13 +257,14 @@ inline Stencil<std::vector<double>> udf_xcorr(const Stencil<short> &iStencil)
 
         fftv_forward_p2(ts2d[i_row], fft_out);
 
-        if (i_row == 0)
+        if (i_row == MASTER_INDEX)
         {
             master_fft = fft_out;
+            /*
             for (int ij = 0; ij < master_fft.size(); ij++)
             {
                 std::cout << " master_fft [" << ij << "] =  " << master_fft[ij] << " \n";
-            }
+            }*/
         }
 
         fft_in.clear();
@@ -270,7 +274,7 @@ inline Stencil<std::vector<double>> udf_xcorr(const Stencil<short> &iStencil)
             fft_in[j].real(master_fft[j].real() * fft_out[j].real() + master_fft[j].imag() * fft_out[j].imag());
             fft_in[j].imag(master_fft[j].imag() * fft_out[j].real() - master_fft[j].real() * fft_out[j].imag());
 
-            std::cout << " fft_in [" << j << "] =  " << fft_in[j] << " \n";
+            //std::cout << " fft_in [" << j << "] =  " << fft_in[j] << " \n";
         }
 
         fftv_backward(fft_in, fft_out);
@@ -296,8 +300,8 @@ inline Stencil<std::vector<double>> udf_xcorr(const Stencil<short> &iStencil)
     std::vector<size_t> vector_shape(2);
     vector_shape[0] = ts2d_ma.size();
     vector_shape[1] = ts2d_ma[0].size();
-    PrintVector("vector_shape: ", vector_shape);
-    std::cout << "vector_shape[0] = " << vector_shape[0] << ",vector_shape[1] = " << vector_shape[1] << "\n";
+    //PrintVector("vector_shape: ", vector_shape);
+    //std::cout << "vector_shape[0] = " << vector_shape[0] << ",vector_shape[1] = " << vector_shape[1] << "\n";
     DasLib::clear_vector(ts2d_ma);
     oStencil.SetShape(vector_shape);
     oStencil = ts_temp;
@@ -305,7 +309,6 @@ inline Stencil<std::vector<double>> udf_xcorr(const Stencil<short> &iStencil)
     //
     // Deal with tag
     //
-
     if (iStencil.HasTagMap())
     {
         std::map<std::string, std::string> tag_map;
@@ -313,6 +316,10 @@ inline Stencil<std::vector<double>> udf_xcorr(const Stencil<short> &iStencil)
         for (std::map<std::string, std::string>::iterator it = tag_map.begin(); it != tag_map.end(); ++it)
         {
             std::cout << " key : " << it->first << ", value:" << it->second << " \n";
+            if (it->first == "SamplingFrequency[Hz]")
+            {
+                it->second = "125";
+            }
         }
         oStencil.SetTagMap(tag_map);
     }
@@ -359,18 +366,40 @@ int main(int argc, char *argv[])
     // 11648, 30000 for each dataset
     std::vector<int> chunk_size(2);
     //chunk_size[0] = chs_per_file;
-    //chunk_size[1] = lts_per_file * time_decimate_files;
+    //chunk_size[1] = lts_per_file * n_files_time_decimate;
     std::vector<int> overlap_size = {0, 0};
 
-    std::cout << "EP_DIR:" + input_file_type + ":" + input_dir << ":" << input_h5_dataset << "\n";
-    //Input data
-    AU::Array<short> *A = new AU::Array<short>("EP_DIR:" + input_file_type + ":" + input_dir + ":" + input_h5_dataset);
-    std::vector<std::string> file_size_str;
-    A->EndpointControl(DIR_GET_FILE_SIZE, file_size_str);
+    std::cout << "EP_DIR:" + input_file_type + ":" + input_dir_file << ":" << input_h5_dataset << "\n";
+    std::string A_endpoint_id;
 
+    if (!is_input_single_file)
+    {
+        A_endpoint_id = "EP_DIR:" + input_file_type + ":" + input_dir_file + ":" + input_h5_dataset;
+    }
+    else
+    {
+        A_endpoint_id = input_file_type + ":" + input_dir_file + ":" + input_h5_dataset;
+    }
+    //Input data
+    AU::Array<short> *A = new AU::Array<short>(A_endpoint_id);
     A->GetStencilTag();
 
-    String2Vector(file_size_str[0], chunk_size);
+    if (!is_input_single_file)
+    {
+        std::vector<std::string> file_size_str;
+        A->EndpointControl(DIR_GET_FILE_SIZE, file_size_str);
+        String2Vector(file_size_str[0], chunk_size);
+    }
+    else
+    {
+        std::vector<unsigned long long> array_size;
+        A->GetArraySize(array_size);
+        chunk_size[0] = array_size[0];
+        chunk_size[1] = array_size[1];
+    }
+
+    std::cout << "A_endpoint_id = " << A_endpoint_id << "\n";
+
     chs_per_file = chunk_size[0];
     lts_per_file = chunk_size[1];
     A->SetChunkSize(chunk_size);
@@ -456,11 +485,16 @@ int read_config_file(std::string file_name, int mpi_rank)
         return 1;
     }
 
-    input_dir = reader.Get("parameter", "input_dir", "/Users/dbin/work/arrayudf-git-svn-test-on-bitbucket/examples/das/tdms-dir");
+    input_dir_file = reader.Get("parameter", "input_dir_file", "/Users/dbin/work/arrayudf-git-svn-test-on-bitbucket/examples/das/tdms-dir");
+
+    input_h5_dataset = reader.Get("parameter", "input_dataset", "/dat");
 
     input_file_type = reader.Get("parameter", "input_file_type", "EP_TDMS");
 
-    std::string temp_str = reader.Get("parameter", "is_input_search_rgx", "false");
+    std::string temp_str = reader.Get("parameter", "is_input_single_file", "false");
+    is_input_single_file = (temp_str == "false") ? false : true;
+
+    temp_str = reader.Get("parameter", "is_input_search_rgx", "false");
 
     is_input_search_rgx = (temp_str == "false") ? false : true;
 
@@ -481,7 +515,7 @@ int read_config_file(std::string file_name, int mpi_rank)
         channel_range_end = reader.GetInteger("parameter", "channel_range_end", 1);
     }
 
-    time_decimate_files = reader.GetInteger("parameter", "time_decimate_files", 2);
+    n_files_time_decimate = reader.GetInteger("parameter", "n_files_time_decimate", 1);
 
     temp_str = reader.Get("parameter", "is_output_single_file", "false");
 
@@ -520,13 +554,37 @@ int read_config_file(std::string file_name, int mpi_rank)
 
     DT_NEW = reader.GetReal("parameter", "dt_new", 0.008);
 
+    std::string temp_str2 = reader.Get("parameter", "z", "0, 0.5, 1, 1, 0.5, 0");
+    std::stringstream iss(temp_str2);
+    double number;
+    std::vector<double> Z;
+    while (iss >> number)
+    {
+        Z.push_back(number);
+        if (iss.peek() == ',')
+            iss.ignore();
+    }
+    INTERP_Z = Z;
+    INTERP_ZF[0] = reader.GetReal("parameter", "F1", 0);
+    INTERP_ZF[1] = reader.GetReal("parameter", "F2", 0.002);
+    INTERP_ZF[2] = reader.GetReal("parameter", "F3", 0.006);
+    INTERP_ZF[3] = reader.GetReal("parameter", "F4", 14.5);
+    INTERP_ZF[4] = reader.GetReal("parameter", "F5", 15);
+
+    WINLEN_SEC = reader.GetReal("parameter", "winLen_sec", 0.5);
+
+    eCoeff = reader.GetReal("parameter", "eCoeff", 1.0);
+    MASTER_INDEX = reader.GetInteger("parameter", "master_index", 0);
+
+    butter_order = reader.GetInteger("parameter", "butter_order", 3);
+
     if (!mpi_rank)
     {
         std::cout << "\n\n";
         std::cout << termcolor::red << "Parameters to run the Decimate: ";
 
         std::cout << termcolor::blue << "\n\n Input parameters: ";
-        std::cout << termcolor::magenta << "\n        input_dir = " << termcolor::green << input_dir;
+        std::cout << termcolor::magenta << "\n        input_dir_file = " << termcolor::green << input_dir_file;
         std::cout << termcolor::magenta << "\n        input_file_type = " << termcolor::green << input_file_type;
 
         if (is_input_search_rgx)
@@ -534,9 +592,9 @@ int read_config_file(std::string file_name, int mpi_rank)
             std::cout << termcolor::magenta << "\n        input_search_rgx = " << termcolor::green << input_search_rgx;
         }
         std::cout << termcolor::blue << "\n\n Runtime parameters: ";
-        std::cout << termcolor::magenta << "\n\n        lts_per_file = " << termcolor::green << lts_per_file;
-        std::cout << termcolor::magenta << "\n        chs_per_file = " << termcolor::green << chs_per_file;
-        std::cout << termcolor::magenta << "\n        time_decimate_files = " << termcolor::green << time_decimate_files;
+        // std::cout << termcolor::magenta << "\n\n        lts_per_file = " << termcolor::green << lts_per_file;
+        // std::cout << termcolor::magenta << "\n        chs_per_file = " << termcolor::green << chs_per_file;
+        std::cout << termcolor::magenta << "\n        n_files_time_decimate = " << termcolor::green << n_files_time_decimate;
 
         std::cout << termcolor::magenta << "\n        is_space_decimate = " << termcolor::green << is_space_decimate;
 
@@ -563,6 +621,7 @@ int read_config_file(std::string file_name, int mpi_rank)
 
         std::cout << termcolor::reset << "\n\n";
     }
+
     fflush(stdout);
 
     return 0;
