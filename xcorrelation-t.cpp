@@ -102,6 +102,16 @@ unsigned long long MASTER_INDEX = 0;
 bool is_test_flag = false;
 std::vector<int> output_chunk_size(2);
 
+bool is_column_major = true;
+
+/**
+ * @brief input data type
+ *    0 : short (by default)
+ *    1 : double 
+ *    2 : float 
+ */
+int input_data_type = 0;
+
 void init_xcorr()
 {
     int nPoint = ceil(lts_per_file * n_files_time_decimate / (DT_NEW / DT));
@@ -141,7 +151,8 @@ void init_xcorr()
     std::vector<double>().swap(LHS);
 }
 
-inline Stencil<std::vector<double>> udf_xcorr(const Stencil<short> &iStencil)
+template <class TT>
+inline Stencil<std::vector<double>> udf_xcorr(const Stencil<TT> &iStencil)
 {
     std::vector<int> max_offset_upper;
     iStencil.GetOffsetUpper(max_offset_upper);
@@ -176,15 +187,26 @@ inline Stencil<std::vector<double>> udf_xcorr(const Stencil<short> &iStencil)
             std::cout << "Using the is_many_files, many_files_split_n = " << many_files_split_n << " \n";
     }
 
-    std::vector<short> ts_short;
+    std::vector<TT> ts_short;
     iStencil.ReadNeighbors(start_offset, end_offset, ts_short);
-    std::vector<std::vector<double>> ts2d = DasLib::Vector1D2D<short, double>(lts_per_file_udf, ts_short);
-    std::vector<std::vector<double>> ts2d_ma;
 
+    if (is_column_major)
+    {
+        std::vector<TT> ts_short_temp;
+        ts_short_temp.resize(ts_short.size());
+        transpose(ts_short.data(), ts_short_temp.data(), chs_per_file_udf, lts_per_file_udf);
+        ts_short = ts_short_temp;
+        int temp = chs_per_file_udf;
+        chs_per_file_udf = lts_per_file_udf;
+        lts_per_file_udf = temp;
+    }
+
+    std::vector<std::vector<double>> ts2d = DasLib::Vector1D2D(lts_per_file_udf, ts_short);
     //PrintVV("ts2d :", ts2d);
 
-    std::cout << "ts2d.size() = " << ts2d.size() << ",ts2d[0].size() = " << ts2d[0].size() << ", lts_per_file_udf =" << lts_per_file_udf << ", ts_short.size() = " << ts_short.size() << "\n";
+    std::vector<std::vector<double>> ts2d_ma;
 
+    std::cout << "ts2d.size() = " << ts2d.size() << ",ts2d[0].size() = " << ts2d[0].size() << ", lts_per_file_udf =" << lts_per_file_udf << ", ts_short.size() = " << ts_short.size() << "\n";
     std::cout << "Got data ! at rank " << ft_rank << " \n";
 
     std::vector<double> ts_temp2;
@@ -365,8 +387,6 @@ int main(int argc, char *argv[])
     // set up the chunk size and the overlap size
     // 11648, 30000 for each dataset
     std::vector<int> chunk_size(2);
-    //chunk_size[0] = chs_per_file;
-    //chunk_size[1] = lts_per_file * n_files_time_decimate;
     std::vector<int> overlap_size = {0, 0};
 
     std::cout << "EP_DIR:" + input_file_type + ":" + input_dir_file << ":" << input_h5_dataset << "\n";
@@ -380,14 +400,39 @@ int main(int argc, char *argv[])
     {
         A_endpoint_id = input_file_type + ":" + input_dir_file + ":" + input_h5_dataset;
     }
+
     //Input data
-    AU::Array<short> *A = new AU::Array<short>(A_endpoint_id);
+    //AU::Array<short> *
+
+    FT::ArrayBase *A;
+    AuEndpointDataType t;
+    if (input_data_type == 0)
+    {
+        t = AuEndpointDataType::AU_SHORT;
+        A = new FT::Array<short>(A_endpoint_id);
+    }
+    else if (input_data_type == 1)
+    {
+        t = AuEndpointDataType::AU_DOUBLE;
+        A = new FT::Array<double>(A_endpoint_id);
+    }
+    else if (input_data_type == 2)
+    {
+        t = AuEndpointDataType::AU_FLOAT;
+        A = new FT::Array<float>(A_endpoint_id);
+    }
+    else
+    {
+        std::cout << "Not supported input_data_type \n";
+        exit(-1);
+    }
+
     A->GetStencilTag();
 
     if (!is_input_single_file)
     {
         std::vector<std::string> file_size_str;
-        A->EndpointControl(DIR_GET_FILE_SIZE, file_size_str);
+        A->ControlEndpoint(DIR_GET_FILE_SIZE, file_size_str);
         String2Vector(file_size_str[0], chunk_size);
     }
     else
@@ -400,27 +445,34 @@ int main(int argc, char *argv[])
 
     std::cout << "A_endpoint_id = " << A_endpoint_id << "\n";
 
-    chs_per_file = chunk_size[0];
-    lts_per_file = chunk_size[1];
+    if (!is_column_major)
+    {
+        chunk_size[1] = chunk_size[1] * n_files_time_decimate;
+        chs_per_file = chunk_size[0];
+        lts_per_file = chunk_size[1];
+    }
+    else
+    {
+        chunk_size[0] = chunk_size[0] * n_files_time_decimate;
+        chs_per_file = chunk_size[1];
+        lts_per_file = chunk_size[0];
+    }
+
     A->SetChunkSize(chunk_size);
     A->SetOverlapSize(overlap_size);
 
     std::cout << "chunk_size = " << chunk_size[0] << " , " << chunk_size[1] << " \n";
 
-    ///Users/dbin/work/arrayudf-git-svn-test-on-bitbucket/examples/das/tdms-dir", chunk_size, overlap_size);
-
-    std::vector<std::string> aug_merge_index, aug_input_search_rgx;
-
+    std::vector<std::string> aug_merge_index;
     aug_merge_index.push_back("1");
-    //aug_dir_sub_cmd.push_back("BINARY_ENABLE_TRANSPOSE_ON_READ");
+    A->ControlEndpoint(DIR_MERGE_INDEX, aug_merge_index);
 
-    aug_input_search_rgx.push_back(input_search_rgx);
-
-    A->EndpointControl(DIR_MERGE_INDEX, aug_merge_index);
-    //A->EndpointControl(DIR_SUB_CMD_ARG, aug_dir_sub_cmd1); //Not needed
-    //A->EndpointControl(DIR_SUB_CMD_ARG, aug_dir_sub_cmd);
     if (is_input_search_rgx)
-        A->EndpointControl(DIR_INPUT_SEARCH_RGX, aug_input_search_rgx);
+    {
+        std::vector<std::string> aug_input_search_rgx;
+        aug_input_search_rgx.push_back(input_search_rgx);
+        A->ControlEndpoint(DIR_INPUT_SEARCH_RGX, aug_input_search_rgx);
+    }
 
     init_xcorr();
     //Result data
@@ -439,10 +491,10 @@ int main(int argc, char *argv[])
         std::vector<std::string> aug_output_replace_arg;
         aug_output_replace_arg.push_back(dir_output_match_rgx);
         aug_output_replace_arg.push_back(dir_output_replace_rgx);
-        B->EndpointControl(DIR_MERGE_INDEX, aug_merge_index);
+        B->ControlEndpoint(DIR_MERGE_INDEX, aug_merge_index);
 
         if (is_dir_output_match_replace_rgx)
-            B->EndpointControl(DIR_OUPUT_REPLACE_RGX, aug_output_replace_arg);
+            B->ControlEndpoint(DIR_OUPUT_REPLACE_RGX, aug_output_replace_arg);
     }
 
     //Stride on execution
@@ -452,9 +504,9 @@ int main(int argc, char *argv[])
     A->SetVectorDirection(AU_FLAT_OUTPUT_ROW);
 
     //Run
-    A->Transform(udf_xcorr, B);
-
-    A->ReportTime();
+    //A->Transform<std::vector<double>>(udf_xcorr, B);
+    TRANSFORM(A, udf_xcorr, B, t, std::vector<double>);
+    A->ReportCost();
     //Clear
     delete A;
     delete B;
@@ -491,6 +543,8 @@ int read_config_file(std::string file_name, int mpi_rank)
 
     input_file_type = reader.Get("parameter", "input_file_type", "EP_TDMS");
 
+    input_data_type = reader.GetInteger("parameter", "input_data_type", 0);
+
     std::string temp_str = reader.Get("parameter", "is_input_single_file", "false");
     is_input_single_file = (temp_str == "false") ? false : true;
 
@@ -503,8 +557,8 @@ int read_config_file(std::string file_name, int mpi_rank)
         input_search_rgx = reader.Get("parameter", "input_search_rgx", "^(.*)[1234]\\.tdms$");
     }
 
-    chs_per_file = reader.GetInteger("parameter", "chs_per_file", 11648);
-    lts_per_file = reader.GetInteger("parameter", "lts_per_file", 30000);
+    //chs_per_file = reader.GetInteger("parameter", "chs_per_file", 11648);
+    //lts_per_file = reader.GetInteger("parameter", "lts_per_file", 30000);
 
     temp_str = reader.Get("parameter", "is_channel_range", "false");
 
@@ -514,6 +568,9 @@ int read_config_file(std::string file_name, int mpi_rank)
         channel_range_start = reader.GetInteger("parameter", "channel_range_start", 0);
         channel_range_end = reader.GetInteger("parameter", "channel_range_end", 1);
     }
+
+    temp_str = reader.Get("parameter", "is_column_major", "true");
+    is_column_major = (temp_str == "false" || temp_str == "0") ? false : true;
 
     n_files_time_decimate = reader.GetInteger("parameter", "n_files_time_decimate", 1);
 
@@ -586,6 +643,8 @@ int read_config_file(std::string file_name, int mpi_rank)
         std::cout << termcolor::blue << "\n\n Input parameters: ";
         std::cout << termcolor::magenta << "\n        input_dir_file = " << termcolor::green << input_dir_file;
         std::cout << termcolor::magenta << "\n        input_file_type = " << termcolor::green << input_file_type;
+        std::cout << termcolor::magenta << "\n        input_data_type = " << termcolor::green << input_data_type;
+        std::cout << termcolor::magenta << "\n        is_column_major = " << termcolor::green << is_column_major;
 
         if (is_input_search_rgx)
         {

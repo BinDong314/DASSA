@@ -218,7 +218,7 @@ namespace DasLib
 
     typedef std::vector<std::vector<double>> DoubleVector2D;
 
-    template <class T1, class T2>
+    template <class T1, class T2 = double>
     inline std::vector<std::vector<T2>> Vector1D2D(size_t cols, const std::vector<T1> &data1d)
     {
         std::vector<std::vector<T2>> result;
@@ -732,6 +732,27 @@ inline std::vector<std::vector<T>> Vector1D2D(size_t cols, std::vector<T> &data1
     {
         v.clear();
         std::vector<T>().swap(v);
+    }
+
+    void transpose_data(int16_t *src, int16_t *dst, const int N, const int M)
+    {
+        for (int n = 0; n < N * M; n++)
+        {
+            int i = n / N;
+            int j = n % N;
+            dst[n] = src[M * j + i];
+        }
+    }
+
+    template <class T>
+    void transpose(T *src, T *dst, const int N, const int M)
+    {
+        for (int n = 0; n < N * M; n++)
+        {
+            int i = n / N;
+            int j = n % N;
+            dst[n] = src[M * j + i];
+        }
     }
 
 } // namespace DasLib
