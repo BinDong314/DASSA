@@ -6,8 +6,8 @@
 #EIGEN3_DIR=/Users/dbin/work/test-fasttensor/fasttensor/examples/dassa/Tools3rd
 
 #Lawrencium
-AU_DIR=/clusterfs/bear/BinDong_DAS_Data/fasttensor/build
-DASH_DIR=/clusterfs/bear/BinDong_DAS_Data/fasttensor/dash/build/install
+AU_DIR=/bear0-data/BinDong_DAS_Data/fasttensor/build
+DASH_DIR=/bear0-data/BinDong_DAS_Data/fasttensor/dash/build/install
 EIGEN3_DIR=${PWD}/Tools3rd/
 
 
