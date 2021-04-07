@@ -44,3 +44,7 @@ decimate:decimate.cpp
 
 clean:
 	rm stack tdms2h5 xcorrelation decimate
+
+
+test:
+	./test.sh
