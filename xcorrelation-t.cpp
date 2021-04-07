@@ -103,7 +103,7 @@ unsigned long long MASTER_INDEX = 0;
 bool is_test_flag = false;
 std::vector<int> output_chunk_size(2);
 
-bool is_column_major = true;
+bool is_column_major = false;
 
 /**
  * @brief input data type

@@ -36,8 +36,8 @@ tdms2h5:tdms2h5.cpp
 xcorrelation-t:xcorrelation-t.cpp
 	$(CCC) -o xcorrelation-t xcorrelation-t.cpp  $(ALL_FLAGS) 
 
-xcorrelation:xcorrelation.cpp
-	$(CCC) -o xcorrelation xcorrelation.cpp  $(ALL_FLAGS) 
+xcorrelation:xcorrelation-t.cpp
+	$(CCC) -o xcorrelation xcorrelation-t.cpp  $(ALL_FLAGS) 
 
 decimate:decimate.cpp
 	$(CCC) -o decimate decimate.cpp  $(ALL_FLAGS)
