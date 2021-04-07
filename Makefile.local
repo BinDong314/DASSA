@@ -25,7 +25,7 @@ EIGEN3_FLAG=-I$(EIGEN3_DIR)
 ALL_FLAGS= $(OTHER_FLAGS) $(AU_FLAG) $(HDF5_FLAG) $(FFTW_FLAG)  $(DASH_FLAG) $(EIGEN3_FLAG) 
 
 .PHONY:all
-all:stack tdms2h5 xcorrelation decimate similarity xcorrelation-t create_test_data
+all:stack tdms2h5 xcorrelation decimate similarity  create_test_data
 
 stack:stack.cpp
 	$(CCC) -o stack stack.cpp $(ALL_FLAGS)
@@ -33,11 +33,8 @@ stack:stack.cpp
 tdms2h5:tdms2h5.cpp
 	$(CCC) -o  tdms2h5 tdms2h5.cpp $(ALL_FLAGS) 
 
-xcorrelation-t:xcorrelation-t.cpp
-	$(CCC) -o xcorrelation-t xcorrelation-t.cpp  $(ALL_FLAGS) 
-
-xcorrelation:xcorrelation-t.cpp
-	$(CCC) -o xcorrelation xcorrelation-t.cpp  $(ALL_FLAGS) 
+xcorrelation:xcorrelation.cpp
+	$(CCC) -o xcorrelation xcorrelation.cpp  $(ALL_FLAGS) 
 
 decimate:decimate.cpp
 	$(CCC) -o decimate decimate.cpp  $(ALL_FLAGS)
