@@ -52,6 +52,5 @@ clean:
 	rm stack tdms2h5 xcorrelation decimate similarity create_test_data
 
 test:
-	#./create_test_data -f  ./test-data/test-das.h5  -d /dat -n 2 -s 12,16 -t 2 -r -m
 	./test.sh
 	

@@ -1,6 +1,7 @@
 #!/bin/bash
 
 echo "Clear test data ..."
+##	#./create_test_data -f  ./test-data/test-das.h5  -d /dat -n 2 -s 12,16 -t 2 -r -m
 ##Clean data
 rm ./test-data/dir-output/*
 ###Create test data ends
