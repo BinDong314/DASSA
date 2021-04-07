@@ -320,10 +320,24 @@ inline Stencil<std::vector<double>> udf_xcorr(const Stencil<TT> &iStencil)
     std::vector<double> ts_temp = Convert2DVTo1DV(ts2d_ma);
     Stencil<std::vector<double>> oStencil;
     std::vector<size_t> vector_shape(2);
-    vector_shape[0] = ts2d_ma.size();
-    vector_shape[1] = ts2d_ma[0].size();
+
+    if (is_column_major)
+    {
+        std::vector<double> ts_temp_column;
+        ts_temp_column.resize(ts_temp.size());
+        transpose(ts_temp.data(), ts_temp_column.data(), ts2d_ma.size(), ts2d_ma[0].size());
+        ts_temp = ts_temp_column;
+        vector_shape[1] = ts2d_ma.size();
+        vector_shape[0] = ts2d_ma[0].size();
+    }
+    else
+    {
+        vector_shape[0] = ts2d_ma.size();
+        vector_shape[1] = ts2d_ma[0].size();
+    }
+
     //PrintVector("vector_shape: ", vector_shape);
-    //std::cout << "vector_shape[0] = " << vector_shape[0] << ",vector_shape[1] = " << vector_shape[1] << "\n";
+    std::cout << "vector_shape[0] = " << vector_shape[0] << ",vector_shape[1] = " << vector_shape[1] << "\n";
     DasLib::clear_vector(ts2d_ma);
     oStencil.SetShape(vector_shape);
     oStencil = ts_temp;
@@ -337,10 +351,11 @@ inline Stencil<std::vector<double>> udf_xcorr(const Stencil<TT> &iStencil)
         iStencil.GetTagMap(tag_map);
         for (std::map<std::string, std::string>::iterator it = tag_map.begin(); it != tag_map.end(); ++it)
         {
-            std::cout << " key : " << it->first << ", value:" << it->second << " \n";
+            //std::cout << " key : " << it->first << ", value:" << it->second << " \n";
             if (it->first == "SamplingFrequency[Hz]")
             {
-                it->second = "125";
+                int temp_sf = 1 / DT_NEW;
+                it->second = std::to_string(temp_sf); // "125";
             }
         }
         oStencil.SetTagMap(tag_map);
@@ -464,7 +479,15 @@ int main(int argc, char *argv[])
     std::cout << "chunk_size = " << chunk_size[0] << " , " << chunk_size[1] << " \n";
 
     std::vector<std::string> aug_merge_index;
-    aug_merge_index.push_back("1");
+    if (!is_column_major)
+    {
+        aug_merge_index.push_back("1");
+    }
+    else
+    {
+        aug_merge_index.push_back("0");
+    }
+
     A->ControlEndpoint(DIR_MERGE_INDEX, aug_merge_index);
 
     if (is_input_search_rgx)
@@ -507,6 +530,7 @@ int main(int argc, char *argv[])
     //A->Transform<std::vector<double>>(udf_xcorr, B);
     TRANSFORM(A, udf_xcorr, B, t, std::vector<double>);
     A->ReportCost();
+
     //Clear
     delete A;
     delete B;
@@ -543,7 +567,24 @@ int read_config_file(std::string file_name, int mpi_rank)
 
     input_file_type = reader.Get("parameter", "input_file_type", "EP_TDMS");
 
-    input_data_type = reader.GetInteger("parameter", "input_data_type", 0);
+    std::string temp_str_str;
+    temp_str_str = reader.Get("parameter", "input_data_type", "short");
+    if (temp_str_str == "short" || temp_str_str == "0")
+    {
+        input_data_type = 0;
+    }
+    else if (temp_str_str == "double" || temp_str_str == "1")
+    {
+        input_data_type = 1;
+    }
+    else if (temp_str_str == "float" || temp_str_str == "2")
+    {
+        input_data_type = 2;
+    }
+    else
+    {
+        AU_EXIT("Don't understand the [input_data_type] in config file. It can take short/double/float or 0/1/2\n");
+    }
 
     std::string temp_str = reader.Get("parameter", "is_input_single_file", "false");
     is_input_single_file = (temp_str == "false") ? false : true;
@@ -643,7 +684,19 @@ int read_config_file(std::string file_name, int mpi_rank)
         std::cout << termcolor::blue << "\n\n Input parameters: ";
         std::cout << termcolor::magenta << "\n        input_dir_file = " << termcolor::green << input_dir_file;
         std::cout << termcolor::magenta << "\n        input_file_type = " << termcolor::green << input_file_type;
-        std::cout << termcolor::magenta << "\n        input_data_type = " << termcolor::green << input_data_type;
+        if (input_data_type == 0)
+        {
+            std::cout << termcolor::magenta << "\n        input_data_type = " << termcolor::green << "short";
+        }
+        else if (input_data_type == 1)
+        {
+            std::cout << termcolor::magenta << "\n        input_data_type = " << termcolor::green << "double";
+        }
+        else if (input_data_type == 2)
+        {
+            std::cout << termcolor::magenta << "\n        input_data_type = " << termcolor::green << "float";
+        }
+
         std::cout << termcolor::magenta << "\n        is_column_major = " << termcolor::green << is_column_major;
 
         if (is_input_search_rgx)
