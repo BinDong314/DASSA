@@ -27,12 +27,13 @@ using namespace AU;
 using namespace DasLib;
 
 int read_config_file(std::string file_name, int mpi_rank);
-std::string config_file = "./decimate.config";
+std::string config_file = "./xcorrelation.config";
 
 bool is_input_single_file = false;
 std::string input_dir_file = "./test-data/dir";
 std::string input_h5_dataset = "/dat";
 std::string input_file_type = "EP_HDF5";
+
 bool is_input_search_rgx = false;
 std::string input_search_rgx = "^(.*)[1234]\\.tdms$";
 
