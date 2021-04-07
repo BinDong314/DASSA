@@ -34,9 +34,9 @@ tdms2h5:tdms2h5.c
 	module unload gcc ; module load gcc/7.4.0 hdf5/1.10.5-gcc-p fftw; \
 	$(CCC) -o  tdms2h5 tdms2h5.c $(ALL_FLAGS) 
 
-xcorrelation:xcorrelation.cpp
+xcorrelation:xcorrelation-t.cpp
 	module unload gcc ; module load gcc/7.4.0 hdf5/1.10.5-gcc-p fftw boost; \
-	$(CCC) -o xcorrelation xcorrelation.cpp  $(ALL_FLAGS) 
+	$(CCC) -o xcorrelation xcorrelation-t.cpp  $(ALL_FLAGS) 
 
 decimate:decimate.cpp
 	module unload gcc ; module load gcc/7.4.0 hdf5/1.10.5-gcc-p fftw boost; \
