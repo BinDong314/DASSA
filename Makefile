@@ -24,24 +24,29 @@ EIGEN3_FLAG=-I$(EIGEN3_DIR)
 ALL_FLAGS= $(OTHER_FLAGS) $(AU_FLAG) $(HDF5_FLAG) $(FFTW_FLAG)  $(DASH_FLAG) $(EIGEN3_FLAG) 
 
 .PHONY:all
-all:stack tdms2h5 xcorrelation decimate
+all:stack tdms2h5 xcorrelation decimate similarity  create_test_data
 
 stack:stack.cpp
-	module load gcc/7.4.0 hdf5/1.10.5-gcc-p fftw boost; \
 	$(CCC) -o stack stack.cpp $(ALL_FLAGS)
 
-tdms2h5:tdms2h5.c
-	module load gcc/7.4.0 hdf5/1.10.5-gcc-p fftw; \
-	$(CCC) -o  tdms2h5 tdms2h5.c $(ALL_FLAGS) 
+tdms2h5:tdms2h5.cpp
+	$(CCC) -o  tdms2h5 tdms2h5.cpp $(ALL_FLAGS) 
 
 xcorrelation:xcorrelation.cpp
-	module load gcc/7.4.0 hdf5/1.10.5-gcc-p fftw boost; \
 	$(CCC) -o xcorrelation xcorrelation.cpp  $(ALL_FLAGS) 
 
 decimate:decimate.cpp
-	module load gcc/7.4.0 hdf5/1.10.5-gcc-p fftw boost; \
 	$(CCC) -o decimate decimate.cpp  $(ALL_FLAGS)
 
+similarity:similarity.cpp
+	$(CCC) -o similarity similarity.cpp  $(ALL_FLAGS)
+
+create_test_data: create_test_data.cpp
+	$(CCC) -o create_test_data create_test_data.cpp $(ALL_FLAGS)
+
 clean:
-	rm stack tdms2h5 xcorrelation decimate
+	rm stack tdms2h5 xcorrelation decimate similarity create_test_data
+
+test:
+	./test.sh
 

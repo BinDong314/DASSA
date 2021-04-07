@@ -39,21 +39,21 @@ std::string input_search_rgx = "^(.*)[1234]\\.tdms$";
 
 int chs_per_file = 11648;
 int lts_per_file = 30000;
-int n_files_time_decimate = 1;
+int n_files_to_concatenate = 1;
 
 bool is_output_single_file = false;
 std::string output_type = "EP_HDF5";
 std::string output_file_dir = "./test-data/dir-output/";
 std::string output_dataset = "/dat";
 
-bool is_dir_output_match_replace_rgx = true;
+bool is_dir_output_match_replace_rgx = false;
 
 std::string dir_output_match_rgx = "^(.*)\\.h5$";
 
 std::string dir_output_replace_rgx = "$1-xcorr.h5";
 
 bool is_space_decimate = false;
-int space_decimate_rows = 32;
+int space_decimate_chs = 32;
 /**
  * 
  * Name convertion for the space_decimate_operation
@@ -103,7 +103,7 @@ unsigned long long MASTER_INDEX = 0;
 bool is_test_flag = false;
 std::vector<int> output_chunk_size(2);
 
-bool is_column_major = false;
+bool is_column_major = true;
 
 /**
  * @brief input data type
@@ -115,7 +115,7 @@ int input_data_type = 0;
 
 void init_xcorr()
 {
-    int nPoint = ceil(lts_per_file * n_files_time_decimate / (DT_NEW / DT));
+    int nPoint = ceil(lts_per_file * n_files_to_concatenate / (DT_NEW / DT));
     cut_frequency_low = (0.5 / DT_NEW) / (0.5 / DT);
     ButterLow(butter_order, cut_frequency_low, BUTTER_A, BUTTER_B);
 
@@ -177,11 +177,11 @@ inline Stencil<std::vector<double>> udf_xcorr(const Stencil<TT> &iStencil)
     {
         if (is_space_decimate)
         {
-            many_files_split_n = space_decimate_rows;
+            many_files_split_n = space_decimate_chs;
         }
         else
         {
-            many_files_split_n = chs_per_file_udf / n_files_time_decimate;
+            many_files_split_n = chs_per_file_udf / n_files_to_concatenate;
         }
 
         if (!ft_rank)
@@ -229,12 +229,12 @@ inline Stencil<std::vector<double>> udf_xcorr(const Stencil<TT> &iStencil)
     if (is_space_decimate)
     {
         //decimate in space-domain
-        int ma_batches = (chs_per_file_udf % space_decimate_rows) ? (chs_per_file_udf / space_decimate_rows + 1) : (chs_per_file_udf / space_decimate_rows);
+        int ma_batches = (chs_per_file_udf % space_decimate_chs) ? (chs_per_file_udf / space_decimate_chs + 1) : (chs_per_file_udf / space_decimate_chs);
         int start_row, end_row;
         for (int i = 0; i < ma_batches; i++)
         {
-            start_row = i * space_decimate_rows;
-            end_row = (((i + 1) * space_decimate_rows - 1) < chs_per_file_udf) ? ((i + 1) * space_decimate_rows - 1) : chs_per_file_udf - 1;
+            start_row = i * space_decimate_chs;
+            end_row = (((i + 1) * space_decimate_chs - 1) < chs_per_file_udf) ? ((i + 1) * space_decimate_chs - 1) : chs_per_file_udf - 1;
             //std::cout << "ma_batches =" << ma_batches << ", start_row = " << start_row << ", end_row =  " << end_row << "\n";
             ts2d_ma.push_back(spacedecimate(ts2d, start_row, end_row, space_decimate_operation));
         }
@@ -463,13 +463,13 @@ int main(int argc, char *argv[])
 
     if (!is_column_major)
     {
-        chunk_size[1] = chunk_size[1] * n_files_time_decimate;
+        chunk_size[1] = chunk_size[1] * n_files_to_concatenate;
         chs_per_file = chunk_size[0];
         lts_per_file = chunk_size[1];
     }
     else
     {
-        chunk_size[0] = chunk_size[0] * n_files_time_decimate;
+        chunk_size[0] = chunk_size[0] * n_files_to_concatenate;
         chs_per_file = chunk_size[1];
         lts_per_file = chunk_size[0];
     }
@@ -614,7 +614,7 @@ int read_config_file(std::string file_name, int mpi_rank)
     temp_str = reader.Get("parameter", "is_column_major", "true");
     is_column_major = (temp_str == "false" || temp_str == "0") ? false : true;
 
-    n_files_time_decimate = reader.GetInteger("parameter", "n_files_time_decimate", 1);
+    n_files_to_concatenate = reader.GetInteger("parameter", "n_files_to_concatenate", 1);
 
     temp_str = reader.Get("parameter", "is_output_single_file", "false");
 
@@ -644,7 +644,7 @@ int read_config_file(std::string file_name, int mpi_rank)
     if (is_space_decimate)
     {
 
-        space_decimate_rows = reader.GetInteger("parameter", "space_decimate_rows", 32);
+        space_decimate_chs = reader.GetInteger("parameter", "space_decimate_chs", 32);
 
         space_decimate_operation = reader.Get("parameter", "space_decimate_operation", "ave");
     }
@@ -707,11 +707,11 @@ int read_config_file(std::string file_name, int mpi_rank)
         std::cout << termcolor::blue << "\n\n Runtime parameters: ";
         // std::cout << termcolor::magenta << "\n\n        lts_per_file = " << termcolor::green << lts_per_file;
         // std::cout << termcolor::magenta << "\n        chs_per_file = " << termcolor::green << chs_per_file;
-        std::cout << termcolor::magenta << "\n        n_files_time_decimate = " << termcolor::green << n_files_time_decimate;
+        std::cout << termcolor::magenta << "\n        n_files_to_concatenate = " << termcolor::green << n_files_to_concatenate;
 
         std::cout << termcolor::magenta << "\n        is_space_decimate = " << termcolor::green << is_space_decimate;
 
-        std::cout << termcolor::magenta << "\n        space_decimate_rows = " << termcolor::green << space_decimate_rows;
+        std::cout << termcolor::magenta << "\n        space_decimate_chs = " << termcolor::green << space_decimate_chs;
 
         std::cout << termcolor::magenta << "\n        space_decimate_operation = " << termcolor::green << space_decimate_operation;
 
