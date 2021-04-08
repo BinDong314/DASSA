@@ -127,8 +127,8 @@ void init_xcorr()
     fNyquist = 0.5 / DT_NEW;
     INTERP_ZF[5] = fNyquist;
 
-    if (!ft_rank)
-        std::cout << "After decimate, nPoint = " << nPoint << ", lts_per_file =" << lts_per_file << ", DT_NEW = " << DT_NEW << ", DT =  " << DT << " , nfft = " << nfft << "\n";
+    //if (!ft_rank)
+    //    std::cout << "After decimate, nPoint = " << nPoint << ", lts_per_file =" << lts_per_file << ", DT_NEW = " << DT_NEW << ", DT =  " << DT << " , nfft = " << nfft << "\n";
 
     df = 2.0 * fNyquist / (double)nfft;
 
@@ -207,8 +207,8 @@ inline Stencil<std::vector<double>> udf_xcorr(const Stencil<TT> &iStencil)
 
     std::vector<std::vector<double>> ts2d_ma;
 
-    std::cout << "ts2d.size() = " << ts2d.size() << ",ts2d[0].size() = " << ts2d[0].size() << ", lts_per_file_udf =" << lts_per_file_udf << ", ts_short.size() = " << ts_short.size() << "\n";
-    std::cout << "Got data ! at rank " << ft_rank << " \n";
+    //std::cout << "ts2d.size() = " << ts2d.size() << ",ts2d[0].size() = " << ts2d[0].size() << ", lts_per_file_udf =" << lts_per_file_udf << ", ts_short.size() = " << ts_short.size() << "\n";
+    //std::cout << "Got data ! at rank " << ft_rank << " \n";
 
     std::vector<double> ts_temp2;
     //Resample in time-domain
@@ -223,8 +223,8 @@ inline Stencil<std::vector<double>> udf_xcorr(const Stencil<TT> &iStencil)
     //PrintVV("ts2d :", ts2d);
 
     DasLib::clear_vector(ts_temp2);
-    if (!ft_rank)
-        std::cout << "Finish time-domain decimate ! \n";
+    //if (!ft_rank)
+    //    std::cout << "Finish time-domain decimate ! \n";
 
     if (is_space_decimate)
     {
@@ -394,8 +394,8 @@ int main(int argc, char *argv[])
     MPI_Comm_size(MPI_COMM_WORLD, &numprocs);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-    MPI_Get_processor_name(processor_name, &namelen);
-    printf("Process %d on %s out of %d\n", rank, processor_name, numprocs);
+    //MPI_Get_processor_name(processor_name, &namelen);
+    //printf("Process %d on %s out of %d\n", rank, processor_name, numprocs);
 
     if (has_config_file_flag)
         read_config_file(config_file, ft_rank);
@@ -405,7 +405,7 @@ int main(int argc, char *argv[])
     std::vector<int> chunk_size(2);
     std::vector<int> overlap_size = {0, 0};
 
-    std::cout << "EP_DIR:" + input_file_type + ":" + input_dir_file << ":" << input_h5_dataset << "\n";
+    //std::cout << "EP_DIR:" + input_file_type + ":" + input_dir_file << ":" << input_h5_dataset << "\n";
     std::string A_endpoint_id;
 
     if (!is_input_single_file)
@@ -459,7 +459,7 @@ int main(int argc, char *argv[])
         chunk_size[1] = array_size[1];
     }
 
-    std::cout << "A_endpoint_id = " << A_endpoint_id << "\n";
+    //std::cout << "A_endpoint_id = " << A_endpoint_id << "\n";
 
     if (!is_column_major)
     {
@@ -477,7 +477,7 @@ int main(int argc, char *argv[])
     A->SetChunkSize(chunk_size);
     A->SetOverlapSize(overlap_size);
 
-    std::cout << "chunk_size = " << chunk_size[0] << " , " << chunk_size[1] << " \n";
+    //std::cout << "chunk_size = " << chunk_size[0] << " , " << chunk_size[1] << " \n";
 
     std::vector<std::string> aug_merge_index;
     if (!is_column_major)
@@ -546,8 +546,7 @@ void printf_help(char *cmd)
     char *msg = (char *)"Usage: %s [OPTION]\n\
       	  -h help (--help)\n\
           -c config file for parameters (has high priority than commands if existing) \n\
-          -t do a quick test with a short input\n\
-          Example: mpirun -n 1 %s -i  -o fft-test.arrayudf.h5  -g / -t /DataCT -x /Xcorr\n";
+          Example: mpirun -n 1 %s -c %s.config \n";
 
     fprintf(stdout, msg, cmd, cmd);
 }
@@ -704,10 +703,11 @@ int read_config_file(std::string file_name, int mpi_rank)
         {
             std::cout << termcolor::magenta << "\n        input_search_rgx = " << termcolor::green << input_search_rgx;
         }
+        std::cout << termcolor::magenta << "\n        n_files_to_concatenate = " << termcolor::green << n_files_to_concatenate;
+
         std::cout << termcolor::blue << "\n\n Runtime parameters: ";
         // std::cout << termcolor::magenta << "\n\n        lts_per_file = " << termcolor::green << lts_per_file;
         // std::cout << termcolor::magenta << "\n        chs_per_file = " << termcolor::green << chs_per_file;
-        std::cout << termcolor::magenta << "\n        n_files_to_concatenate = " << termcolor::green << n_files_to_concatenate;
 
         std::cout << termcolor::magenta << "\n        is_space_decimate = " << termcolor::green << is_space_decimate;
 
