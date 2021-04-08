@@ -22,7 +22,7 @@ function run_command(){
     fi
 
     if [ "$#" -gt 1 ]; then
-        h5diff ./test-data/dir-output/$2 ./test-data-good/$4 > /dev/null 2>&1
+        h5diff  -v ./test-data/dir-output/$2 ./test-data-good/$4 > /dev/null 2>&1
         if [ $? -eq 0 ]
         then
             echo "Checked output of $2 [PASSED]"
@@ -41,5 +41,5 @@ function run_command(){
 
 
 ## Run the test code
-run_command ./xcorrelation test-das-1-xcorr.h5  test-das-2-xcorr.h5 test-das-xcorr.h5
+run_command ./xcorrelation test-das-1.h5  test-das-2.h5 test-das-xcorr.h5
 
