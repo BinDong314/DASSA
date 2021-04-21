@@ -461,17 +461,17 @@ int main(int argc, char *argv[])
 
     //std::cout << "A_endpoint_id = " << A_endpoint_id << "\n";
 
-    if (!is_column_major)
-    {
-        chunk_size[1] = chunk_size[1] * n_files_to_concatenate;
-        chs_per_file = chunk_size[0];
-        lts_per_file = chunk_size[1];
-    }
-    else
+    if (is_column_major)
     {
         chunk_size[0] = chunk_size[0] * n_files_to_concatenate;
         chs_per_file = chunk_size[1];
         lts_per_file = chunk_size[0];
+    }
+    else
+    {
+        chunk_size[1] = chunk_size[1] * n_files_to_concatenate;
+        chs_per_file = chunk_size[0];
+        lts_per_file = chunk_size[1];
     }
 
     A->SetChunkSize(chunk_size);
@@ -480,13 +480,13 @@ int main(int argc, char *argv[])
     //std::cout << "chunk_size = " << chunk_size[0] << " , " << chunk_size[1] << " \n";
 
     std::vector<std::string> aug_merge_index;
-    if (!is_column_major)
+    if (is_column_major)
     {
-        aug_merge_index.push_back("1");
+        aug_merge_index.push_back("0");
     }
     else
     {
-        aug_merge_index.push_back("0");
+        aug_merge_index.push_back("1");
     }
 
     A->ControlEndpoint(DIR_MERGE_INDEX, aug_merge_index);
@@ -697,7 +697,14 @@ int read_config_file(std::string file_name, int mpi_rank)
             std::cout << termcolor::magenta << "\n        input_data_type = " << termcolor::green << "float";
         }
 
-        std::cout << termcolor::magenta << "\n        is_column_major = " << termcolor::green << is_column_major;
+        if (is_column_major == true)
+        {
+            std::cout << termcolor::magenta << "\n        is_column_major = " << termcolor::green << "true";
+        }
+        else
+        {
+            std::cout << termcolor::magenta << "\n        is_column_major = " << termcolor::green << "false";
+        }
 
         if (is_input_search_rgx)
         {
