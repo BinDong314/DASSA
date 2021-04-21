@@ -19,14 +19,23 @@
 
 % - Modifications
 % V. Rodríguez Tribaldos -- add some minor comments, paths to data files.
+% 
+% Add from_mem_flag  Apr 5  Bin Dong
+%     
+
 
 
 %%
 % Convert dsi_file to HDF5 file
 % h5_type_str: only allow 'single', 'int16', 'int32' 'float', and 'double'
 
-function dsi2h5(dsi_file, h5_file, h5_dataset, h5_type_str, transpose_flag)
-dsi_data_raw = importdata(dsi_file);
+function dsi2h5(dsi_file, h5_file, h5_dataset, h5_type_str, transpose_flag, from_mem_flag)
+
+if(from_mem_flag == 0)
+    dsi_data_raw = importdata(dsi_file);
+else
+    dsi_data_raw =   dsi_file;  
+end
 
 fcpl = H5P.create('H5P_FILE_CREATE');
 fapl = H5P.create('H5P_FILE_ACCESS');
