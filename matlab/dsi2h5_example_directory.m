@@ -10,10 +10,6 @@ h5_dset_name='dat'
 h5_data_type='double' % int32 int16, float/single, double
 h5_file_append='.h5'  % h5_file_name is not needed, the append '.h5' to file name
 
-transpose_flag=1 % from col-major (matlab) to row-major (hdf5)
-
-from_mem_flag = 0 %
-
 
 %
 % Some code to work
@@ -39,7 +35,7 @@ for k = 1 : nStack
     dsi_file = char(filelist_cell{k});
     dsi_fullpath = fullfile(dsi_dir, dsi_file);
     h5_fullpath=fullfile(h5_dir, dsi_file) + h5_file_append;
-    dsi2h5(dsi_fullpath, h5_fullpath, h5_dset_name, h5_data_type, transpose_flag, from_mem_flag)
+    dsi2h5(dsi_fullpath, h5_fullpath, h5_dset_name, h5_data_type)
 end    
 
 
