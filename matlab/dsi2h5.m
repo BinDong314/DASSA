@@ -42,10 +42,14 @@
 %  "transpose_flag=0" it stores the data in dsi as it is in dsi_file.  
 %  
 %  About metadata:
-%     The dsi2h5 will attach two metadata to record the semantic of the
+%     The dsi2h5 will attach below metadata to record the semantic of the
 %     data within the HDF5.
+%     - SamplingFrequency[Hz]
+%     - MeasureLength[m] and SpatialResolution[m], 
 %     - nTrace is the number of channel, size(dsi_file.dat)[1] 
 %     - nPoint is the number of points in time series, , size(dsi_file.dat)[1] 
+%     - fh (as string)
+%     - dh (as dataset)
 function dsi2h5(dsi_file, h5_file, h5_dataset, h5_type, transpose_flag)
     if nargin < 4
       error('At least four parameters are needed to call dsi2h5, dsi_file, h5_file, h5_dataset and h5_type.');

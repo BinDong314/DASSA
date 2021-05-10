@@ -1,0 +1,48 @@
+Author: Bin Dong May 2021
+
+This directory contains the code to write DSI objects from a file or memory to HDF5 file.
+
+1, dsi2h5.m is the major function to convert a DSI file to a HDF5 file. 
+
+   The dsi2h5 has the interface defination  as:
+
+   function dsi2h5(dsi_file, h5_file, h5_dataset, h5_type, transpose_flag)
+
+    % Convert dsi_file to HDF5 file
+    %  -- The "dsi_file" is the file name to a DSI file, which has a cell namely
+    %    'dat' for the data.
+    %  -- The data in "dsi_file.dat" is stored as "double"
+    %  -- The "h5_type" specifies the type to store the data in HDF5.
+    %     Thus, there is a conversion from "double" to the "h5_type".
+    %     The "h5_type" accepts 'single', 'int16', 'int32' 'float', and 'double'
+    %  -- The "h5_file" and "h5_dataset" contains the HDF5 file name and dataset
+    %     name for HDF5 file.
+    %  
+    %  ! Above four parameter are necessay to call dsi2h5
+    %
+    %  The "transpose_flag" is optional parameter, by default it is set to be 0
+    %  "transpose_flag=0" it stores the data in dsi as it is in dsi_file.  
+    %  
+    %  About metadata:
+    %     The dsi2h5 will attach below metadata to record the semantic of the
+    %     data within the HDF5.
+    %     - SamplingFrequency[Hz]
+    %     - MeasureLength[m] and SpatialResolution[m], 
+    %     - nTrace is the number of channel, size(dsi_file.dat)[1] 
+    %     - nPoint is the number of points in time series, , size(dsi_file.dat)[1] 
+    %     - fh (as string)
+    %     - dh (as dataset)
+
+2, dsi2h5_from_mem.m saves the DSI vaiable to HDF5 directly from Matlab variable.
+   It has same semantic as dsi2h5.com above. 
+
+   function dsi2h5_from_mem(dsi_variable, h5_file, h5_dataset, h5_type, transpose_flag)
+
+3, dsi2h5_example_single.m and dsi2h5_example_directory.m are example code to use dsi2h5.m
+   to convert a single DSI file and a multiple DSI files, rexpectively. 
+
+4, dsi2h5_read.m is the code to read a DSI object from a HDF5 file back to a Matlab variable. 
+   The DSI object should be saved with the dsi2h5.m 
+
+5, dsi2h5_write.m is the support function for dsi2h5.m and dsi2h5_from_mem.m. 
+    
