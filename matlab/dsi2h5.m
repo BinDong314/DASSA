@@ -27,82 +27,36 @@
 
 %%
 % Convert dsi_file to HDF5 file
-% h5_type_str: only allow 'single', 'int16', 'int32' 'float', and 'double'
-
-function dsi2h5(dsi_file, h5_file, h5_dataset, h5_type_str, transpose_flag, from_mem_flag)
-
-if(from_mem_flag == 0)
-    dsi_data_raw = importdata(dsi_file);
-else
-    dsi_data_raw =   dsi_file;  
+%  -- The "dsi_file" is the file name to a DSI file, which has a cell namely
+%    'dat' for the data.
+%  -- The data in "dsi_file.dat" is stored as "double"
+%  -- The "h5_type" specifies the type to store the data in HDF5.
+%     Thus, there is a conversion from "double" to the "h5_type".
+%     The "h5_type" accepts 'single', 'int16', 'int32' 'float', and 'double'
+%  -- The "h5_file" and "h5_dataset" contains the HDF5 file name and dataset
+%     name for HDF5 file.
+%  
+%  ! Above four parameter are necessay to call dsi2h5
+%
+%  The "transpose_flag" is optional parameter, by default it is set to be 0
+%  "transpose_flag=0" it stores the data in dsi as it is in dsi_file.  
+%  
+%  About metadata:
+%     The dsi2h5 will attach two metadata to record the semantic of the
+%     data within the HDF5.
+%     - nTrace is the number of channel, size(dsi_file.dat)[1] 
+%     - nPoint is the number of points in time series, , size(dsi_file.dat)[1] 
+function dsi2h5(dsi_file, h5_file, h5_dataset, h5_type, transpose_flag)
+    if nargin < 4
+      error('At least four parameters are needed to call dsi2h5, dsi_file, h5_file, h5_dataset and h5_type.');
+    end
+    
+    if nargin < 5
+        transpose_flag =  0;
+    end
+    dsi2h5_write(dsi_file, h5_file, h5_dataset, h5_type, transpose_flag, 0);
 end
 
-fcpl = H5P.create('H5P_FILE_CREATE');
-fapl = H5P.create('H5P_FILE_ACCESS');
-fid  = H5F.create(h5_file, 'H5F_ACC_TRUNC', fcpl, fapl);
-
-%Get the data and its size, type, etc.
-%Force to use the  single/float/double/int16 type 
-if(strcmp(h5_type_str, 'single'))
-    dsi_data =single(cell2mat(dsi_data_raw.dat));
-elseif(strcmp(h5_type_str, 'float'))
-    dsi_data =float(cell2mat(dsi_data_raw.dat));
-elseif(strcmp(h5_type_str, 'double'))
-    dsi_data = double(cell2mat(dsi_data_raw.dat));
-elseif(strcmp(h5_type_str, 'int16'))
-    dsi_data =int16(cell2mat(dsi_data_raw.dat));
-elseif(strcmp(h5_type_str, 'int32'))
-    dsi_data =int32(cell2mat(dsi_data_raw.dat));
-else
-    disp('Not known h5_type_str, I only understand single, int16, int32, float, double.')
-end
-
-if(transpose_flag == 1)
-    dsi_data = transpose(dsi_data);
-end
-
-h5_dims = size(dsi_data);
- 
-%Create the space size on disk /w size of float_data_set
-space_id = H5S.create_simple(2, h5_dims, h5_dims);
-
-
-%Create the actual dataset to store the 2D data
-%Get the data and its size, type, etc.
-if(strcmp(h5_type_str, 'single'))
-    type_id = H5T.copy('H5T_NATIVE_FLOAT');
-    order = H5ML.get_constant_value('H5T_ORDER_BE');
-    H5T.set_order(type_id,order);
-elseif(strcmp(h5_type_str, 'int16'))
-    type_id = H5T.copy('H5T_NATIVE_SHORT');
-    order = H5ML.get_constant_value('H5T_ORDER_BE');
-    H5T.set_order(type_id,order);
-elseif(strcmp(h5_type_str, 'int32'))
-    type_id = H5T.copy('H5T_NATIVE_INT');
-    order = H5ML.get_constant_value('H5T_ORDER_BE');
-    H5T.set_order(type_id,order);
-elseif(strcmp(h5_type_str, 'float'))
-    type_id = H5T.copy('H5T_NATIVE_FLOAT');
-    order = H5ML.get_constant_value('H5T_ORDER_BE');
-    H5T.set_order(type_id,order);
-elseif(strcmp(h5_type_str, 'double'))
-    type_id = H5T.copy('H5T_NATIVE_DOUBLE');
-    order = H5ML.get_constant_value('H5T_ORDER_BE');
-    H5T.set_order(type_id,order);
-else
-    disp('Not known type_str, I only understand single(float), double or int16.')
-end
-
-dset_id = H5D.create(fid, h5_dataset, type_id, space_id, 'H5P_DEFAULT');
-
-%Write data
-%Here we transpose the column-major to row-major
-H5D.write(dset_id, 'H5ML_DEFAULT','H5S_ALL','H5S_ALL','H5P_DEFAULT',transpose(dsi_data));
-H5S.close(space_id);
-H5T.close(type_id);
-H5D.close(dset_id);
-H5F.close(fid);
-end
 
 
 

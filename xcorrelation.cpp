@@ -104,6 +104,7 @@ bool is_test_flag = false;
 std::vector<int> output_chunk_size(2);
 
 bool is_column_major = true;
+bool is_column_major_from_config = false;
 
 /**
  * @brief input data type
@@ -460,6 +461,33 @@ int main(int argc, char *argv[])
     }
 
     //std::cout << "A_endpoint_id = " << A_endpoint_id << "\n";
+    if (!is_column_major_from_config)
+    {
+        std::string MeasureLength, SpatialResolution, SamplingFrequency;
+        A->GetTag("MeasureLength[m]", MeasureLength);
+        A->GetTag("SpatialResolution[m]", SpatialResolution);
+        A->GetTag("SamplingFrequency[Hz]", SamplingFrequency);
+        std::cout << "MeasureLength= " << MeasureLength << " , SpatialResolution =" << SpatialResolution << ", SamplingFrequency = " << SamplingFrequency << std::endl;
+        int meta_chs = -1, meta_time_series_points = -1;
+        if (!MeasureLength.empty() && !SpatialResolution.empty() && !SamplingFrequency.empty())
+        {
+            meta_chs = std::stoi(MeasureLength) / std::stoi(SpatialResolution);
+            meta_time_series_points = std::stoi(SamplingFrequency);
+        }
+
+        if (chunk_size[0] == meta_time_series_points && chunk_size[1] == meta_chs)
+        {
+            is_column_major = true;
+        }
+        else if (chunk_size[0] == meta_chs && chunk_size[1] == meta_time_series_points)
+        {
+            is_column_major = false;
+        }
+        else
+        {
+        AU_EXIT("Metadata and data are inconsistent in the size of the data by (MeasureLength[m]/SpatialResolution[m]/SamplingFrequency[Hz]) = "+ std::stoi(MeasureLength)+"/"+std::stoi(SpatialResolution)+"/"+ std::stoi(SamplingFrequency);
+        }
+    }
 
     if (is_column_major)
     {
@@ -610,8 +638,16 @@ int read_config_file(std::string file_name, int mpi_rank)
         channel_range_end = reader.GetInteger("parameter", "channel_range_end", 1);
     }
 
-    temp_str = reader.Get("parameter", "is_column_major", "true");
-    is_column_major = (temp_str == "false" || temp_str == "0") ? false : true;
+    temp_str = reader.Get("parameter", "is_column_major", "NULL");
+    if (temp_str == "NULL")
+    {
+        is_column_major_from_config = false;
+    }
+    else
+    {
+        is_column_major = (temp_str == "false" || temp_str == "0") ? false : true;
+        is_column_major_from_config = true;
+    }
 
     n_files_to_concatenate = reader.GetInteger("parameter", "n_files_to_concatenate", 1);
 
