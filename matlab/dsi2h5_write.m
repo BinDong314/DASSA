@@ -140,8 +140,8 @@ H5T.close(attr_type_id_2);
 %          (0): "125"
 %          }
 %       }
-if (isfield(dsi_data_raw, 'fh')) 
-    SamplingFrequency_int = 1/dsi_data_raw.fh{8};
+%if (isfield(dsi_data_raw, 'fh')) 
+%    SamplingFrequency_int = 1/dsi_data_raw.fh{8};
     %
     %Fixme: we conver HZ to be normalized ones (based on 1 minute's data)
     %       This convert only happens when the data spans multiple
@@ -149,16 +149,16 @@ if (isfield(dsi_data_raw, 'fh'))
     %
     % We do this to let DASSA understand data layout
     %
-    SamplingFrequency_int =  SamplingFrequency_int * h5_dims(1) / (500 * 60)
-    SamplingFrequency_str=int2str(SamplingFrequency_int)
-    attr_type_id_22 = H5T.copy('H5T_C_S1');
-    H5T.set_size(attr_type_id_22,strlength(SamplingFrequency_str));
-    H5T.set_cset(attr_type_id_22, encoding);
-    attr_id_22 = H5A.create(dset_id,'SamplingFrequency[Hz]', attr_type_id_22, attr_space_id, acpl);
-    H5A.write(attr_id_22,'H5ML_DEFAULT',SamplingFrequency_str)
-    H5A.close(attr_id_22);
-    H5T.close(attr_type_id_22);
-end
+%    SamplingFrequency_int =  SamplingFrequency_int * h5_dims(1) / (500 * 60)
+%    SamplingFrequency_str=int2str(SamplingFrequency_int)
+%     attr_type_id_22 = H5T.copy('H5T_C_S1');
+%     H5T.set_size(attr_type_id_22,strlength(SamplingFrequency_str));
+%     H5T.set_cset(attr_type_id_22, encoding);
+%     attr_id_22 = H5A.create(dset_id,'SamplingFrequency[Hz]', attr_type_id_22, attr_space_id, acpl);
+%     H5A.write(attr_id_22,'H5ML_DEFAULT',SamplingFrequency_str)
+%     H5A.close(attr_id_22);
+%     H5T.close(attr_type_id_22);
+% end
 
 %"MeasureLength[m]"
 % In this case, we set the MeasureLength[m] = fh{1}
@@ -168,20 +168,20 @@ end
 % MeasureLength[m]/SpatialResolution[m] = nTrace
 % Both MeasureLength[m] and SpatialResolution[m] are used by DASSA's
 % XCORR'code to figure out column-vector or so.
-if (isfield(dsi_data_raw, 'fh'))
-    %
-    %Fixme: we treate the nTrace as the MeasureLength to let DASSA understand data layout
-    %       
-    %
-    MeasureLength_str=int2str(dsi_data_raw.fh{1});
-    attr_type_id_23 = H5T.copy('H5T_C_S1');
-    H5T.set_size(attr_type_id_23,strlength(MeasureLength_str));
-    H5T.set_cset(attr_type_id_23, encoding);
-    attr_id_23 = H5A.create(dset_id,'MeasureLength[m]', attr_type_id_23, attr_space_id, acpl);
-    H5A.write(attr_id_23,'H5ML_DEFAULT',MeasureLength_str)
-    H5A.close(attr_id_23);
-    H5T.close(attr_type_id_23);
-end
+% if (isfield(dsi_data_raw, 'fh'))
+%     %
+%     %Fixme: we treate the nTrace as the MeasureLength to let DASSA understand data layout
+%     %       
+%     %
+%     MeasureLength_str=int2str(dsi_data_raw.fh{1});
+%     attr_type_id_23 = H5T.copy('H5T_C_S1');
+%     H5T.set_size(attr_type_id_23,strlength(MeasureLength_str));
+%     H5T.set_cset(attr_type_id_23, encoding);
+%     attr_id_23 = H5A.create(dset_id,'MeasureLength[m]', attr_type_id_23, attr_space_id, acpl);
+%     H5A.write(attr_id_23,'H5ML_DEFAULT',MeasureLength_str)
+%     H5A.close(attr_id_23);
+%     H5T.close(attr_type_id_23);
+% end
 
 %SpatialResolution[m]
 % In this case, we set the SpatialResolution[m] = 1
@@ -191,20 +191,20 @@ end
 % MeasureLength[m]/SpatialResolution[m] = nTrace
 % Both MeasureLength[m] and SpatialResolution[m] are used by DASSA's
 % XCORR'code to figure out column-vector or so.
-if (isfield(dsi_data_raw, 'fh'))  
-    %
-    %Fixme: we only put '1' here to let DASSA understand data layout
-    %       
-    %
-    SpatialResolution_str='1';
-    attr_type_id_24 = H5T.copy('H5T_C_S1');
-    H5T.set_size(attr_type_id_24,strlength(SpatialResolution_str));
-    H5T.set_cset(attr_type_id_24, encoding);
-    attr_id_24 = H5A.create(dset_id,'SpatialResolution[m]', attr_type_id_24, attr_space_id, acpl);
-    H5A.write(attr_id_24,'H5ML_DEFAULT',SpatialResolution_str)
-    H5A.close(attr_id_24);
-    H5T.close(attr_type_id_24);
-end
+% if (isfield(dsi_data_raw, 'fh'))  
+%     %
+%     %Fixme: we only put '1' here to let DASSA understand data layout
+%     %       
+%     %
+%     SpatialResolution_str='1';
+%     attr_type_id_24 = H5T.copy('H5T_C_S1');
+%     H5T.set_size(attr_type_id_24,strlength(SpatialResolution_str));
+%     H5T.set_cset(attr_type_id_24, encoding);
+%     attr_id_24 = H5A.create(dset_id,'SpatialResolution[m]', attr_type_id_24, attr_space_id, acpl);
+%     H5A.write(attr_id_24,'H5ML_DEFAULT',SpatialResolution_str)
+%     H5A.close(attr_id_24);
+%     H5T.close(attr_type_id_24);
+% end
 
 %
 %fh header, is saved as attribute 

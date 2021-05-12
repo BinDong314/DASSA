@@ -343,7 +343,7 @@ inline Stencil<std::vector<double>> udf_xcorr(const Stencil<TT> &iStencil)
     }
 
     //PrintVector("vector_shape: ", vector_shape);
-    std::cout << "vector_shape[0] = " << vector_shape[0] << ",vector_shape[1] = " << vector_shape[1] << "\n";
+    //std::cout << "vector_shape[0] = " << vector_shape[0] << ",vector_shape[1] = " << vector_shape[1] << "\n";
     DasLib::clear_vector(ts2d_ma);
     oStencil.SetShape(vector_shape);
     oStencil = ts_temp;
@@ -468,30 +468,67 @@ int main(int argc, char *argv[])
     //std::cout << "A_endpoint_id = " << A_endpoint_id << "\n";
     if (!is_column_major_from_config)
     {
+        /*
+         * Here we try to read  MeasureLengthName/SpatialResolutionName/SamplingFrequencyName or nTrace/nPoint
+         *    to detect the layout of the file.
+         * 
+         */
+        int meta_chs = -1, meta_time_series_points = -1;
         std::string MeasureLength, SpatialResolution, SamplingFrequency;
         A->GetTag(MeasureLengthName, MeasureLength);
         A->GetTag(SpatialResolutionName, SpatialResolution);
-        A->GetTag(SamplingFrequencyName, SamplingFrequency);
-        //std::cout << "MeasureLength= " << MeasureLength << " , SpatialResolution =" << SpatialResolution << ", SamplingFrequency = " << SamplingFrequency << std::endl;
-        int meta_chs = -1, meta_time_series_points = -1;
-        if (!MeasureLength.empty() && !SpatialResolution.empty() && !SamplingFrequency.empty())
+        if (MeasureLength.empty() || SpatialResolution.empty())
         {
-            meta_chs = std::stoi(MeasureLength) / std::stoi(SpatialResolution);
-            meta_time_series_points = 60 * std::stoi(SamplingFrequency);
+            A->GetTag("nTrace", MeasureLength);
+            if (MeasureLength.empty())
+            {
+                std::cout << "Error: Can not find out [" << MeasureLengthName << "/" << SpatialResolutionName << "] or [nTrace] in the file to detect organization. You can also set [is_column_vector = true/false] in config file to disable this detection ! \n";
+                exit(-1);
+            }
+            meta_chs = std::stoi(MeasureLength);
         }
         else
         {
-            std::cout << "Metadata can not be found for, " << MeasureLengthName << ", " << SpatialResolutionName << ", and " << SamplingFrequencyName << ", please specify the is_column_vector in config file, check attribute_name_*, ... " << std::endl;
-            exit(-1);
+            meta_chs = std::stoi(MeasureLength) / std::stoi(SpatialResolution);
         }
 
-        std::cout << "meta_time_series_points = " << meta_time_series_points << " , meta_chs =  " << meta_chs << " \n";
+        A->GetTag(SamplingFrequencyName, SamplingFrequency);
+        if (SamplingFrequency.empty())
+        {
+            A->GetTag("nPoint", SamplingFrequency);
+            if (SamplingFrequency.empty())
+            {
+                std::cout << "Error: Can not find out [" << SamplingFrequencyName << "] or [nPoint] in the file to detect organization. You can also set [is_column_vector = true/false] in config file to disable this detection ! \n";
+                exit(-1);
+            }
+            meta_time_series_points = std::stoi(SamplingFrequency);
+        }
+        else
+        {
+            meta_time_series_points = 60 * std::stoi(SamplingFrequency);
+        }
+
+        //std::cout << "MeasureLength= " << MeasureLength << " , SpatialResolution =" << SpatialResolution << ", SamplingFrequency = " << SamplingFrequency << std::endl;
+        //if (!MeasureLength.empty() && !SpatialResolution.empty() && !SamplingFrequency.empty())
+        //{
+        //    meta_chs = std::stoi(MeasureLength) / std::stoi(SpatialResolution);
+        //    meta_time_series_points = 60 * std::stoi(SamplingFrequency);
+        //}
+        //else
+        //{
+        //    std::cout << "Metadata can not be found for, " << MeasureLengthName << ", " << SpatialResolutionName << ", and " << SamplingFrequencyName << ", please specify the is_column_vector in config file, check attribute_name_*, ... " << std::endl;
+        //    exit(-1);
+        //}
+
+        //std::cout << "meta_time_series_points = " << meta_time_series_points << " , meta_chs =  " << meta_chs << " \n";
         if (chunk_size[0] == meta_time_series_points && chunk_size[1] == meta_chs)
         {
             is_column_major = true;
             if (!ft_rank)
             {
-                std::cout << termcolor::magenta << "Data organization found is = " << termcolor::green << " column vector (time by channel) \n";
+                std::cout << termcolor::reset << "\n";
+                std::cout << termcolor::magenta << "Found data organization = " << termcolor::green << " column vector (time by channel) \n";
+                std::cout << termcolor::reset << "\n";
             }
         }
         else if (chunk_size[0] == meta_chs && chunk_size[1] == meta_time_series_points)
@@ -499,12 +536,14 @@ int main(int argc, char *argv[])
             is_column_major = false;
             if (!ft_rank)
             {
-                std::cout << termcolor::magenta << "Data organization found is = " << termcolor::green << " row vector (channel by time)\n";
+                std::cout << termcolor::reset << "\n";
+                std::cout << termcolor::magenta << "Found data organization = " << termcolor::green << " row vector (channel by time)\n";
+                std::cout << termcolor::reset << "\n";
             }
         }
         else
         {
-            std::cout << "Metadata and data are inconsistent in the size from " << MeasureLengthName << "/" << SpatialResolutionName << "/" << SamplingFrequencyName << " =  " << std::stoi(MeasureLength) << "/" << std::stoi(SpatialResolution) << "/" << std::stoi(SamplingFrequency) << std::endl;
+            std::cout << "Metadata and data are inconsistent in the size ! " << std::endl;
             exit(-1);
         }
     }
