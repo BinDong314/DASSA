@@ -26,12 +26,13 @@ This directory contains the code to write DSI objects from a file or memory to H
     %  About metadata:
     %     The dsi2h5 will attach below metadata to record the semantic of the
     %     data within the HDF5.
-    %     - SamplingFrequency[Hz]
-    %     - MeasureLength[m] and SpatialResolution[m], 
     %     - nTrace is the number of channel, size(dsi_file.dat)[1] 
     %     - nPoint is the number of points in time series, , size(dsi_file.dat)[1] 
     %     - fh (as string)
     %     - dh (as dataset)
+    %     - SamplingFrequency[Hz]  ;; Disable now
+    %     - MeasureLength[m] and SpatialResolution[m] ;; Disable now
+
 
 2, dsi2h5_from_mem.m saves the DSI vaiable to HDF5 directly from Matlab variable.
    It has same semantic as dsi2h5.com above. 

@@ -162,7 +162,7 @@ inline Stencil<std::vector<double>> udf_xcorr(const Stencil<TT> &iStencil)
 {
     std::vector<int> max_offset_upper;
     iStencil.GetOffsetUpper(max_offset_upper);
-    PrintVector("max_offset_upper = ", max_offset_upper);
+    //PrintVector("max_offset_upper = ", max_offset_upper);
 
     int chs_per_file_udf = max_offset_upper[0] + 1, lts_per_file_udf = max_offset_upper[1] + 1;
     std::vector<int> start_offset = {0, 0};
