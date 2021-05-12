@@ -114,6 +114,10 @@ bool is_column_major_from_config = false;
  */
 int input_data_type = 0;
 
+std::string MeasureLengthName = "MeasureLength[m]";
+std::string SpatialResolutionName = "SpatialResolution[m]";
+std::string SamplingFrequencyName = "SamplingFrequency[Hz]";
+
 void init_xcorr()
 {
     int nPoint = ceil(lts_per_file * n_files_to_concatenate / (DT_NEW / DT));
@@ -460,32 +464,48 @@ int main(int argc, char *argv[])
         chunk_size[1] = array_size[1];
     }
 
+    PrintVector("chunk_size = ", chunk_size);
     //std::cout << "A_endpoint_id = " << A_endpoint_id << "\n";
     if (!is_column_major_from_config)
     {
         std::string MeasureLength, SpatialResolution, SamplingFrequency;
-        A->GetTag("MeasureLength[m]", MeasureLength);
-        A->GetTag("SpatialResolution[m]", SpatialResolution);
-        A->GetTag("SamplingFrequency[Hz]", SamplingFrequency);
-        std::cout << "MeasureLength= " << MeasureLength << " , SpatialResolution =" << SpatialResolution << ", SamplingFrequency = " << SamplingFrequency << std::endl;
+        A->GetTag(MeasureLengthName, MeasureLength);
+        A->GetTag(SpatialResolutionName, SpatialResolution);
+        A->GetTag(SamplingFrequencyName, SamplingFrequency);
+        //std::cout << "MeasureLength= " << MeasureLength << " , SpatialResolution =" << SpatialResolution << ", SamplingFrequency = " << SamplingFrequency << std::endl;
         int meta_chs = -1, meta_time_series_points = -1;
         if (!MeasureLength.empty() && !SpatialResolution.empty() && !SamplingFrequency.empty())
         {
             meta_chs = std::stoi(MeasureLength) / std::stoi(SpatialResolution);
-            meta_time_series_points = std::stoi(SamplingFrequency);
+            meta_time_series_points = 60 * std::stoi(SamplingFrequency);
+        }
+        else
+        {
+            std::cout << "Metadata can not be found for, " << MeasureLengthName << ", " << SpatialResolutionName << ", and " << SamplingFrequencyName << ", please specify the is_column_vector in config file, check attribute_name_*, ... " << std::endl;
+            exit(-1);
         }
 
+        std::cout << "meta_time_series_points = " << meta_time_series_points << " , meta_chs =  " << meta_chs << " \n";
         if (chunk_size[0] == meta_time_series_points && chunk_size[1] == meta_chs)
         {
             is_column_major = true;
+            if (!ft_rank)
+            {
+                std::cout << termcolor::magenta << "Data organization found is = " << termcolor::green << " column vector (time by channel) \n";
+            }
         }
         else if (chunk_size[0] == meta_chs && chunk_size[1] == meta_time_series_points)
         {
             is_column_major = false;
+            if (!ft_rank)
+            {
+                std::cout << termcolor::magenta << "Data organization found is = " << termcolor::green << " row vector (channel by time)\n";
+            }
         }
         else
         {
-        AU_EXIT("Metadata and data are inconsistent in the size of the data by (MeasureLength[m]/SpatialResolution[m]/SamplingFrequency[Hz]) = "+ std::stoi(MeasureLength)+"/"+std::stoi(SpatialResolution)+"/"+ std::stoi(SamplingFrequency);
+            std::cout << "Metadata and data are inconsistent in the size from " << MeasureLengthName << "/" << SpatialResolutionName << "/" << SamplingFrequencyName << " =  " << std::stoi(MeasureLength) << "/" << std::stoi(SpatialResolution) << "/" << std::stoi(SamplingFrequency) << std::endl;
+            exit(-1);
         }
     }
 
@@ -638,7 +658,7 @@ int read_config_file(std::string file_name, int mpi_rank)
         channel_range_end = reader.GetInteger("parameter", "channel_range_end", 1);
     }
 
-    temp_str = reader.Get("parameter", "is_column_major", "NULL");
+    temp_str = reader.Get("parameter", "is_column_vector", "NULL");
     if (temp_str == "NULL")
     {
         is_column_major_from_config = false;
@@ -648,6 +668,10 @@ int read_config_file(std::string file_name, int mpi_rank)
         is_column_major = (temp_str == "false" || temp_str == "0") ? false : true;
         is_column_major_from_config = true;
     }
+
+    MeasureLengthName = reader.Get("parameter", "attribute_name_measure_length", "MeasureLength[m]");
+    SpatialResolutionName = reader.Get("parameter", "attribute_name_spatial_resolution", "SpatialResolution[m]");
+    SamplingFrequencyName = reader.Get("parameter", "attribute_name_sampling_frequency", "SamplingFrequency[Hz]");
 
     n_files_to_concatenate = reader.GetInteger("parameter", "n_files_to_concatenate", 1);
 
@@ -733,13 +757,16 @@ int read_config_file(std::string file_name, int mpi_rank)
             std::cout << termcolor::magenta << "\n        input_data_type = " << termcolor::green << "float";
         }
 
-        if (is_column_major == true)
+        if (is_column_major_from_config)
         {
-            std::cout << termcolor::magenta << "\n        is_column_major = " << termcolor::green << "true";
-        }
-        else
-        {
-            std::cout << termcolor::magenta << "\n        is_column_major = " << termcolor::green << "false";
+            if (is_column_major == true)
+            {
+                std::cout << termcolor::magenta << "\n        is_column_vector = " << termcolor::green << "true";
+            }
+            else
+            {
+                std::cout << termcolor::magenta << "\n        is_column_vector = " << termcolor::green << "false";
+            }
         }
 
         if (is_input_search_rgx)

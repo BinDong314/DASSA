@@ -76,17 +76,17 @@ attr_space_id = H5S.create('H5S_SCALAR');
 %nTrace
 % is the number of channels
 %It is stored as string in HDF5
-% e.g.
-% ATTRIBUTE "nPoint" {
+%  e.g.,
+%    ATTRIBUTE "nTrace" {
 %          DATATYPE  H5T_STRING {
-%             STRSIZE 6;
+%             STRSIZE 3;
 %             STRPAD H5T_STR_NULLTERM;
 %             CSET H5T_CSET_ASCII;
 %             CTYPE H5T_C_S1;
 %          }
 %          DATASPACE  SCALAR
 %          DATA {
-%          (0): "149999"
+%          (0): "375"
 %          }
 %       }
 attr_type_id = H5T.copy('H5T_C_S1');
@@ -101,17 +101,17 @@ H5T.close(attr_type_id);
 
 % nPoint
 %  is the number of point in time series 
-%  e.g.,
-%    ATTRIBUTE "nTrace" {
+% e.g.
+% ATTRIBUTE "nPoint" {
 %          DATATYPE  H5T_STRING {
-%             STRSIZE 3;
+%             STRSIZE 6;
 %             STRPAD H5T_STR_NULLTERM;
 %             CSET H5T_CSET_ASCII;
 %             CTYPE H5T_C_S1;
 %          }
 %          DATASPACE  SCALAR
 %          DATA {
-%          (0): "375"
+%          (0): "149999"
 %          }
 %       }
 nPoint_str=int2str(h5_dims(1));
@@ -140,9 +140,17 @@ H5T.close(attr_type_id_2);
 %          (0): "125"
 %          }
 %       }
-if (isfield(dsi_data_raw, 'fh'))      
-    SamplingFrequency_str=int2str(1/dsi_data_raw.fh{8})
-    dsi_data_raw.fh
+if (isfield(dsi_data_raw, 'fh')) 
+    SamplingFrequency_int = 1/dsi_data_raw.fh{8};
+    %
+    %Fixme: we conver HZ to be normalized ones (based on 1 minute's data)
+    %       This convert only happens when the data spans multiple
+    %       munites
+    %
+    % We do this to let DASSA understand data layout
+    %
+    SamplingFrequency_int =  SamplingFrequency_int * h5_dims(1) / (500 * 60)
+    SamplingFrequency_str=int2str(SamplingFrequency_int)
     attr_type_id_22 = H5T.copy('H5T_C_S1');
     H5T.set_size(attr_type_id_22,strlength(SamplingFrequency_str));
     H5T.set_cset(attr_type_id_22, encoding);
@@ -160,7 +168,11 @@ end
 % MeasureLength[m]/SpatialResolution[m] = nTrace
 % Both MeasureLength[m] and SpatialResolution[m] are used by DASSA's
 % XCORR'code to figure out column-vector or so.
-if (isfield(dsi_data_raw, 'fh'))      
+if (isfield(dsi_data_raw, 'fh'))
+    %
+    %Fixme: we treate the nTrace as the MeasureLength to let DASSA understand data layout
+    %       
+    %
     MeasureLength_str=int2str(dsi_data_raw.fh{1});
     attr_type_id_23 = H5T.copy('H5T_C_S1');
     H5T.set_size(attr_type_id_23,strlength(MeasureLength_str));
@@ -179,7 +191,11 @@ end
 % MeasureLength[m]/SpatialResolution[m] = nTrace
 % Both MeasureLength[m] and SpatialResolution[m] are used by DASSA's
 % XCORR'code to figure out column-vector or so.
-if (isfield(dsi_data_raw, 'fh'))      
+if (isfield(dsi_data_raw, 'fh'))  
+    %
+    %Fixme: we only put '1' here to let DASSA understand data layout
+    %       
+    %
     SpatialResolution_str='1';
     attr_type_id_24 = H5T.copy('H5T_C_S1');
     H5T.set_size(attr_type_id_24,strlength(SpatialResolution_str));
@@ -250,7 +266,6 @@ end
 % end
 %Error using hdf5lib2
 %The HDF5 library encountered an error and produced the following stack trace information:
-
 %    H5O_alloc              object header message is too large
 %    H5O_msg_alloc          unable to allocate space for message
 %    H5O_msg_append_real    unable to create new message
