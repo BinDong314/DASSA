@@ -385,6 +385,14 @@ int main(int argc, char **argv)
 
         std::string tag_value4 = "100.10010000";
         A->SetTag("Tag4Tag4Tag4Tag4Tag4", tag_value4);
+
+        //nTrace
+        //nPoint
+        std::string nTrace_value = "16";
+        std::string nPoint_value = "12";
+        A->SetTag("nTrace", nTrace_value);
+        A->SetTag("nPoint", nPoint_value);
+
         delete A;
     }
 
