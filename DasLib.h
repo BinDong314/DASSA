@@ -43,7 +43,8 @@ namespace DasLib
         // to avoid unnecessary index re-orderings
         // when v contains elements of equal values
         stable_sort(idx.begin(), idx.end(),
-                    [&v](size_t i1, size_t i2) { return v[i1] > v[i2]; });
+                    [&v](size_t i1, size_t i2)
+                    { return v[i1] > v[i2]; });
 
         return idx;
     }
@@ -218,6 +219,16 @@ namespace DasLib
 
     typedef std::vector<std::vector<double>> DoubleVector2D;
 
+    /**
+     * @brief Convert a 1D vector to 2D vector
+     * 
+     * @tparam T1 
+     * @tparam T2 
+     * @param cols 
+     * @param data1d : is organized as row-major, i.e., row is cotigious 
+     *                  row 1 , row 2, row 3... 
+     * @return std::vector<std::vector<T2>> 
+     */
     template <class T1, class T2 = double>
     inline std::vector<std::vector<T2>> Vector1D2D(size_t cols, const std::vector<T1> &data1d)
     {
@@ -744,13 +755,23 @@ inline std::vector<std::vector<T>> Vector1D2D(size_t cols, std::vector<T> &data1
         }
     }
 
+    /**
+     * @brief Convert a N x M matrix src to M x N matrix dst
+     * 
+     * @tparam T 
+     * @param src 
+     * @param dst 
+     * @param N : row
+     * @param M : column 
+     */
     template <class T>
-    void transpose(T *src, T *dst, const int N, const int M)
+    inline void transpose(T *src, T *dst, const int N, const int M)
     {
+        int i, j;
         for (int n = 0; n < N * M; n++)
         {
-            int i = n / N;
-            int j = n % N;
+            i = n / N;
+            j = n % N;
             dst[n] = src[M * j + i];
         }
     }

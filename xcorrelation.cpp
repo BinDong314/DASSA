@@ -118,6 +118,9 @@ std::string MeasureLengthName = "MeasureLength[m]";
 std::string SpatialResolutionName = "SpatialResolution[m]";
 std::string SamplingFrequencyName = "SamplingFrequency[Hz]";
 
+bool is_channel_stride = false;
+int channel_stride_size = 0;
+
 void init_xcorr()
 {
     int nPoint = ceil(lts_per_file * n_files_to_concatenate / (DT_NEW / DT));
@@ -162,53 +165,89 @@ inline Stencil<std::vector<double>> udf_xcorr(const Stencil<TT> &iStencil)
 {
     std::vector<int> max_offset_upper;
     iStencil.GetOffsetUpper(max_offset_upper);
-    //PrintVector("max_offset_upper = ", max_offset_upper);
+    PrintVector("max_offset_upper = ", max_offset_upper);
 
-    int chs_per_file_udf = max_offset_upper[0] + 1, lts_per_file_udf = max_offset_upper[1] + 1;
+    //Here, we assume data is row-vector
+    //int chs_per_file_udf = max_offset_upper[0] + 1, lts_per_file_udf = max_offset_upper[1] + 1;
+    int chs_per_file_udf, lts_per_file_udf;
     std::vector<int> start_offset = {0, 0};
-    std::vector<int> end_offset = {chs_per_file_udf - 1, lts_per_file_udf - 1};
+    std::vector<int> end_offset = {max_offset_upper[0], max_offset_upper[1]};
+
+    if (is_column_major)
+    {
+        chs_per_file_udf = max_offset_upper[1] + 1;
+        lts_per_file_udf = max_offset_upper[0] + 1;
+    }
+    else
+    {
+        chs_per_file_udf = max_offset_upper[0] + 1;
+        lts_per_file_udf = max_offset_upper[1] + 1;
+    }
 
     if (is_channel_range)
     {
         assert(channel_range_end - channel_range_start + 1 <= chs_per_file_udf);
         chs_per_file_udf = channel_range_end - channel_range_start + 1;
-        start_offset[0] = channel_range_start;
-        end_offset[0] = channel_range_end;
-        PrintVector("start_offset = ", start_offset);
-        PrintVector("end_offset = ", end_offset);
-    }
-
-    if (is_many_files)
-    {
-        if (is_space_decimate)
+        if (is_column_major)
         {
-            many_files_split_n = space_decimate_chs;
+            start_offset[1] = channel_range_start;
+            end_offset[1] = channel_range_end;
         }
         else
         {
-            many_files_split_n = chs_per_file_udf / n_files_to_concatenate;
+            start_offset[0] = channel_range_start;
+            end_offset[0] = channel_range_end;
         }
-
-        if (!ft_rank)
-            std::cout << "Using the is_many_files, many_files_split_n = " << many_files_split_n << " \n";
+        PrintVector("start_offset = ", start_offset);
+        PrintVector("end_offset = ", end_offset);
     }
 
     std::vector<TT> ts_short;
     iStencil.ReadNeighbors(start_offset, end_offset, ts_short);
 
+    //Convert to row-vector here if it is column-vector
+    //Because all the following code are built as row-vector (2D vector)
+    //Each row is a time series
     if (is_column_major)
     {
         std::vector<TT> ts_short_temp;
         ts_short_temp.resize(ts_short.size());
-        transpose(ts_short.data(), ts_short_temp.data(), chs_per_file_udf, lts_per_file_udf);
+        transpose(ts_short.data(), ts_short_temp.data(), lts_per_file_udf, chs_per_file_udf);
         ts_short = ts_short_temp;
-        int temp = chs_per_file_udf;
-        chs_per_file_udf = lts_per_file_udf;
-        lts_per_file_udf = temp;
+        //    int temp = chs_per_file_udf;
+        //    chs_per_file_udf = lts_per_file_udf;
+        //    lts_per_file_udf = temp;
     }
 
+    //Starts from here: ts_short is row-major order,
+    //e.g. ts = {time series 1 , time series 2}
+    std::cout << "Before Vector1D2D ), chs_per_file_udf = " << chs_per_file_udf << ", lts_per_file_udf = " << lts_per_file_udf << "\n";
     std::vector<std::vector<double>> ts2d = DasLib::Vector1D2D(lts_per_file_udf, ts_short);
+    PrintVV("ts2d", ts2d);
+
     //PrintVV("ts2d :", ts2d);
+
+    std::cout << "chs_per_file_udf (before skip ) = " << ts2d.size() << ", " << ts2d[0].size() << ", chs_per_file_udf = " << chs_per_file_udf << ", lts_per_file_udf = " << lts_per_file_udf << "\n";
+
+    //We may update the data based on is_channel_stride/channel_stride_size
+    //e.g.,  channel_range_start = 0, channel_range_end = 99
+    //       channel_stride_size = 99
+    if (is_channel_stride)
+    {
+        std::vector<std::vector<double>> ts2d_temp;
+        for (int iiii = 0; iiii < chs_per_file_udf; iiii++)
+        {
+            if (iiii % channel_stride_size == 0)
+            {
+                std::cout << iiii << "\n";
+                //ts2d.erase(ts2d.begin() + iiii);
+                ts2d_temp.push_back(ts2d[iiii]);
+            }
+        }
+        ts2d = ts2d_temp;
+        chs_per_file_udf = ts2d.size();
+        std::cout << "chs_per_file_udf (after skip ) = " << ts2d.size() << ", " << ts2d[0].size() << "\n";
+    }
 
     std::vector<std::vector<double>> ts2d_ma;
 
@@ -342,7 +381,7 @@ inline Stencil<std::vector<double>> udf_xcorr(const Stencil<TT> &iStencil)
         vector_shape[1] = ts2d_ma[0].size();
     }
 
-    //PrintVector("vector_shape: ", vector_shape);
+    PrintVector("Output vector_shape: ", vector_shape);
     //std::cout << "vector_shape[0] = " << vector_shape[0] << ",vector_shape[1] = " << vector_shape[1] << "\n";
     DasLib::clear_vector(ts2d_ma);
     oStencil.SetShape(vector_shape);
@@ -697,6 +736,13 @@ int read_config_file(std::string file_name, int mpi_rank)
         channel_range_end = reader.GetInteger("parameter", "channel_range_end", 1);
     }
 
+    temp_str = reader.Get("parameter", "is_channel_stride", "false");
+    is_channel_stride = (temp_str == "false" || temp_str == "0") ? false : true;
+    if (is_channel_stride)
+    {
+        channel_stride_size = reader.GetInteger("parameter", "channel_stride_size", 1);
+    }
+
     temp_str = reader.Get("parameter", "is_column_vector", "NULL");
     if (temp_str == "NULL")
     {
@@ -806,6 +852,27 @@ int read_config_file(std::string file_name, int mpi_rank)
             {
                 std::cout << termcolor::magenta << "\n        is_column_vector = " << termcolor::green << "false";
             }
+        }
+
+        if (is_channel_range)
+        {
+            std::cout << termcolor::magenta << "\n        is_channel_range = " << termcolor::green << "true";
+            std::cout << termcolor::magenta << "\n        channel_range_start = " << termcolor::green << channel_range_start;
+            std::cout << termcolor::magenta << "\n        channel_range_end = " << termcolor::green << channel_range_end;
+        }
+        else
+        {
+            std::cout << termcolor::magenta << "\n        is_channel_range = " << termcolor::green << "false";
+        }
+
+        if (is_channel_stride)
+        {
+            std::cout << termcolor::magenta << "\n        is_channel_stride = " << termcolor::green << "true";
+            std::cout << termcolor::magenta << "\n        channel_stride_size = " << termcolor::green << channel_stride_size;
+        }
+        else
+        {
+            std::cout << termcolor::magenta << "\n        is_channel_stride = " << termcolor::green << "false";
         }
 
         if (is_input_search_rgx)
