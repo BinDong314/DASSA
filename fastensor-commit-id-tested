@@ -1,2 +1,5 @@
 git log --pretty=format:'%h' -n 1
 168b9ca
+
+
+export HDF5_USE_FILE_LOCKING=FALSE
