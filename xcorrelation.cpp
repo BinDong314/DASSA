@@ -300,6 +300,33 @@ inline Stencil<std::vector<double>> udf_xcorr(const Stencil<TT> &iStencil)
     std::vector<std::complex<double>> fft_out, fft_in, master_fft;
     size_t nPoint_before_fft;
     double temp_real, temp_imag, temp_f;
+
+    if (MASTER_INDEX != 0)
+    {
+        moving_mean(ts2d_ma[MASTER_INDEX], ts2d[MASTER_INDEX], nPoint_hal_win);
+        nPoint_before_fft = ts2d[MASTER_INDEX].size();
+        fftv_forward_p2(ts2d[MASTER_INDEX], fft_out);
+        fft_in.resize(fft_out.size());
+        for (int ii = 0; ii < fft_out.size(); ii++)
+        {
+            temp_f = pow(sqrt(fft_out[ii].real() * fft_out[ii].real() + fft_out[ii].imag() * fft_out[ii].imag()), eCoeff) + 0.001;
+            temp_real = (fft_out[ii].real() + 0.001) / temp_f * shapingFilt[ii];
+            fft_in[ii].real(temp_real);
+            temp_imag = (fft_out[ii].imag()) / temp_f * shapingFilt[ii];
+            fft_in[ii].imag(temp_imag);
+        }
+        fftv_backward(fft_in, fft_out);
+
+        ts2d[MASTER_INDEX].resize(nPoint_before_fft);
+        for (int i = 0; i < nPoint_before_fft; i++)
+        {
+            ts2d[MASTER_INDEX][i] = fft_out[i].real();
+        }
+
+        fftv_forward_p2(ts2d[MASTER_INDEX], fft_out);
+        master_fft = fft_out;
+    }
+
     for (int i_row = 0; i_row < ts2d_ma.size(); i_row++)
     {
         moving_mean(ts2d_ma[i_row], ts2d[i_row], nPoint_hal_win);
@@ -324,7 +351,7 @@ inline Stencil<std::vector<double>> udf_xcorr(const Stencil<TT> &iStencil)
 
         fftv_forward_p2(ts2d[i_row], fft_out);
 
-        if (i_row == MASTER_INDEX)
+        if (i_row == 0 && i_row == MASTER_INDEX)
         {
             master_fft = fft_out;
             /*
