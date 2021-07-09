@@ -226,7 +226,7 @@ inline Stencil<std::vector<double>> udf_xcorr(const Stencil<TT> &iStencil)
 
     std::cout << "Before Vector1D2D ), chs_per_file_udf = " << chs_per_file_udf << ", lts_per_file_udf = " << lts_per_file_udf << "\n";
     std::vector<std::vector<double>> ts2d = DasLib::Vector1D2D(lts_per_file_udf, ts_short);
-    PrintVV("ts2d", ts2d);
+    //PrintVV("ts2d", ts2d);
 
     //
     //Starts from here: ts_short is row-major order,
@@ -522,6 +522,40 @@ int main(int argc, char *argv[])
 
     A->GetStencilTag();
 
+    if (is_input_search_rgx)
+    {
+        std::vector<std::string> aug_input_search_rgx;
+        aug_input_search_rgx.push_back(input_search_rgx);
+        A->ControlEndpoint(DIR_INPUT_SEARCH_RGX, aug_input_search_rgx);
+    }
+
+    if (is_file_range && is_input_single_file == false)
+    {
+        std::vector<size_t> file_range_index;
+        for (size_t i = file_range_start_index; i <= file_range_end_index; i++)
+        {
+            file_range_index.push_back(i);
+        }
+        file_range_indexes_str = Vector2String(file_range_index);
+        std::cout << " file_range_indexes_str =" << file_range_indexes_str << "\n";
+
+        std::vector<std::string> index_param;
+        index_param.push_back(file_range_indexes_str);
+        A->ControlEndpoint(DIR_FILE_SORT_INDEXES, index_param);
+    }
+
+    std::vector<std::string> aug_merge_index;
+    if (is_column_major)
+    {
+        aug_merge_index.push_back("0");
+    }
+    else
+    {
+        aug_merge_index.push_back("1");
+    }
+
+    A->ControlEndpoint(DIR_MERGE_INDEX, aug_merge_index);
+
     if (!is_input_single_file)
     {
         std::vector<std::string> file_size_str;
@@ -637,40 +671,6 @@ int main(int argc, char *argv[])
     A->SetOverlapSize(overlap_size);
 
     //std::cout << "chunk_size = " << chunk_size[0] << " , " << chunk_size[1] << " \n";
-
-    std::vector<std::string> aug_merge_index;
-    if (is_column_major)
-    {
-        aug_merge_index.push_back("0");
-    }
-    else
-    {
-        aug_merge_index.push_back("1");
-    }
-
-    A->ControlEndpoint(DIR_MERGE_INDEX, aug_merge_index);
-
-    if (is_input_search_rgx)
-    {
-        std::vector<std::string> aug_input_search_rgx;
-        aug_input_search_rgx.push_back(input_search_rgx);
-        A->ControlEndpoint(DIR_INPUT_SEARCH_RGX, aug_input_search_rgx);
-    }
-
-    if (is_file_range && is_input_single_file == false)
-    {
-        std::vector<size_t> file_range_index;
-        for (size_t i = file_range_start_index; i <= file_range_end_index; i++)
-        {
-            file_range_index.push_back(i);
-        }
-        file_range_indexes_str = Vector2String(file_range_index);
-        std::cout << " file_range_indexes_str =" << file_range_indexes_str << "\n";
-
-        std::vector<std::string> index_param;
-        index_param.push_back(file_range_indexes_str);
-        A->ControlEndpoint(DIR_FILE_SORT_INDEXES, index_param);
-    }
 
     init_xcorr();
     //Result data
