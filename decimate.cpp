@@ -573,6 +573,9 @@ int read_config_file(std::string file_name, int mpi_rank)
         is_column_major_from_config = true;
     }
 
+    temp_str = reader.Get("parameter", "is_input_single_file", "false");
+    is_input_single_file = (temp_str == "false") ? false : true;
+
     n_files_to_concatenate = reader.GetInteger("parameter", "n_files_to_concatenate", 2);
 
     MeasureLengthName = reader.Get("parameter", "attribute_name_measure_length", "MeasureLength[m]");
