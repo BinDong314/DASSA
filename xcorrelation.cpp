@@ -121,9 +121,14 @@ std::string SamplingFrequencyName = "SamplingFrequency[Hz]";
 bool is_channel_stride = false;
 int channel_stride_size = 0;
 
+bool is_file_range = false;
+int file_range_start_index = 0;
+int file_range_end_index = 1;
+std::string file_range_indexes_str;
+
 void init_xcorr()
 {
-    int nPoint = ceil(lts_per_file * n_files_to_concatenate / (DT_NEW / DT));
+    int nPoint = ceil(lts_per_file / (DT_NEW / DT));
     cut_frequency_low = (0.5 / DT_NEW) / (0.5 / DT);
     ButterLow(butter_order, cut_frequency_low, BUTTER_A, BUTTER_B);
 
@@ -219,13 +224,14 @@ inline Stencil<std::vector<double>> udf_xcorr(const Stencil<TT> &iStencil)
         //    lts_per_file_udf = temp;
     }
 
-    //Starts from here: ts_short is row-major order,
-    //e.g. ts = {time series 1 , time series 2}
     std::cout << "Before Vector1D2D ), chs_per_file_udf = " << chs_per_file_udf << ", lts_per_file_udf = " << lts_per_file_udf << "\n";
     std::vector<std::vector<double>> ts2d = DasLib::Vector1D2D(lts_per_file_udf, ts_short);
     PrintVV("ts2d", ts2d);
 
-    //PrintVV("ts2d :", ts2d);
+    //
+    //Starts from here: ts_short is row-major order,
+    //e.g. ts = {time series 1 , time series 2}
+    //
 
     std::cout << "chs_per_file_udf (before skip ) = " << ts2d.size() << ", " << ts2d[0].size() << ", chs_per_file_udf = " << chs_per_file_udf << ", lts_per_file_udf = " << lts_per_file_udf << "\n";
 
@@ -651,6 +657,21 @@ int main(int argc, char *argv[])
         A->ControlEndpoint(DIR_INPUT_SEARCH_RGX, aug_input_search_rgx);
     }
 
+    if (is_file_range && is_input_single_file == false)
+    {
+        std::vector<size_t> file_range_index;
+        for (size_t i = file_range_start_index; i <= file_range_end_index; i++)
+        {
+            file_range_index.push_back(i);
+        }
+        file_range_indexes_str = Vector2String(file_range_index);
+        std::cout << " file_range_indexes_str =" << file_range_indexes_str << "\n";
+
+        std::vector<std::string> index_param;
+        index_param.push_back(file_range_indexes_str);
+        A->ControlEndpoint(DIR_FILE_SORT_INDEXES, index_param);
+    }
+
     init_xcorr();
     //Result data
 
@@ -779,6 +800,26 @@ int read_config_file(std::string file_name, int mpi_rank)
     {
         is_column_major = (temp_str == "false" || temp_str == "0") ? false : true;
         is_column_major_from_config = true;
+    }
+
+    std::string is_file_range_str = reader.Get("parameter", "is_file_range", "false");
+    if (is_file_range_str == "false" || is_file_range_str == "0")
+    {
+        is_file_range = false;
+    }
+    else if (is_file_range_str == "true" || is_file_range_str == "1")
+    {
+        is_file_range = true;
+    }
+    else
+    {
+        AU_EXIT("Don't read the is_file_range's value " + is_file_range_str);
+    }
+
+    if (is_file_range)
+    {
+        file_range_start_index = reader.GetInteger("parameter", "file_range_start_index", 0);
+        file_range_end_index = reader.GetInteger("parameter", "file_range_end_index", 1);
     }
 
     MeasureLengthName = reader.Get("parameter", "attribute_name_measure_length", "MeasureLength[m]");
