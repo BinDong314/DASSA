@@ -32,6 +32,8 @@ std::string config_file = "./decimate.config";
 bool is_input_single_file = false;
 std::string input_dir_file = "/Users/dbin/work/arrayudf-git-svn-test-on-bitbucket/examples/das/tdms-dir";
 std::string input_file_type = "EP_TDMS";
+std::string input_h5_dataset = "/dat";
+
 bool is_input_search_rgx = false;
 std::string input_search_rgx = "^(.*)[1234]\\.tdms$";
 
@@ -93,6 +95,11 @@ bool is_channel_stride = false;
 int channel_stride_size = 0;
 
 bool is_stencil_tag_once = false;
+
+bool is_file_range = false;
+int file_range_start_index = 0;
+int file_range_end_index = 1;
+std::string file_range_indexes_str;
 
 void InitDecimate()
 {
@@ -325,19 +332,44 @@ int main(int argc, char *argv[])
 
     //Input data
     AU::Array<short> *A;
-    if (!is_input_single_file)
+    if (input_file_type == "EP_TDMS")
     {
         A = new AU::Array<short>("EP_DIR:" + input_file_type + ":" + input_dir_file);
-        std::cout << "EP_DIR:" + input_file_type + ":" + input_dir_file << "\n";
+    }
+    else
+    {
+        A = new AU::Array<short>("EP_DIR:" + input_file_type + ":" + input_dir_file + ":" + input_h5_dataset);
+    }
+    std::vector<std::string> aug_merge_index, aug_dir_sub_cmd, aug_input_search_rgx;
 
+    //Set fhe search reges on file
+    aug_input_search_rgx.push_back(input_search_rgx);
+    if (is_input_search_rgx)
+        A->EndpointControl(DIR_INPUT_SEARCH_RGX, aug_input_search_rgx);
+
+    if (is_file_range && is_input_single_file == false)
+    {
+        std::vector<size_t> file_range_index;
+        for (size_t i = file_range_start_index; i <= file_range_end_index; i++)
+        {
+            file_range_index.push_back(i);
+        }
+        file_range_indexes_str = Vector2String(file_range_index);
+        std::cout << " file_range_indexes_str =" << file_range_indexes_str << "\n";
+
+        std::vector<std::string> index_param;
+        index_param.push_back(file_range_indexes_str);
+        A->ControlEndpoint(DIR_FILE_SORT_INDEXES, index_param);
+    }
+
+    if (!is_input_single_file)
+    {
         std::vector<std::string> file_size_str;
         A->ControlEndpoint(DIR_GET_FILE_SIZE, file_size_str);
         String2Vector(file_size_str[0], chunk_size);
     }
     else
     {
-        A = new AU::Array<short>(input_file_type + ":" + input_dir_file);
-        std::cout << input_file_type + ":" + input_dir_file << "\n";
         std::vector<unsigned long long> array_size;
         A->GetArraySize(array_size);
         chunk_size[0] = array_size[0];
@@ -444,8 +476,6 @@ int main(int argc, char *argv[])
     //Extract tag to be along with Input Stencil
     A->GetStencilTag();
 
-    std::vector<std::string> aug_merge_index, aug_dir_sub_cmd, aug_input_search_rgx;
-
     //Set the index to merge file
     if (is_column_major)
     {
@@ -457,11 +487,6 @@ int main(int argc, char *argv[])
         aug_merge_index.push_back("1");
         A->EndpointControl(DIR_MERGE_INDEX, aug_merge_index);
     }
-
-    //Set fhe search reges on file
-    aug_input_search_rgx.push_back(input_search_rgx);
-    if (is_input_search_rgx)
-        A->EndpointControl(DIR_INPUT_SEARCH_RGX, aug_input_search_rgx);
 
     if (!is_column_major && input_file_type == "EP_TDMS")
     {
@@ -544,6 +569,26 @@ int read_config_file(std::string file_name, int mpi_rank)
         input_search_rgx = reader.Get("parameter", "input_search_rgx", "^(.*)[1234]\\.tdms$");
     }
 
+    std::string is_file_range_str = reader.Get("parameter", "is_file_range", "false");
+    if (is_file_range_str == "false" || is_file_range_str == "0")
+    {
+        is_file_range = false;
+    }
+    else if (is_file_range_str == "true" || is_file_range_str == "1")
+    {
+        is_file_range = true;
+    }
+    else
+    {
+        AU_EXIT("Don't read the is_file_range's value " + is_file_range_str);
+    }
+
+    if (is_file_range)
+    {
+        file_range_start_index = reader.GetInteger("parameter", "file_range_start_index", 0);
+        file_range_end_index = reader.GetInteger("parameter", "file_range_end_index", 1);
+    }
+
     chs_per_file = reader.GetInteger("parameter", "chs_per_file", 11648);
     lts_per_file = reader.GetInteger("parameter", "lts_per_file", 30000);
 
@@ -572,6 +617,8 @@ int read_config_file(std::string file_name, int mpi_rank)
         is_column_major = (temp_str == "false" || temp_str == "0") ? false : true;
         is_column_major_from_config = true;
     }
+
+    input_h5_dataset = reader.Get("parameter", "input_dataset", "/dat");
 
     temp_str = reader.Get("parameter", "is_input_single_file", "false");
     is_input_single_file = (temp_str == "false") ? false : true;
@@ -610,7 +657,7 @@ int read_config_file(std::string file_name, int mpi_rank)
     if (is_space_decimate)
     {
 
-        space_decimate_rows = reader.GetInteger("parameter", "space_decimate_rows", 32);
+        space_decimate_rows = reader.GetInteger("parameter", "space_decimate_chs", 32);
 
         space_decimate_operation = reader.Get("parameter", "space_decimate_operation", "ave");
     }

@@ -203,8 +203,8 @@ inline Stencil<std::vector<double>> udf_xcorr(const Stencil<TT> &iStencil)
             start_offset[0] = channel_range_start;
             end_offset[0] = channel_range_end;
         }
-        PrintVector("start_offset = ", start_offset);
-        PrintVector("end_offset = ", end_offset);
+        PrintVector("start_offset after channel_range  = ", start_offset);
+        PrintVector("end_offset after channel_range = ", end_offset);
     }
 
     std::vector<TT> ts_short;
@@ -227,6 +227,26 @@ inline Stencil<std::vector<double>> udf_xcorr(const Stencil<TT> &iStencil)
     std::cout << "Before Vector1D2D ), chs_per_file_udf = " << chs_per_file_udf << ", lts_per_file_udf = " << lts_per_file_udf << "\n";
     std::vector<std::vector<double>> ts2d = DasLib::Vector1D2D(lts_per_file_udf, ts_short);
     //PrintVV("ts2d", ts2d);
+
+    if (is_space_decimate)
+    {
+        std::vector<std::vector<double>> ts2d_temp;
+        //decimate in space-domain
+        int ma_batches = (chs_per_file_udf % space_decimate_chs) ? (chs_per_file_udf / space_decimate_chs + 1) : (chs_per_file_udf / space_decimate_chs);
+        int start_row, end_row;
+        for (int i = 0; i < ma_batches; i++)
+        {
+            start_row = i * space_decimate_chs;
+            end_row = (((i + 1) * space_decimate_chs - 1) < chs_per_file_udf) ? ((i + 1) * space_decimate_chs - 1) : chs_per_file_udf - 1;
+            //std::cout << "ma_batches =" << ma_batches << ", start_row = " << start_row << ", end_row =  " << end_row << "\n";
+            ts2d_temp.push_back(spacedecimate(ts2d, start_row, end_row, space_decimate_operation));
+        }
+
+        if (!ft_rank)
+            std::cout << "Finish space-domain decimate with [" << ts2d_temp.size() << "] channels \n";
+
+        ts2d = ts2d_temp;
+    }
 
     //
     //Starts from here: ts_short is row-major order,
@@ -255,8 +275,6 @@ inline Stencil<std::vector<double>> udf_xcorr(const Stencil<TT> &iStencil)
         std::cout << "chs_per_file_udf (after skip ) = " << ts2d.size() << ", " << ts2d[0].size() << "\n";
     }
 
-    std::vector<std::vector<double>> ts2d_ma;
-
     //std::cout << "ts2d.size() = " << ts2d.size() << ",ts2d[0].size() = " << ts2d[0].size() << ", lts_per_file_udf =" << lts_per_file_udf << ", ts_short.size() = " << ts_short.size() << "\n";
     //std::cout << "Got data ! at rank " << ft_rank << " \n";
 
@@ -269,33 +287,36 @@ inline Stencil<std::vector<double>> udf_xcorr(const Stencil<TT> &iStencil)
         filtfilt(BUTTER_A, BUTTER_B, ts2d[i], ts_temp2); //filtfilt
         resample(1, DT_NEW / DT, ts_temp2, ts2d[i]);     //resample
     }
+    DasLib::clear_vector(ts_temp2);
 
     //PrintVV("ts2d :", ts2d);
 
-    DasLib::clear_vector(ts_temp2);
     //if (!ft_rank)
     //    std::cout << "Finish time-domain decimate ! \n";
 
-    if (is_space_decimate)
-    {
-        //decimate in space-domain
-        int ma_batches = (chs_per_file_udf % space_decimate_chs) ? (chs_per_file_udf / space_decimate_chs + 1) : (chs_per_file_udf / space_decimate_chs);
-        int start_row, end_row;
-        for (int i = 0; i < ma_batches; i++)
-        {
-            start_row = i * space_decimate_chs;
-            end_row = (((i + 1) * space_decimate_chs - 1) < chs_per_file_udf) ? ((i + 1) * space_decimate_chs - 1) : chs_per_file_udf - 1;
-            //std::cout << "ma_batches =" << ma_batches << ", start_row = " << start_row << ", end_row =  " << end_row << "\n";
-            ts2d_ma.push_back(spacedecimate(ts2d, start_row, end_row, space_decimate_operation));
-        }
+    std::vector<std::vector<double>> ts2d_ma = ts2d;
 
-        if (!ft_rank)
-            std::cout << "Finish space-domain decimate ! \n";
-    }
-    else
-    {
-        ts2d_ma = ts2d;
-    }
+    // Moved the blow code to be before
+    // if (is_space_decimate)
+    // {
+    //     //decimate in space-domain
+    //     int ma_batches = (chs_per_file_udf % space_decimate_chs) ? (chs_per_file_udf / space_decimate_chs + 1) : (chs_per_file_udf / space_decimate_chs);
+    //     int start_row, end_row;
+    //     for (int i = 0; i < ma_batches; i++)
+    //     {
+    //         start_row = i * space_decimate_chs;
+    //         end_row = (((i + 1) * space_decimate_chs - 1) < chs_per_file_udf) ? ((i + 1) * space_decimate_chs - 1) : chs_per_file_udf - 1;
+    //         //std::cout << "ma_batches =" << ma_batches << ", start_row = " << start_row << ", end_row =  " << end_row << "\n";
+    //         ts2d_ma.push_back(spacedecimate(ts2d, start_row, end_row, space_decimate_operation));
+    //     }
+
+    //     if (!ft_rank)
+    //         std::cout << "Finish space-domain decimate ! \n";
+    // }
+    // else
+    // {
+    //     ts2d_ma = ts2d;
+    // }
     DasLib::clear_vector(ts2d);
 
     //***************
