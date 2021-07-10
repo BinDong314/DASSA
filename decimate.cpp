@@ -183,6 +183,22 @@ inline Stencil<std::vector<double>> udf_decimate(const Stencil<short> &iStencil)
 
     std::vector<std::vector<double>> ts2d = DasLib::Vector1D2D<short, double>(lts_per_file_udf, ts_short);
 
+    if (is_space_decimate)
+    {
+        std::vector<std::vector<double>> ts2d_temp_v;
+        //decimate in space-domain
+        int ma_batches = (chs_per_file_udf % space_decimate_rows) ? (chs_per_file_udf / space_decimate_rows + 1) : (chs_per_file_udf / space_decimate_rows);
+        int start_row, end_row;
+        for (int i = 0; i < ma_batches; i++)
+        {
+            start_row = i * space_decimate_rows;
+            end_row = (((i + 1) * space_decimate_rows - 1) < chs_per_file_udf) ? ((i + 1) * space_decimate_rows - 1) : chs_per_file_udf - 1;
+            //std::cout << "ma_batches =" << ma_batches << ", start_row = " << start_row << ", end_row =  " << end_row << "\n";
+            ts2d_temp_v.push_back(spacedecimate(ts2d, start_row, end_row, space_decimate_operation));
+        }
+        ts2d = ts2d_temp_v;
+    }
+
     //We may update the data based on is_channel_stride/channel_stride_size
     //e.g.,  channel_range_start = 0, channel_range_end = 99
     //       channel_stride_size = 99
@@ -203,8 +219,6 @@ inline Stencil<std::vector<double>> udf_decimate(const Stencil<short> &iStencil)
         std::cout << "chs_per_file_udf (after skip ) = " << ts2d.size() << ", " << ts2d[0].size() << "\n";
     }
 
-    std::vector<std::vector<double>> ts2d_ma;
-
     std::cout << "ts2d.size() = " << ts2d.size() << ",ts2d[0].size() = " << ts2d[0].size() << ", lts_per_file_udf =" << lts_per_file_udf << ", ts_short.size() = " << ts_short.size() << "\n";
 
     //std::cout << "Got data ! at rank " << ft_rank << " \n";
@@ -221,23 +235,25 @@ inline Stencil<std::vector<double>> udf_decimate(const Stencil<short> &iStencil)
     if (!ft_rank)
         std::cout << "Finish time-domain decimate ! \n";
 
-    if (is_space_decimate)
-    {
-        //decimate in space-domain
-        int ma_batches = (chs_per_file_udf % space_decimate_rows) ? (chs_per_file_udf / space_decimate_rows + 1) : (chs_per_file_udf / space_decimate_rows);
-        int start_row, end_row;
-        for (int i = 0; i < ma_batches; i++)
-        {
-            start_row = i * space_decimate_rows;
-            end_row = (((i + 1) * space_decimate_rows - 1) < chs_per_file_udf) ? ((i + 1) * space_decimate_rows - 1) : chs_per_file_udf - 1;
-            //std::cout << "ma_batches =" << ma_batches << ", start_row = " << start_row << ", end_row =  " << end_row << "\n";
-            ts2d_ma.push_back(spacedecimate(ts2d, start_row, end_row, space_decimate_operation));
-        }
-    }
-    else
-    {
-        ts2d_ma = ts2d;
-    }
+    std::vector<std::vector<double>> ts2d_ma;
+    ts2d_ma = ts2d;
+    // if (is_space_decimate)
+    // {
+    //     //decimate in space-domain
+    //     int ma_batches = (chs_per_file_udf % space_decimate_rows) ? (chs_per_file_udf / space_decimate_rows + 1) : (chs_per_file_udf / space_decimate_rows);
+    //     int start_row, end_row;
+    //     for (int i = 0; i < ma_batches; i++)
+    //     {
+    //         start_row = i * space_decimate_rows;
+    //         end_row = (((i + 1) * space_decimate_rows - 1) < chs_per_file_udf) ? ((i + 1) * space_decimate_rows - 1) : chs_per_file_udf - 1;
+    //         //std::cout << "ma_batches =" << ma_batches << ", start_row = " << start_row << ", end_row =  " << end_row << "\n";
+    //         ts2d_ma.push_back(spacedecimate(ts2d, start_row, end_row, space_decimate_operation));
+    //     }
+    // }
+    // else
+    // {
+    //     ts2d_ma = ts2d;
+    // }
     DasLib::clear_vector(ts2d);
     if (!ft_rank)
         std::cout << "Finish space-domain decimate ! \n";
@@ -284,7 +300,7 @@ inline Stencil<std::vector<double>> udf_decimate(const Stencil<short> &iStencil)
     //vector_shape[0] = ts2d_ma.size();
     //vector_shape[1] = ts2d_ma[0].size();
     PrintVector("vector_shape: ", vector_shape);
-    std::cout << "vector_shape[0] = " << vector_shape[0] << ",vector_shape[1] = " << vector_shape[1] << "\n";
+    //std::cout << "vector_shape[0] = " << vector_shape[0] << ",vector_shape[1] = " << vector_shape[1] << "\n";
     DasLib::clear_vector(ts2d_ma);
     oStencil.SetShape(vector_shape);
     oStencil = ts_temp;
@@ -356,10 +372,21 @@ int main(int argc, char *argv[])
         }
         file_range_indexes_str = Vector2String(file_range_index);
         std::cout << " file_range_indexes_str =" << file_range_indexes_str << "\n";
-
         std::vector<std::string> index_param;
         index_param.push_back(file_range_indexes_str);
         A->ControlEndpoint(DIR_FILE_SORT_INDEXES, index_param);
+    }
+
+    //Set the index to merge file
+    if (is_column_major)
+    {
+        aug_merge_index.push_back("0");
+        A->EndpointControl(DIR_MERGE_INDEX, aug_merge_index);
+    }
+    else
+    {
+        aug_merge_index.push_back("1");
+        A->EndpointControl(DIR_MERGE_INDEX, aug_merge_index);
     }
 
     if (!is_input_single_file)
@@ -375,7 +402,6 @@ int main(int argc, char *argv[])
         chunk_size[0] = array_size[0];
         chunk_size[1] = array_size[1];
     }
-    PrintVector("chunk_size = ", chunk_size);
 
     //By default, the TDMS file is column major
     if (input_file_type == "EP_TDMS")
@@ -466,6 +492,7 @@ int main(int argc, char *argv[])
         lts_per_file = chunk_size[1];
         chs_per_file = chunk_size[0];
     }
+    PrintVector("chunk_size = ", chunk_size);
     if (!ft_rank)
         std::cout << "lts_per_file = " << lts_per_file << ",chs_per_file = " << chs_per_file << "\n";
 
@@ -475,18 +502,6 @@ int main(int argc, char *argv[])
 
     //Extract tag to be along with Input Stencil
     A->GetStencilTag();
-
-    //Set the index to merge file
-    if (is_column_major)
-    {
-        aug_merge_index.push_back("0");
-        A->EndpointControl(DIR_MERGE_INDEX, aug_merge_index);
-    }
-    else
-    {
-        aug_merge_index.push_back("1");
-        A->EndpointControl(DIR_MERGE_INDEX, aug_merge_index);
-    }
 
     if (!is_column_major && input_file_type == "EP_TDMS")
     {
