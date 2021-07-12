@@ -282,7 +282,7 @@ namespace DasLib
                 result[i].resize(rows);
                 for (std::size_t j = 0; j < rows; ++j)
                 {
-                    result[i][j] = data1d[i * cols + j];
+                    result[i][j] = data1d[j * cols + i];
                 }
             }
         }

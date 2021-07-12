@@ -30,8 +30,8 @@ int read_config_file(std::string file_name, int mpi_rank);
 std::string config_file = "./decimate.config";
 
 bool is_input_single_file = false;
-std::string input_dir_file = "/Users/dbin/work/arrayudf-git-svn-test-on-bitbucket/examples/das/tdms-dir";
-std::string input_file_type = "EP_TDMS";
+std::string input_dir_file = "./test-data/dir";
+std::string input_file_type = "EP_HDF5";
 std::string input_h5_dataset = "/dat";
 
 bool is_input_search_rgx = false;
@@ -39,11 +39,11 @@ std::string input_search_rgx = "^(.*)[1234]\\.tdms$";
 
 int chs_per_file = 11648;
 int lts_per_file = 30000;
-int n_files_to_concatenate = 2;
+int n_files_to_concatenate = 1;
 
 bool is_output_single_file = false;
 std::string output_type = "EP_HDF5";
-std::string output_file_dir = "./tdms-dir-dec/";
+std::string output_file_dir = "./test-data/dir-decimate/";
 std::string output_dataset = "/dat";
 
 bool is_dir_output_match_replace_rgx = true;
@@ -360,24 +360,36 @@ int main(int argc, char *argv[])
     std::vector<int> chunk_size(2);
     std::vector<int> overlap_size = {0, 0};
 
-    //Input data
-    AU::Array<short> *A;
-    if (input_file_type == "EP_TDMS")
+    std::string A_endpoint_id;
+    if (!is_input_single_file)
     {
-        A = new AU::Array<short>("EP_DIR:" + input_file_type + ":" + input_dir_file);
+        A_endpoint_id = "EP_DIR:" + input_file_type + ":" + input_dir_file;
     }
     else
     {
-        A = new AU::Array<short>("EP_DIR:" + input_file_type + ":" + input_dir_file + ":" + input_h5_dataset);
+        A_endpoint_id = input_file_type + ":" + input_dir_file;
     }
+    //+ ":" + input_h5_dataset
+
+    if (input_file_type == "EP_HDF5")
+    {
+        A_endpoint_id += ":";
+        A_endpoint_id += input_h5_dataset;
+    }
+
+    //Input data
+    AU::Array<short> *A = new AU::Array<short>(A_endpoint_id);
+
     std::vector<std::string> aug_merge_index, aug_dir_sub_cmd, aug_input_search_rgx;
 
     //Set fhe search reges on file
-    aug_input_search_rgx.push_back(input_search_rgx);
-    if (is_input_search_rgx)
+    if (is_input_search_rgx && !is_input_single_file)
+    {
+        aug_input_search_rgx.push_back(input_search_rgx);
         A->EndpointControl(DIR_INPUT_SEARCH_RGX, aug_input_search_rgx);
+    }
 
-    if (is_file_range && is_input_single_file == false)
+    if (is_file_range && !is_input_single_file)
     {
         std::vector<size_t> file_range_index;
         for (size_t i = file_range_start_index; i <= file_range_end_index; i++)
@@ -392,15 +404,18 @@ int main(int argc, char *argv[])
     }
 
     //Set the index to merge file
-    if (is_column_major)
+    if (!is_input_single_file)
     {
-        aug_merge_index.push_back("0");
-        A->EndpointControl(DIR_MERGE_INDEX, aug_merge_index);
-    }
-    else
-    {
-        aug_merge_index.push_back("1");
-        A->EndpointControl(DIR_MERGE_INDEX, aug_merge_index);
+        if (is_column_major)
+        {
+            aug_merge_index.push_back("0");
+            A->EndpointControl(DIR_MERGE_INDEX, aug_merge_index);
+        }
+        else
+        {
+            aug_merge_index.push_back("1");
+            A->EndpointControl(DIR_MERGE_INDEX, aug_merge_index);
+        }
     }
 
     if (!is_input_single_file)
@@ -701,6 +716,9 @@ int read_config_file(std::string file_name, int mpi_rank)
         std::cout << termcolor::red << "Parameters to run the Decimate: ";
 
         std::cout << termcolor::blue << "\n\n Input parameters: ";
+
+        std::cout << termcolor::magenta << "\n        is_input_single_file = " << termcolor::green << is_input_single_file;
+
         std::cout << termcolor::magenta << "\n        input_dir_file = " << termcolor::green << input_dir_file;
         std::cout << termcolor::magenta << "\n        input_file_type = " << termcolor::green << input_file_type;
 
