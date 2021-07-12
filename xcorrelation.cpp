@@ -544,7 +544,7 @@ int main(int argc, char *argv[])
 
     A->GetStencilTag();
 
-    if (is_input_search_rgx)
+    if (is_input_search_rgx && is_input_single_file == false)
     {
         std::vector<std::string> aug_input_search_rgx;
         aug_input_search_rgx.push_back(input_search_rgx);
@@ -566,17 +566,19 @@ int main(int argc, char *argv[])
         A->ControlEndpoint(DIR_FILE_SORT_INDEXES, index_param);
     }
 
-    std::vector<std::string> aug_merge_index;
-    if (is_column_major)
+    if (is_input_single_file == false)
     {
-        aug_merge_index.push_back("0");
+        std::vector<std::string> aug_merge_index;
+        if (is_column_major)
+        {
+            aug_merge_index.push_back("0");
+        }
+        else
+        {
+            aug_merge_index.push_back("1");
+        }
+        A->ControlEndpoint(DIR_MERGE_INDEX, aug_merge_index);
     }
-    else
-    {
-        aug_merge_index.push_back("1");
-    }
-
-    A->ControlEndpoint(DIR_MERGE_INDEX, aug_merge_index);
 
     if (!is_input_single_file)
     {
@@ -593,6 +595,14 @@ int main(int argc, char *argv[])
     }
 
     PrintVector("chunk_size = ", chunk_size);
+
+    //By default, the TDMS file is column major
+    if (input_file_type == "EP_TDMS")
+    {
+        is_column_major_from_config = true; //Set to skip the check from file
+        is_column_major = true;
+    }
+
     //std::cout << "A_endpoint_id = " << A_endpoint_id << "\n";
     if (!is_column_major_from_config)
     {
