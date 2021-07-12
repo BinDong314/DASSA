@@ -245,6 +245,50 @@ namespace DasLib
         }
         return result;
     }
+
+    /**
+     * @brief Convert a 1D vector to 2D vector
+     * 
+     * @tparam T1 
+     * @tparam T2 
+     * @param cols 
+     * @param data1d : is organized as row-major, i.e., row is cotigious 
+     *                  row 1 , row 2, row 3...
+     *  @param row_layout_flag: extrat row or column as 2D vector 
+     * @return std::vector<std::vector<T2>> 
+     */
+    template <class T1, class T2 = double>
+    inline int ConvertVector1DTo2D(const std::vector<T1> &data1d, const size_t rows, const size_t cols, std::vector<std::vector<T2>> &result, const bool row_layout_flag)
+    {
+        if (row_layout_flag)
+        {
+            //size_t rows = data1d.size() / cols;
+            result.resize(rows);
+            for (std::size_t i = 0; i < rows; ++i)
+            {
+                result[i].resize(cols);
+                for (std::size_t j = 0; j < cols; ++j)
+                {
+                    result[i][j] = data1d[i * cols + j];
+                }
+            }
+        }
+        else
+        {
+            //size_t rows = data1d.size() / cols;
+            result.resize(cols);
+            for (std::size_t i = 0; i < cols; ++i)
+            {
+                result[i].resize(rows);
+                for (std::size_t j = 0; j < rows; ++j)
+                {
+                    result[i][j] = data1d[i * cols + j];
+                }
+            }
+        }
+
+        return result;
+    }
     /*
 template <class T>
 inline std::vector<std::vector<T>> Vector1D2D(size_t cols, std::vector<T> &data1d)

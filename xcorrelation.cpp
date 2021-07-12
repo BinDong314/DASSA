@@ -243,9 +243,10 @@ inline Stencil<std::vector<double>> udf_xcorr(const Stencil<TT> &iStencil)
         }
 
         if (!ft_rank)
-            std::cout << "Finish space-domain decimate with [" << ts2d_temp.size() << "] channels \n";
+            std::cout << "Finish space-domain decimate with [" << ts2d_temp.size() << "] channels  with [ " << ts2d_temp[0].size() << " ] points\n";
 
         ts2d = ts2d_temp;
+        chs_per_file_udf = ts2d_temp.size();
     }
 
     //

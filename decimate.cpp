@@ -268,13 +268,13 @@ inline Stencil<std::vector<double>> udf_decimate(const Stencil<short> &iStencil)
         ts_temp_column.resize(ts_temp.size());
         transpose(ts_temp.data(), ts_temp_column.data(), ts2d_ma.size(), ts2d_ma[0].size());
         ts_temp = ts_temp_column;
-        vector_shape[1] = ts2d_ma.size();
-        vector_shape[0] = ts2d_ma[0].size();
+        vector_shape[0] = ts2d_ma[0].size(); //nPoint
+        vector_shape[1] = ts2d_ma.size();    // nTrace
     }
     else
     {
-        vector_shape[0] = ts2d_ma.size();
-        vector_shape[1] = ts2d_ma[0].size();
+        vector_shape[0] = ts2d_ma.size();    // nTrace
+        vector_shape[1] = ts2d_ma[0].size(); // nPoint
     }
 
     //
@@ -291,6 +291,20 @@ inline Stencil<std::vector<double>> udf_decimate(const Stencil<short> &iStencil)
             {
                 int temp_sf = 1 / DT_NEW;
                 it->second = std::to_string(temp_sf); // "125";
+            }
+
+            if (it->first == "nPoint")
+            {
+                int temp_sf;
+                if (is_column_major)
+                {
+                    temp_sf = vector_shape[0];
+                }
+                else
+                {
+                    temp_sf = vector_shape[1];
+                }
+                it->second = std::to_string(temp_sf);
             }
         }
         oStencil.SetTagMap(tag_map);
