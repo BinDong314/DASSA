@@ -125,6 +125,7 @@ bool is_file_range = false;
 int file_range_start_index = 0;
 int file_range_end_index = 1;
 std::string file_range_indexes_str;
+std::vector<std::string> aug_merge_index;
 
 void init_xcorr()
 {
@@ -568,7 +569,6 @@ int main(int argc, char *argv[])
 
     if (is_input_single_file == false)
     {
-        std::vector<std::string> aug_merge_index;
         if (is_column_major)
         {
             aug_merge_index.push_back("0");
