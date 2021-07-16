@@ -225,9 +225,10 @@ inline Stencil<std::vector<double>> udf_xcorr(const Stencil<TT> &iStencil)
         //    lts_per_file_udf = temp;
     }
 
-    std::cout << "Before Vector1D2D ), chs_per_file_udf = " << chs_per_file_udf << ", lts_per_file_udf = " << lts_per_file_udf << "\n";
+    //std::cout << "Before Vector1D2D ), chs_per_file_udf = " << chs_per_file_udf << ", lts_per_file_udf = " << lts_per_file_udf << "\n";
     std::vector<std::vector<double>> ts2d = DasLib::Vector1D2D(lts_per_file_udf, ts_short);
-    //PrintVV("ts2d", ts2d);
+
+    //PrintVV("ts2d before space decimate:", ts2d);
 
     if (is_space_decimate)
     {
@@ -255,7 +256,9 @@ inline Stencil<std::vector<double>> udf_xcorr(const Stencil<TT> &iStencil)
     //e.g. ts = {time series 1 , time series 2}
     //
 
-    std::cout << "chs_per_file_udf (before skip ) = " << ts2d.size() << ", " << ts2d[0].size() << ", chs_per_file_udf = " << chs_per_file_udf << ", lts_per_file_udf = " << lts_per_file_udf << "\n";
+    //std::cout << "chs_per_file_udf (before skip ) = " << ts2d.size() << ", " << ts2d[0].size() << ", chs_per_file_udf = " << chs_per_file_udf << ", lts_per_file_udf = " << lts_per_file_udf << "\n";
+
+    //PrintVV("ts2d before stride after space-dec: \n ", ts2d);
 
     //We may update the data based on is_channel_stride/channel_stride_size
     //e.g.,  channel_range_start = 0, channel_range_end = 99
@@ -267,18 +270,19 @@ inline Stencil<std::vector<double>> udf_xcorr(const Stencil<TT> &iStencil)
         {
             if (iiii % channel_stride_size == 0)
             {
-                std::cout << iiii << "\n";
+                //std::cout << iiii << "\n";
                 //ts2d.erase(ts2d.begin() + iiii);
                 ts2d_temp.push_back(ts2d[iiii]);
             }
         }
         ts2d = ts2d_temp;
         chs_per_file_udf = ts2d.size();
-        std::cout << "chs_per_file_udf (after skip ) = " << ts2d.size() << ", " << ts2d[0].size() << "\n";
+        //std::cout << "chs_per_file_udf (after skip ) = " << ts2d.size() << ", " << ts2d[0].size() << "\n";
     }
 
-    //std::cout << "ts2d.size() = " << ts2d.size() << ",ts2d[0].size() = " << ts2d[0].size() << ", lts_per_file_udf =" << lts_per_file_udf << ", ts_short.size() = " << ts_short.size() << "\n";
+    // std::cout << "ts2d.size() = " << ts2d.size() << ",ts2d[0].size() = " << ts2d[0].size() << ", lts_per_file_udf =" << lts_per_file_udf << ", ts_short.size() = " << ts_short.size() << "\n";
     //std::cout << "Got data ! at rank " << ft_rank << " \n";
+    //PrintVV("ts2d before detrend: ", ts2d);
 
     std::vector<double> ts_temp2;
     //Resample in time-domain
