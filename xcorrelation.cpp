@@ -67,7 +67,7 @@ std::string space_decimate_operation = "ave"; //"median", "min", "max"
 
 double DT = 0.002;
 double DT_NEW = 0.008;
-
+int round_dt_dew_dt;
 void printf_help(char *cmd);
 
 //
@@ -129,7 +129,9 @@ std::vector<std::string> aug_merge_index;
 
 void init_xcorr()
 {
-    int nPoint = ceil(lts_per_file / (DT_NEW / DT));
+    round_dt_dew_dt = round(DT_NEW / DT);
+    //int nPoint = ceil(lts_per_file / (DT_NEW / DT));
+    int nPoint = ceil(lts_per_file / round_dt_dew_dt);
     cut_frequency_low = (0.5 / DT_NEW) / (0.5 / DT);
     ButterLow(butter_order, cut_frequency_low, BUTTER_A, BUTTER_B);
 
@@ -141,8 +143,12 @@ void init_xcorr()
     fNyquist = 0.5 / DT_NEW;
     INTERP_ZF[5] = fNyquist;
 
-    //if (!ft_rank)
-    //    std::cout << "After decimate, nPoint = " << nPoint << ", lts_per_file =" << lts_per_file << ", DT_NEW = " << DT_NEW << ", DT =  " << DT << " , nfft = " << nfft << "\n";
+    if (!ft_rank)
+    {
+        std::cout << "In init_xcorr, nPoint = " << nPoint << ", lts_per_file =" << lts_per_file << ", DT_NEW = " << DT_NEW << ", DT =  " << DT << " , nfft = " << nfft << ", round_dt_dew_dt = " << round_dt_dew_dt << "\n";
+        PrintVector("BUTTER_A = ", BUTTER_A);
+        PrintVector("BUTTER_B = ", BUTTER_B);
+    }
 
     df = 2.0 * fNyquist / (double)nfft;
 
@@ -277,7 +283,8 @@ inline Stencil<std::vector<double>> udf_xcorr(const Stencil<TT> &iStencil)
         }
         ts2d = ts2d_temp;
         chs_per_file_udf = ts2d.size();
-        //std::cout << "chs_per_file_udf (after skip ) = " << ts2d.size() << ", " << ts2d[0].size() << "\n";
+        if (!ft_rank)
+            std::cout << "chs_per_file_udf (after skip ) = " << ts2d.size() << ", each with " << ts2d[0].size() << " points\n";
     }
 
     // std::cout << "ts2d.size() = " << ts2d.size() << ",ts2d[0].size() = " << ts2d[0].size() << ", lts_per_file_udf =" << lts_per_file_udf << ", ts_short.size() = " << ts_short.size() << "\n";
@@ -291,10 +298,11 @@ inline Stencil<std::vector<double>> udf_xcorr(const Stencil<TT> &iStencil)
         detrend(ts2d[i].data(), lts_per_file_udf); //Detread
         //PrintVector("ts2d[i] = ", ts2d[i]);
         filtfilt(BUTTER_A, BUTTER_B, ts2d[i], ts_temp2); //filtfilt
-        resample(1, DT_NEW / DT, ts_temp2, ts2d[i]);     //resample
+        resample(1, round_dt_dew_dt, ts_temp2, ts2d[i]); //resample
     }
     DasLib::clear_vector(ts_temp2);
-
+    if (!ft_rank)
+        std::cout << "After time-domain decimate, with " << ts2d.size() << " channels,  each with " << ts2d[0].size() << " points \n";
     //PrintVV("ts2d :", ts2d);
 
     //if (!ft_rank)
@@ -364,8 +372,10 @@ inline Stencil<std::vector<double>> udf_xcorr(const Stencil<TT> &iStencil)
     {
         moving_mean(ts2d_ma[i_row], ts2d[i_row], nPoint_hal_win);
         nPoint_before_fft = ts2d[i_row].size();
+
         fftv_forward_p2(ts2d[i_row], fft_out);
         fft_in.resize(fft_out.size());
+        //std::cout << "nPoint_before_fft =" << nPoint_before_fft << ", ts2d_ma[i_row].size() = " << ts2d_ma[i_row].size() << ", ts2d[i_row].size() = " << ts2d[i_row].size() << ", fft_out.size = " << fft_out.size() << ", shapingFilt.size() =" << shapingFilt.size() << " \n";
         for (int ii = 0; ii < fft_out.size(); ii++)
         {
             temp_f = pow(sqrt(fft_out[ii].real() * fft_out[ii].real() + fft_out[ii].imag() * fft_out[ii].imag()), eCoeff) + 0.001;
