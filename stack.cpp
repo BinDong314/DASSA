@@ -96,6 +96,12 @@ std::string sorted_indexes_str;     //string of sort_indexes after cut to n_weig
 
 bool is_delete_median = false;
 
+bool is_column_major = true;
+bool is_column_major_from_config = false;
+std::string MeasureLengthName = "MeasureLength[m]";
+std::string SpatialResolutionName = "SpatialResolution[m]";
+std::string SamplingFrequencyName = "SamplingFrequency[Hz]";
+
 void read_ml_weight(const std::string ml_weight_file_p, std::vector<double> &ml_weight_p, std::vector<size_t> &sort_indexes_p);
 
 inline Stencil<double>
@@ -103,35 +109,47 @@ stack_udf(const Stencil<double> &iStencil)
 {
     nStack++;
 
-    std::vector<int> start_offset{0, 0}, end_offset{chs_per_file - 1, lts_per_file - 1};
+    std::vector<int> max_offset_upper;
+    iStencil.GetOffsetUpper(max_offset_upper);
+    PrintVector("max_offset_upper = ", max_offset_upper);
+
+    std::vector<int> start_offset = {0, 0}, end_offset = {max_offset_upper[0], max_offset_upper[1]};
     std::vector<double> ts;
     iStencil.ReadNeighbors(start_offset, end_offset, ts);
-    std::vector<std::vector<double>> ts2d = DasLib::Vector1D2D<double, double>(lts_per_file, ts);
 
-    //PrintVV("ts2d ", ts2d);
-    /*
-    std::vector<std::vector<double>> ts2d;
-    ts2d.resize(chs_per_file);
-    for (int i = 0; i < chs_per_file; i++)
+    int chs_per_file_udf, lts_per_file_udf;
+    if (is_column_major)
     {
-        ts2d[i].resize(lts_per_file);
-        for (int j = 0; j < lts_per_file; j++)
-        {
-            ts2d[i][j] = iStencil(i, j);
-        }
+        chs_per_file_udf = max_offset_upper[1] + 1;
+        lts_per_file_udf = max_offset_upper[0] + 1;
     }
-    */
+    else
+    {
+        chs_per_file_udf = max_offset_upper[0] + 1;
+        lts_per_file_udf = max_offset_upper[1] + 1;
+    }
+
+    if (is_column_major)
+    {
+        std::vector<double> ts_short_temp;
+        ts_short_temp.resize(ts.size());
+        DasLib::transpose(ts.data(), ts_short_temp.data(), lts_per_file_udf, chs_per_file_udf);
+        ts = ts_short_temp;
+    }
+
+    std::vector<std::vector<double>> ts2d = DasLib::Vector1D2D<double, double>(lts_per_file_udf, ts);
 
     if (is_delete_median)
     {
         DasLib::DeleteMedian(ts2d);
         if (!ft_rank)
-            std::cout << "Disable DeleteMedian ! \n";
+            std::cout << "Enable DeleteMedian ! \n";
     }
 
     DetMean_tim = DetMean_tim + (AU_WTIME - temp_time);
     temp_time = AU_WTIME;
 
+    //std::cout << "t_start = " << t_start << ", t_end = " <<  t_end<< ",sub_start_t =  " << sub_start_t
     //Remove the media
     for (int i = 0; i < chs_per_file; i++)
     {
@@ -185,7 +203,18 @@ stack_udf(const Stencil<double> &iStencil)
     CPU_Time = CPU_Time + (AU_WTIME - temp_time_large);
     temp_time_large = AU_WTIME;
 
-    std::vector<unsigned long long> H_start{0, 0}, H_end{static_cast<unsigned long long>(chs_per_file) - 1, static_cast<unsigned long long>(LTS_new) - 1};
+    std::vector<unsigned long long> H_start = {0, 0}, H_end = {0, 0};
+
+    if (is_column_major)
+    {
+        H_end[0] = LTS_new - 1;
+        H_end[1] = chs_per_file_udf - 1;
+    }
+    else
+    {
+        H_end[0] = chs_per_file_udf - 1;
+        H_end[1] = LTS_new - 1;
+    }
 
     std::vector<double> semblance_denom_sum_v;
     semblance_denom_sum->ReadArray(H_start, H_end, semblance_denom_sum_v);
@@ -292,14 +321,27 @@ int main(int argc, char *argv[])
     }
 
     // set up the chunk size and the overlap size
-    std::vector<int> chunk_size = {chs_per_file, lts_per_file};
+    std::vector<int> chunk_size = {0, 0};
     std::vector<int> overlap_size = {0, 0};
 
-    size_t size_after_subset = DasLib::InferTimeSubsetSize(t_start, t_end, sub_start_t, sub_end_t, sample_rate);
-    sc_size[0] = chs_per_file;
-    sc_size[1] = size_after_subset;
+    FT::Array<double> *A = new FT::Array<double>("EP_DIR:EP_HDF5:" + xcorr_input_dir + ":" + xcorr_input_dataset_name);
 
-    std::cout << "size_after_subset = " << size_after_subset << "\n";
+    std::vector<std::string> file_size_str;
+    A->ControlEndpoint(DIR_GET_FILE_SIZE, file_size_str);
+    String2Vector(file_size_str[0], chunk_size);
+    lts_per_file = chunk_size[0];
+    chs_per_file = chunk_size[1];
+    if (!ft_rank)
+        PrintVector("chunk_size = ", chunk_size);
+    A->SetChunkSize(chunk_size);
+    A->SetOverlapSize(overlap_size);
+
+    size_t size_after_subset = DasLib::InferTimeSubsetSize(t_start, t_end, sub_start_t, sub_end_t, sample_rate);
+    sc_size[0] = size_after_subset;
+    sc_size[1] = chs_per_file;
+
+    if (!ft_rank)
+        std::cout << "size_after_subset = " << size_after_subset << "\n";
 
     semblance_denom_sum = new FT::Array<double>("EP_MEMORY", sc_size);
     coherency_sum = new FT::Array<std::complex<double>>("EP_MEMORY", sc_size);
@@ -345,10 +387,8 @@ int main(int argc, char *argv[])
     //phaseWeight->Nonvolatile("EP_HDF5:./xcorr_examples_h5_stack_phaseWeight.h5:/data");
     //Input data,
 
-    FT::Array<double> *A = new FT::Array<double>("EP_DIR:EP_HDF5:" + xcorr_input_dir + ":" + xcorr_input_dataset_name, chunk_size, overlap_size);
-
-    std::vector<int> skip_size = {chs_per_file, lts_per_file};
-    A->EnableApplyStride(skip_size);
+    //std::vector<int> skip_size = {chs_per_file, lts_per_file};
+    A->EnableApplyStride(chunk_size);
     if (is_ml_weight || is_file_range)
     {
         std::vector<std::string> index_param;
@@ -396,7 +436,7 @@ int main(int argc, char *argv[])
 
     if (!ft_rank)
     {
-        std::vector<unsigned long long> H_start{0, 0}, H_end{static_cast<unsigned long long>(chs_per_file) - 1, static_cast<unsigned long long>(size_after_subset) - 1};
+        std::vector<unsigned long long> H_start{0, 0}, H_end{static_cast<unsigned long long>(size_after_subset) - 1, static_cast<unsigned long long>(chs_per_file) - 1};
 
         std::vector<double> semblance_denom_sum_v;
         semblance_denom_sum->ReadArray(H_start, H_end, semblance_denom_sum_v);

@@ -2,7 +2,7 @@
 
 #AU_DIR=/Users/dbin/work/fastensor-dassa/build
 AU_DIR=/Users/dbin/work/fastensor/build
-HDF5_DIR=/Users/dbin/work/soft/hdf5-1.12.0/build
+HDF5_DIR=/Users/dbin/work/soft/hdf5-1.10.7/build
 FFTW_DIR=/Users/dbin/work/soft/fftw-3.3.9/build
 DASH_DIR=/Users/dbin/work/soft/dash/build/install
 EIGEN3_DIR=/Users/dbin/work/dassa/Tools3rd
