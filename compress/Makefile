@@ -19,7 +19,7 @@ SZ_DIR=/Users/dbin/work/soft/SZ/build
 SHELL:=/bin/bash
 
 CCC=mpicxx
-OTHER_FLAGS=-g3  -std=c++17 -I./DasLib/
+OTHER_FLAGS=-O3  -std=c++17 -I./DasLib/
 
 SZ_FLAG=
 #-I$(SZ_DIR)/include -L$(SZ_DIR)/lib -Wl,-rpath,$(SZ_DIR)/lib  -Wl,-rpath,$(SZ_DIR) -lSZ   -lzlib -lhdf5sz -ldl

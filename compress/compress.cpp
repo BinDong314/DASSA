@@ -533,7 +533,7 @@ int main(int argc, char *argv[])
 		{
 			filter_chunk_size = chunk_size;
 		}
-
+		filter_paramter.clear();
 		FindCompressMethod(compression_method_name, compression_method_parameter, filter_id, filter_cd_values);
 		filter_paramter.push_back(std::to_string(filter_id));
 		filter_paramter.push_back(Vector2String(filter_cd_values));
@@ -551,6 +551,14 @@ int main(int argc, char *argv[])
 		{
 			filter_paramter.insert(filter_paramter.begin(), std::to_string(HDF5_ENABLE_FILTER));
 			B->ControlEndpoint(DIR_SUB_CMD_ARG, filter_paramter);
+
+			control_paramter_null.clear();
+			control_paramter_null.push_back(to_string(HDF5_DISABLE_MPI_IO));
+			B->ControlEndpoint(DIR_SUB_CMD_ARG, control_paramter_null);
+
+			control_paramter_null.clear();
+			control_paramter_null.push_back(std::to_string(HDF5_DISABLE_COLLECTIVE_IO));
+			B->ControlEndpoint(DIR_SUB_CMD_ARG, control_paramter_null);
 		}
 	}
 	//
