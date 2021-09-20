@@ -162,24 +162,22 @@ void FindCompressMethod(const std::string &compression_method_name, const std::s
 
 //Here we just read and write data
 //Compression happens during the writing
-inline Stencil<std::vector<short>> udf_compress(const Stencil<short> &iStencil)
+std::vector<int> start_offset = {0, 0};
+std::vector<short> ts_short;
+std::vector<int> max_offset_upper;
+std::vector<size_t> vector_shape(2);
+
+#include <ctime>
+
+inline int udf_compress(const Stencil<short> &iStencil, Stencil<std::vector<short>> &oStencil)
 {
-	std::vector<int> max_offset_upper;
 	iStencil.GetOffsetUpper(max_offset_upper);
 	PrintVector("max_offset_upper = ", max_offset_upper);
+	//std::vector<int> end_offset = {max_offset_upper[0], max_offset_upper[1]};
+	iStencil.ReadNeighbors(start_offset, max_offset_upper, ts_short);
 
-	//int chs_per_file_udf = max_offset_upper[0] + 1, lts_per_file_udf = max_offset_upper[1] + 1;
-	int chs_per_file_udf, lts_per_file_udf;
-	std::vector<int> start_offset = {0, 0};
-	std::vector<int> end_offset = {max_offset_upper[0], max_offset_upper[1]};
+	clock_t begin = clock();
 
-	std::vector<short> ts_short;
-	iStencil.ReadNeighbors(start_offset, end_offset, ts_short);
-
-	Stencil<std::vector<short>> oStencil;
-	//
-	// Deal with tag
-	//
 	if (is_tag_flag && iStencil.HasTagMap() && !is_stencil_tag_once)
 	{
 		std::map<std::string, std::string> tag_map;
@@ -188,33 +186,19 @@ inline Stencil<std::vector<short>> udf_compress(const Stencil<short> &iStencil)
 		if (is_output_single_file) //We only deal with meta once
 			is_stencil_tag_once = true;
 	}
+	clock_t end = clock();
 
-	std::vector<size_t> vector_shape(2);
+	double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
+
+	std::cout << "Meta Data Cost = " << elapsed_secs << "[s]" << std::endl;
+
 	vector_shape[0] = max_offset_upper[0] + 1;
 	vector_shape[1] = max_offset_upper[1] + 1;
 	PrintVector("vector_shape: ", vector_shape);
 	oStencil.SetShape(vector_shape);
 
-	// for (size_t i = 0; i < ts_short.size(); i++)
-	// {
-	// 	ts_short[i] = std::abs(ts_short[i]);
-	// }
-
-	// if (input_data_type == 1)
-	// {
-	// 	std::vector<unsigned short> ts_unsigned_short;
-	// 	ts_unsigned_short.resize(ts_short.size());
-	// 	for (size_t i = 0; i < ts_short.size(); i++)
-	// 	{
-	// 		ts_unsigned_short.push_back(ts_short[i]);
-	// 	}
-	// 	oStencil = ts_unsigned_short;
-	// }
-	// else
-	// {
 	oStencil = ts_short;
-	//}
-	return oStencil;
+	return 0;
 }
 
 int main(int argc, char *argv[])
