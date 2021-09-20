@@ -172,11 +172,12 @@ std::vector<size_t> vector_shape(2);
 inline int udf_compress(const Stencil<short> &iStencil, Stencil<std::vector<short>> &oStencil)
 {
 	iStencil.GetOffsetUpper(max_offset_upper);
-	PrintVector("max_offset_upper = ", max_offset_upper);
+	if (!ft_rank)
+		PrintVector("max_offset_upper = ", max_offset_upper);
 	//std::vector<int> end_offset = {max_offset_upper[0], max_offset_upper[1]};
 	iStencil.ReadNeighbors(start_offset, max_offset_upper, ts_short);
 
-	clock_t begin = clock();
+	//clock_t begin = clock();
 
 	if (is_tag_flag && iStencil.HasTagMap() && !is_stencil_tag_once)
 	{
@@ -186,15 +187,14 @@ inline int udf_compress(const Stencil<short> &iStencil, Stencil<std::vector<shor
 		if (is_output_single_file) //We only deal with meta once
 			is_stencil_tag_once = true;
 	}
-	clock_t end = clock();
-
-	double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
-
-	std::cout << "Meta Data Cost = " << elapsed_secs << "[s]" << std::endl;
+	//clock_t end = clock();
+	//double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
+	//std::cout << "Meta Data Cost = " << elapsed_secs << "[s]" << std::endl;
 
 	vector_shape[0] = max_offset_upper[0] + 1;
 	vector_shape[1] = max_offset_upper[1] + 1;
-	PrintVector("vector_shape: ", vector_shape);
+	if (!ft_rank)
+		PrintVector("vector_shape: ", vector_shape);
 	oStencil.SetShape(vector_shape);
 
 	oStencil = ts_short;
