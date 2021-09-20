@@ -230,7 +230,8 @@ int main(int argc, char *argv[])
 	MPI_Comm_size(MPI_COMM_WORLD, &numprocs);
 	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 	MPI_Get_processor_name(processor_name, &namelen);
-	printf("Process %d on %s out of %d\n", rank, processor_name, numprocs);
+	if (!rank)
+		printf("Process %d on %s out of %d\n", rank, processor_name, numprocs);
 
 	if (has_config_file_flag)
 		read_config_file(config_file, ft_rank);
