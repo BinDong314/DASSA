@@ -284,6 +284,9 @@ int main(int argc, char *argv[])
 		A->ControlEndpoint(DIR_FILE_SORT_INDEXES, index_param);
 	}
 
+	std::vector<std::string> p_null;
+	A->ControlEndpoint(DIR_SKIP_SIZE_CHECK, p_null);
+
 	//Set the index to merge file
 	if (!is_input_single_file)
 	{
