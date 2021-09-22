@@ -406,11 +406,11 @@ int main(int argc, char *argv[])
 		lts_per_file = chunk_size[1];
 		chs_per_file = chunk_size[0];
 	}
-
-	PrintVector("chunk_size = ", chunk_size);
 	if (!ft_rank)
+	{
+		PrintVector("chunk_size = ", chunk_size);
 		std::cout << "lts_per_file = " << lts_per_file << ",chs_per_file = " << chs_per_file << "\n";
-
+	}
 	///Users/dbin/work/arrayudf-git-svn-test-on-bitbucket/examples/das/tdms-dir", chunk_size, overlap_size);
 	A->SetChunkSize(chunk_size);
 	A->SetOverlapSize(overlap_size);
