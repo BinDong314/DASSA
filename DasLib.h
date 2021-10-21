@@ -213,7 +213,16 @@ namespace DasLib
     {
         size_t sub_start_index = round((sub_start_t - start_t) / smaple_rate + 1);
         size_t sub_end_index = round((sub_end_t - start_t) / smaple_rate + 1);
-
+        /*
+        std::cout << "sub_start_index = " << sub_start_index
+                  << ", sub_end_index =  " << sub_end_index
+                  << ", start_t =" << start_t
+                  << ", end_t =" << end_t
+                  << ", sub_start_t = " << sub_start_t
+                  << ", sub_end_t = " << sub_end_t
+                  << ", smaple_rate = " << smaple_rate
+                  << "\n";
+        */
         return sub_end_index - sub_start_index + 1;
     }
 

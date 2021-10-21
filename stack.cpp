@@ -139,12 +139,16 @@ stack_udf(const Stencil<double> &iStencil)
 
     std::vector<std::vector<double>> ts2d = DasLib::Vector1D2D<double, double>(lts_per_file_udf, ts);
 
+    //PrintVV("ts2d init", ts2d);
+
     if (is_delete_median)
     {
         DasLib::DeleteMedian(ts2d);
         if (!ft_rank)
             std::cout << "Enable DeleteMedian ! \n";
     }
+
+    //PrintVV("ts2d after DeleteMedian ", ts2d);
 
     DetMean_tim = DetMean_tim + (AU_WTIME - temp_time);
     temp_time = AU_WTIME;
@@ -156,6 +160,8 @@ stack_udf(const Stencil<double> &iStencil)
         //Subset
         ts2d[i] = DasLib::TimeSubset(ts2d[i], t_start, t_end, sub_start_t, sub_end_t, sample_rate);
     }
+
+    //PrintVV("ts2d after TimeSubset ", ts2d);
 
     if (is_flipud_flag)
     {
@@ -216,6 +222,8 @@ stack_udf(const Stencil<double> &iStencil)
         H_end[1] = LTS_new - 1;
     }
 
+    //PrintVector("H_end = ", H_end);
+
     std::vector<double> semblance_denom_sum_v;
     semblance_denom_sum->ReadArray(H_start, H_end, semblance_denom_sum_v);
 
@@ -231,7 +239,15 @@ stack_udf(const Stencil<double> &iStencil)
     {
         for (int j = 0; j < LTS_new; j++)
         {
-            offset = i * LTS_new + j;
+            if (is_column_major)
+            {
+                offset = j * chs_per_file + i;
+            }
+            else
+            {
+                offset = i * LTS_new + j;
+            }
+
             coherency_sum_v[offset] = coherency_sum_v[offset] + coherency[i][j];
             semblance_denom_sum_v[offset] = semblance_denom_sum_v[offset] + semblance_denom[i][j];
             data_in_sum_v[offset] = data_in_sum_v[offset] + ts2d[i][j];
@@ -341,7 +357,7 @@ int main(int argc, char *argv[])
     sc_size[1] = chs_per_file;
 
     if (!ft_rank)
-        std::cout << "size_after_subset = " << size_after_subset << "\n";
+        std::cout << "size_after_subset = " << size_after_subset << ", chs_per_file = " << chs_per_file << "\n";
 
     semblance_denom_sum = new FT::Array<double>("EP_MEMORY", sc_size);
     coherency_sum = new FT::Array<std::complex<double>>("EP_MEMORY", sc_size);
@@ -490,7 +506,7 @@ int main(int argc, char *argv[])
 
         semblanceWeight->WriteArray(H_start, H_end, semblanceWeight_v);
         phaseWeight->WriteArray(H_start, H_end, phaseWeight_v);
-        // std::cout << "Store final_pwstack... \n ";
+        std::cout << "Store final_pwstack... \n ";
         final_pwstack->WriteArray(H_start, H_end, final_pwstack_v);
     }
     MPI_Barrier(MPI_COMM_WORLD);
@@ -668,8 +684,8 @@ int stack_config_reader(std::string file_name, int mpi_rank)
         AU_EXIT("Don't read the is_delete_median's value " + is_flipud_flag_str);
     }
 
-    chs_per_file = reader.GetInteger("parameter", "chs_per_file", 201);
-    lts_per_file = reader.GetInteger("parameter", "lts_per_file", 14999);
+    //chs_per_file = reader.GetInteger("parameter", "chs_per_file", 201);
+    //lts_per_file = reader.GetInteger("parameter", "lts_per_file", 14999);
 
     t_start = reader.GetReal("parameter", "t_start", -59.9920000000000);
     t_end = reader.GetReal("parameter", "t_end", 59.9920000000000);
@@ -712,8 +728,8 @@ int stack_config_reader(std::string file_name, int mpi_rank)
             std::cout << termcolor::magenta << "\n        is_ml_weight_ordered = " << termcolor::green << is_ml_weight_ordered;
         }
         std::cout << termcolor::blue << "\n\n Runtime parameters: ";
-        std::cout << termcolor::magenta << "\n\n        lts_per_file = " << termcolor::green << lts_per_file;
-        std::cout << termcolor::magenta << "\n\n        chs_per_file = " << termcolor::green << chs_per_file;
+        //std::cout << termcolor::magenta << "\n\n        lts_per_file = " << termcolor::green << lts_per_file;
+        //std::cout << termcolor::magenta << "\n\n        chs_per_file = " << termcolor::green << chs_per_file;
         std::cout << termcolor::magenta << "\n        t_start = " << termcolor::green << t_start;
         std::cout << termcolor::magenta << "\n        t_end = " << termcolor::green << t_end;
         std::cout << termcolor::magenta << "\n        sample_rate = " << termcolor::green << sample_rate;
