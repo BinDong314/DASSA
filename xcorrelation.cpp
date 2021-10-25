@@ -127,6 +127,8 @@ int file_range_end_index = 1;
 std::string file_range_indexes_str;
 std::vector<std::string> aug_merge_index;
 
+double time_begin, time_end; // the time for the begin and the end of result series
+
 void init_xcorr()
 {
     round_dt_dew_dt = round(DT_NEW / DT);
@@ -305,6 +307,9 @@ inline Stencil<std::vector<double>> udf_xcorr(const Stencil<TT> &iStencil)
         std::cout << "After time-domain decimate, with " << ts2d.size() << " channels,  each with " << ts2d[0].size() << " points \n";
     //PrintVV("ts2d :", ts2d);
 
+    //Find the time_begin, time_end for the result series
+    time_end = (ts2d[0].size() - 1) * DT_NEW;
+    time_begin = -time_end;
     //if (!ft_rank)
     //    std::cout << "Finish time-domain decimate ! \n";
 
@@ -473,8 +478,9 @@ inline Stencil<std::vector<double>> udf_xcorr(const Stencil<TT> &iStencil)
                 it->second = std::to_string(temp_sf); // "125";
             }
         }
+        tag_map.insert({"time_begin", std::to_string(time_begin)});
+        tag_map.insert({"time_end", std::to_string(time_end)});
         oStencil.SetTagMap(tag_map);
-
         //To add Dsi_out.fh{9} = tb; Dsi_out.fh{10} = te;
         //nPoint = size(seis_resamp, 1);
         //t_resamp = dt_new .* (0 : (nPoint - 1)); tb = t_resamp(1); te = t_resamp(end);
@@ -585,7 +591,7 @@ int main(int argc, char *argv[])
         A->ControlEndpoint(DIR_FILE_SORT_INDEXES, index_param);
     }
 
-    if (is_input_single_file == false)
+    if (!is_input_single_file)
     {
         if (is_column_major)
         {
