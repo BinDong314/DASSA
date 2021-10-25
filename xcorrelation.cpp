@@ -474,6 +474,10 @@ inline Stencil<std::vector<double>> udf_xcorr(const Stencil<TT> &iStencil)
             }
         }
         oStencil.SetTagMap(tag_map);
+
+        //To add Dsi_out.fh{9} = tb; Dsi_out.fh{10} = te;
+        //nPoint = size(seis_resamp, 1);
+        //t_resamp = dt_new .* (0 : (nPoint - 1)); tb = t_resamp(1); te = t_resamp(end);
     }
 
     return oStencil;
