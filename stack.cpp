@@ -102,6 +102,10 @@ std::string MeasureLengthName = "MeasureLength[m]";
 std::string SpatialResolutionName = "SpatialResolution[m]";
 std::string SamplingFrequencyName = "SamplingFrequency[Hz]";
 
+std::string StartTimeName = "time_begin";
+std::string EndTimeName = "time_end";
+bool is_time_from_config = false;
+
 void read_ml_weight(const std::string ml_weight_file_p, std::vector<double> &ml_weight_p, std::vector<size_t> &sort_indexes_p);
 
 inline Stencil<double>
@@ -352,6 +356,14 @@ int main(int argc, char *argv[])
     A->SetChunkSize(chunk_size);
     A->SetOverlapSize(overlap_size);
 
+    if (!is_time_from_config)
+    {
+        std::string StartTime, EndTime;
+        A->GetTag(StartTimeName, StartTime);
+        A->GetTag(EndTimeName, EndTime);
+        t_start = std::stod(StartTime);
+        t_end = std::stod(EndTime);
+    }
     size_t size_after_subset = DasLib::InferTimeSubsetSize(t_start, t_end, sub_start_t, sub_end_t, sample_rate);
     sc_size[0] = size_after_subset;
     sc_size[1] = chs_per_file;
@@ -687,8 +699,18 @@ int stack_config_reader(std::string file_name, int mpi_rank)
     //chs_per_file = reader.GetInteger("parameter", "chs_per_file", 201);
     //lts_per_file = reader.GetInteger("parameter", "lts_per_file", 14999);
 
-    t_start = reader.GetReal("parameter", "t_start", -59.9920000000000);
-    t_end = reader.GetReal("parameter", "t_end", 59.9920000000000);
+    std::string is_time_from_config_str = reader.Get("parameter", "is_time_from_config", "false");
+    if (is_time_from_config_str == "true" || is_time_from_config_str == "1")
+    {
+        is_time_from_config = true;
+        t_start = reader.GetReal("parameter", "t_start", -59.9920000000000);
+        t_end = reader.GetReal("parameter", "t_end", 59.9920000000000);
+    }
+    else
+    {
+        is_time_from_config = false;
+    }
+
     sub_start_t = reader.GetReal("parameter", "sub_start_t", -59);
     sub_end_t = reader.GetReal("parameter", "sub_end_t", 59);
     sample_rate = reader.GetReal("parameter", "sample_rate", 0.00800000000000000);
@@ -730,8 +752,11 @@ int stack_config_reader(std::string file_name, int mpi_rank)
         std::cout << termcolor::blue << "\n\n Runtime parameters: ";
         //std::cout << termcolor::magenta << "\n\n        lts_per_file = " << termcolor::green << lts_per_file;
         //std::cout << termcolor::magenta << "\n\n        chs_per_file = " << termcolor::green << chs_per_file;
-        std::cout << termcolor::magenta << "\n        t_start = " << termcolor::green << t_start;
-        std::cout << termcolor::magenta << "\n        t_end = " << termcolor::green << t_end;
+        if (is_time_from_config)
+        {
+            std::cout << termcolor::magenta << "\n        t_start = " << termcolor::green << t_start;
+            std::cout << termcolor::magenta << "\n        t_end = " << termcolor::green << t_end;
+        }
         std::cout << termcolor::magenta << "\n        sample_rate = " << termcolor::green << sample_rate;
         std::cout << termcolor::magenta << "\n        sub_start_t = " << termcolor::green << sub_start_t;
         std::cout << termcolor::magenta << "\n        sub_end_t = " << termcolor::green << sub_end_t;

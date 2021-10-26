@@ -234,6 +234,26 @@ if (isfield(dsi_data_raw, 'fh'))
    H5A.write(attr_id_3,'H5ML_DEFAULT',fh_str)
    H5A.close(attr_id_3);
    H5T.close(attr_type_id_3);
+   
+
+   fh_str_time_start = convertStringsToChars(string(dsi_data_raw.fh{9}));
+   attr_type_id_4 = H5T.copy('H5T_C_S1');
+   H5T.set_size(attr_type_id_4, strlength(fh_str_time_start));
+   H5T.set_cset(attr_type_id_4, encoding);
+   attr_id_4 = H5A.create(dset_id,'time_begin', attr_type_id_4, attr_space_id, acpl);
+   H5A.write(attr_id_4,'H5ML_DEFAULT',fh_str_time_start)
+   H5A.close(attr_id_4);
+   H5T.close(attr_type_id_4);
+
+   fh_str_time_end = convertStringsToChars(string(dsi_data_raw.fh{9}));
+   attr_type_id_5 = H5T.copy('H5T_C_S1');
+   H5T.set_size(attr_type_id_5, strlength(fh_str_time_end));
+   H5T.set_cset(attr_type_id_5, encoding);
+   attr_id_5 = H5A.create(dset_id,'time_end', attr_type_id_5, attr_space_id, acpl);
+   H5A.write(attr_id_5,'H5ML_DEFAULT',fh_str_time_end)
+   H5A.close(attr_id_5);
+   H5T.close(attr_type_id_5);
+
 end
 
 % th header is stored as a 2D data set at it is too large for attribute
