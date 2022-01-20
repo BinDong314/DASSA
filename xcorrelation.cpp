@@ -55,13 +55,13 @@ std::string dir_output_replace_rgx = "$1-xcorr.h5";
 bool is_space_decimate = false;
 int space_decimate_chs = 32;
 /**
- * 
+ *
  * Name convertion for the space_decimate_operation
-*     ave, average, mean
-*     med, median
-*     max, maximum
-*     min, minimum
-*     sum, summary
+ *     ave, average, mean
+ *     med, median
+ *     max, maximum
+ *     min, minimum
+ *     sum, summary
  */
 std::string space_decimate_operation = "ave"; //"median", "min", "max"
 
@@ -74,8 +74,8 @@ void printf_help(char *cmd);
 vector<double> BUTTER_A;
 vector<double> BUTTER_B;
 
-//int nfft;
-//FIND_M_POWER2(nPoint, nfft);
+// int nfft;
+// FIND_M_POWER2(nPoint, nfft);
 
 int butter_order = 3;
 double cut_frequency_low = 0.25;
@@ -86,13 +86,13 @@ int channel_range_end = 1;
 bool is_many_files = false;
 int many_files_split_n = 10;
 
-//For moveing mean
+// For moveing mean
 double WINLEN_SEC = 0.5;
 int nPoint_hal_win;
 
-//For interp1
+// For interp1
 std::vector<double> shapingFilt;
-double fNyquist = 250; //250
+double fNyquist = 250; // 250
 std::vector<double> INTERP_Z{0, 0.5, 1, 1, 0.5, 0};
 std::vector<double> INTERP_ZF{0, 0.002, 0.006, 14.5, 15, fNyquist};
 double df;
@@ -109,8 +109,8 @@ bool is_column_major_from_config = false;
 /**
  * @brief input data type
  *    0 : short (by default)
- *    1 : double 
- *    2 : float 
+ *    1 : double
+ *    2 : float
  */
 int input_data_type = 0;
 
@@ -132,7 +132,7 @@ double time_begin, time_end; // the time for the begin and the end of result ser
 void init_xcorr()
 {
     round_dt_dew_dt = round(DT_NEW / DT);
-    //int nPoint = ceil(lts_per_file / (DT_NEW / DT));
+    // int nPoint = ceil(lts_per_file / (DT_NEW / DT));
     int nPoint = ceil(lts_per_file / round_dt_dew_dt);
     cut_frequency_low = (0.5 / DT_NEW) / (0.5 / DT);
     ButterLow(butter_order, cut_frequency_low, BUTTER_A, BUTTER_B);
@@ -181,8 +181,8 @@ inline Stencil<std::vector<double>> udf_xcorr(const Stencil<TT> &iStencil)
     iStencil.GetOffsetUpper(max_offset_upper);
     PrintVector("max_offset_upper = ", max_offset_upper);
 
-    //Here, we assume data is row-vector
-    //int chs_per_file_udf = max_offset_upper[0] + 1, lts_per_file_udf = max_offset_upper[1] + 1;
+    // Here, we assume data is row-vector
+    // int chs_per_file_udf = max_offset_upper[0] + 1, lts_per_file_udf = max_offset_upper[1] + 1;
     int chs_per_file_udf, lts_per_file_udf;
     std::vector<int> start_offset = {0, 0};
     std::vector<int> end_offset = {max_offset_upper[0], max_offset_upper[1]};
@@ -219,9 +219,9 @@ inline Stencil<std::vector<double>> udf_xcorr(const Stencil<TT> &iStencil)
     std::vector<TT> ts_short;
     iStencil.ReadNeighbors(start_offset, end_offset, ts_short);
 
-    //Convert to row-vector here if it is column-vector
-    //Because all the following code are built as row-vector (2D vector)
-    //Each row is a time series
+    // Convert to row-vector here if it is column-vector
+    // Because all the following code are built as row-vector (2D vector)
+    // Each row is a time series
     if (is_column_major)
     {
         std::vector<TT> ts_short_temp;
@@ -233,22 +233,22 @@ inline Stencil<std::vector<double>> udf_xcorr(const Stencil<TT> &iStencil)
         //    lts_per_file_udf = temp;
     }
 
-    //std::cout << "Before Vector1D2D ), chs_per_file_udf = " << chs_per_file_udf << ", lts_per_file_udf = " << lts_per_file_udf << "\n";
+    // std::cout << "Before Vector1D2D ), chs_per_file_udf = " << chs_per_file_udf << ", lts_per_file_udf = " << lts_per_file_udf << "\n";
     std::vector<std::vector<double>> ts2d = DasLib::Vector1D2D(lts_per_file_udf, ts_short);
 
-    //PrintVV("ts2d before space decimate:", ts2d);
+    // PrintVV("ts2d before space decimate:", ts2d);
 
     if (is_space_decimate)
     {
         std::vector<std::vector<double>> ts2d_temp;
-        //decimate in space-domain
+        // decimate in space-domain
         int ma_batches = (chs_per_file_udf % space_decimate_chs) ? (chs_per_file_udf / space_decimate_chs + 1) : (chs_per_file_udf / space_decimate_chs);
         int start_row, end_row;
         for (int i = 0; i < ma_batches; i++)
         {
             start_row = i * space_decimate_chs;
             end_row = (((i + 1) * space_decimate_chs - 1) < chs_per_file_udf) ? ((i + 1) * space_decimate_chs - 1) : chs_per_file_udf - 1;
-            //std::cout << "ma_batches =" << ma_batches << ", start_row = " << start_row << ", end_row =  " << end_row << "\n";
+            // std::cout << "ma_batches =" << ma_batches << ", start_row = " << start_row << ", end_row =  " << end_row << "\n";
             ts2d_temp.push_back(spacedecimate(ts2d, start_row, end_row, space_decimate_operation));
         }
 
@@ -260,17 +260,17 @@ inline Stencil<std::vector<double>> udf_xcorr(const Stencil<TT> &iStencil)
     }
 
     //
-    //Starts from here: ts_short is row-major order,
-    //e.g. ts = {time series 1 , time series 2}
+    // Starts from here: ts_short is row-major order,
+    // e.g. ts = {time series 1 , time series 2}
     //
 
-    //std::cout << "chs_per_file_udf (before skip ) = " << ts2d.size() << ", " << ts2d[0].size() << ", chs_per_file_udf = " << chs_per_file_udf << ", lts_per_file_udf = " << lts_per_file_udf << "\n";
+    // std::cout << "chs_per_file_udf (before skip ) = " << ts2d.size() << ", " << ts2d[0].size() << ", chs_per_file_udf = " << chs_per_file_udf << ", lts_per_file_udf = " << lts_per_file_udf << "\n";
 
-    //PrintVV("ts2d before stride after space-dec: \n ", ts2d);
+    // PrintVV("ts2d before stride after space-dec: \n ", ts2d);
 
-    //We may update the data based on is_channel_stride/channel_stride_size
-    //e.g.,  channel_range_start = 0, channel_range_end = 99
-    //       channel_stride_size = 99
+    // We may update the data based on is_channel_stride/channel_stride_size
+    // e.g.,  channel_range_start = 0, channel_range_end = 99
+    //        channel_stride_size = 99
     if (is_channel_stride)
     {
         std::vector<std::vector<double>> ts2d_temp;
@@ -278,8 +278,8 @@ inline Stencil<std::vector<double>> udf_xcorr(const Stencil<TT> &iStencil)
         {
             if (iiii % channel_stride_size == 0)
             {
-                //std::cout << iiii << "\n";
-                //ts2d.erase(ts2d.begin() + iiii);
+                // std::cout << iiii << "\n";
+                // ts2d.erase(ts2d.begin() + iiii);
                 ts2d_temp.push_back(ts2d[iiii]);
             }
         }
@@ -290,28 +290,28 @@ inline Stencil<std::vector<double>> udf_xcorr(const Stencil<TT> &iStencil)
     }
 
     // std::cout << "ts2d.size() = " << ts2d.size() << ",ts2d[0].size() = " << ts2d[0].size() << ", lts_per_file_udf =" << lts_per_file_udf << ", ts_short.size() = " << ts_short.size() << "\n";
-    //std::cout << "Got data ! at rank " << ft_rank << " \n";
-    //PrintVV("ts2d before detrend: ", ts2d);
+    // std::cout << "Got data ! at rank " << ft_rank << " \n";
+    // PrintVV("ts2d before detrend: ", ts2d);
 
     std::vector<double> ts_temp2;
-    //Resample in time-domain
+    // Resample in time-domain
     for (int i = 0; i < chs_per_file_udf; i++)
     {
-        detrend(ts2d[i].data(), lts_per_file_udf); //Detread
-        //PrintVector("ts2d[i] = ", ts2d[i]);
-        filtfilt(BUTTER_A, BUTTER_B, ts2d[i], ts_temp2); //filtfilt
-        resample(1, round_dt_dew_dt, ts_temp2, ts2d[i]); //resample
+        detrend(ts2d[i].data(), lts_per_file_udf); // Detread
+        // PrintVector("ts2d[i] = ", ts2d[i]);
+        filtfilt(BUTTER_A, BUTTER_B, ts2d[i], ts_temp2); // filtfilt
+        resample(1, round_dt_dew_dt, ts_temp2, ts2d[i]); // resample
     }
     DasLib::clear_vector(ts_temp2);
     if (!ft_rank)
         std::cout << "After time-domain decimate, with " << ts2d.size() << " channels,  each with " << ts2d[0].size() << " points \n";
-    //PrintVV("ts2d :", ts2d);
+    // PrintVV("ts2d :", ts2d);
 
-    //Find the time_begin, time_end for the result series
+    // Find the time_begin, time_end for the result series
     time_end = (ts2d[0].size() - 1) * DT_NEW;
     time_begin = -time_end;
-    //if (!ft_rank)
-    //    std::cout << "Finish time-domain decimate ! \n";
+    // if (!ft_rank)
+    //     std::cout << "Finish time-domain decimate ! \n";
 
     std::vector<std::vector<double>> ts2d_ma = ts2d;
 
@@ -339,8 +339,8 @@ inline Stencil<std::vector<double>> udf_xcorr(const Stencil<TT> &iStencil)
     DasLib::clear_vector(ts2d);
 
     //***************
-    //Move Aveage
-    //MOVING_MEAN(X_l, C_l, nPoint_hal_win);
+    // Move Aveage
+    // MOVING_MEAN(X_l, C_l, nPoint_hal_win);
 
     ts2d.resize(ts2d_ma.size());
     std::vector<std::complex<double>> fft_out, fft_in, master_fft;
@@ -380,7 +380,7 @@ inline Stencil<std::vector<double>> udf_xcorr(const Stencil<TT> &iStencil)
 
         fftv_forward_p2(ts2d[i_row], fft_out);
         fft_in.resize(fft_out.size());
-        //std::cout << "nPoint_before_fft =" << nPoint_before_fft << ", ts2d_ma[i_row].size() = " << ts2d_ma[i_row].size() << ", ts2d[i_row].size() = " << ts2d[i_row].size() << ", fft_out.size = " << fft_out.size() << ", shapingFilt.size() =" << shapingFilt.size() << " \n";
+        // std::cout << "nPoint_before_fft =" << nPoint_before_fft << ", ts2d_ma[i_row].size() = " << ts2d_ma[i_row].size() << ", ts2d[i_row].size() = " << ts2d[i_row].size() << ", fft_out.size = " << fft_out.size() << ", shapingFilt.size() =" << shapingFilt.size() << " \n";
         for (int ii = 0; ii < fft_out.size(); ii++)
         {
             temp_f = pow(sqrt(fft_out[ii].real() * fft_out[ii].real() + fft_out[ii].imag() * fft_out[ii].imag()), eCoeff) + 0.001;
@@ -416,7 +416,7 @@ inline Stencil<std::vector<double>> udf_xcorr(const Stencil<TT> &iStencil)
             fft_in[j].real(master_fft[j].real() * fft_out[j].real() + master_fft[j].imag() * fft_out[j].imag());
             fft_in[j].imag(master_fft[j].imag() * fft_out[j].real() - master_fft[j].real() * fft_out[j].imag());
 
-            //std::cout << " fft_in [" << j << "] =  " << fft_in[j] << " \n";
+            // std::cout << " fft_in [" << j << "] =  " << fft_in[j] << " \n";
         }
 
         fftv_backward(fft_in, fft_out);
@@ -457,7 +457,7 @@ inline Stencil<std::vector<double>> udf_xcorr(const Stencil<TT> &iStencil)
     }
 
     PrintVector("Output vector_shape: ", vector_shape);
-    //std::cout << "vector_shape[0] = " << vector_shape[0] << ",vector_shape[1] = " << vector_shape[1] << "\n";
+    // std::cout << "vector_shape[0] = " << vector_shape[0] << ",vector_shape[1] = " << vector_shape[1] << "\n";
     DasLib::clear_vector(ts2d_ma);
     oStencil.SetShape(vector_shape);
     oStencil = ts_temp;
@@ -471,7 +471,7 @@ inline Stencil<std::vector<double>> udf_xcorr(const Stencil<TT> &iStencil)
         iStencil.GetTagMap(tag_map);
         for (std::map<std::string, std::string>::iterator it = tag_map.begin(); it != tag_map.end(); ++it)
         {
-            //std::cout << " key : " << it->first << ", value:" << it->second << " \n";
+            // std::cout << " key : " << it->first << ", value:" << it->second << " \n";
             if (it->first == "SamplingFrequency[Hz]")
             {
                 int temp_sf = 1 / DT_NEW;
@@ -481,9 +481,9 @@ inline Stencil<std::vector<double>> udf_xcorr(const Stencil<TT> &iStencil)
         tag_map.insert({"time_begin", std::to_string(time_begin)});
         tag_map.insert({"time_end", std::to_string(time_end)});
         oStencil.SetTagMap(tag_map);
-        //To add Dsi_out.fh{9} = tb; Dsi_out.fh{10} = te;
-        //nPoint = size(seis_resamp, 1);
-        //t_resamp = dt_new .* (0 : (nPoint - 1)); tb = t_resamp(1); te = t_resamp(end);
+        // To add Dsi_out.fh{9} = tb; Dsi_out.fh{10} = te;
+        // nPoint = size(seis_resamp, 1);
+        // t_resamp = dt_new .* (0 : (nPoint - 1)); tb = t_resamp(1); te = t_resamp(end);
     }
 
     return oStencil;
@@ -510,7 +510,7 @@ int main(int argc, char *argv[])
             break;
         }
 
-    //Init the MPICH, etc.
+    // Init the MPICH, etc.
     AU_Init(argc, argv);
 
     char processor_name[MPI_MAX_PROCESSOR_NAME];
@@ -518,8 +518,8 @@ int main(int argc, char *argv[])
     MPI_Comm_size(MPI_COMM_WORLD, &numprocs);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-    //MPI_Get_processor_name(processor_name, &namelen);
-    //printf("Process %d on %s out of %d\n", rank, processor_name, numprocs);
+    // MPI_Get_processor_name(processor_name, &namelen);
+    // printf("Process %d on %s out of %d\n", rank, processor_name, numprocs);
 
     if (has_config_file_flag)
         read_config_file(config_file, ft_rank);
@@ -529,7 +529,7 @@ int main(int argc, char *argv[])
     std::vector<int> chunk_size(2);
     std::vector<int> overlap_size = {0, 0};
 
-    //std::cout << "EP_DIR:" + input_file_type + ":" + input_dir_file << ":" << input_h5_dataset << "\n";
+    // std::cout << "EP_DIR:" + input_file_type + ":" + input_dir_file << ":" << input_h5_dataset << "\n";
     std::string A_endpoint_id;
 
     if (!is_input_single_file)
@@ -541,8 +541,8 @@ int main(int argc, char *argv[])
         A_endpoint_id = input_file_type + ":" + input_dir_file + ":" + input_h5_dataset;
     }
 
-    //Input data
-    //AU::Array<short> *
+    // Input data
+    // AU::Array<short> *
 
     FT::ArrayBase *A;
     AuEndpointDataType t;
@@ -591,8 +591,8 @@ int main(int argc, char *argv[])
         index_param.push_back(file_range_indexes_str);
         A->ControlEndpoint(DIR_FILE_SORT_INDEXES, index_param);
 
-        //index_param.clear();
-        //A->ControlEndpoint(DIR_SKIP_SIZE_CHECK, index_param);
+        // index_param.clear();
+        // A->ControlEndpoint(DIR_SKIP_SIZE_CHECK, index_param);
     }
 
     if (!is_input_single_file)
@@ -625,20 +625,20 @@ int main(int argc, char *argv[])
     if (!ft_rank)
         PrintVector("chunk_size = ", chunk_size);
 
-    //By default, the TDMS file is column major
+    // By default, the TDMS file is column major
     if (input_file_type == "EP_TDMS")
     {
-        is_column_major_from_config = true; //Set to skip the check from file
+        is_column_major_from_config = true; // Set to skip the check from file
         is_column_major = true;
     }
 
-    //std::cout << "A_endpoint_id = " << A_endpoint_id << "\n";
+    // std::cout << "A_endpoint_id = " << A_endpoint_id << "\n";
     if (!is_column_major_from_config)
     {
         /*
          * Here we try to read  MeasureLengthName/SpatialResolutionName/SamplingFrequencyName or nTrace/nPoint
          *    to detect the layout of the file.
-         * 
+         *
          */
         int meta_chs = -1, meta_time_series_points = -1;
         std::string MeasureLength, SpatialResolution, SamplingFrequency;
@@ -675,19 +675,19 @@ int main(int argc, char *argv[])
             meta_time_series_points = 60 * std::stoi(SamplingFrequency);
         }
 
-        //std::cout << "MeasureLength= " << MeasureLength << " , SpatialResolution =" << SpatialResolution << ", SamplingFrequency = " << SamplingFrequency << std::endl;
-        //if (!MeasureLength.empty() && !SpatialResolution.empty() && !SamplingFrequency.empty())
+        // std::cout << "MeasureLength= " << MeasureLength << " , SpatialResolution =" << SpatialResolution << ", SamplingFrequency = " << SamplingFrequency << std::endl;
+        // if (!MeasureLength.empty() && !SpatialResolution.empty() && !SamplingFrequency.empty())
         //{
-        //    meta_chs = std::stoi(MeasureLength) / std::stoi(SpatialResolution);
-        //    meta_time_series_points = 60 * std::stoi(SamplingFrequency);
-        //}
-        //else
+        //     meta_chs = std::stoi(MeasureLength) / std::stoi(SpatialResolution);
+        //     meta_time_series_points = 60 * std::stoi(SamplingFrequency);
+        // }
+        // else
         //{
-        //    std::cout << "Metadata can not be found for, " << MeasureLengthName << ", " << SpatialResolutionName << ", and " << SamplingFrequencyName << ", please specify the is_column_vector in config file, check attribute_name_*, ... " << std::endl;
-        //    exit(-1);
-        //}
+        //     std::cout << "Metadata can not be found for, " << MeasureLengthName << ", " << SpatialResolutionName << ", and " << SamplingFrequencyName << ", please specify the is_column_vector in config file, check attribute_name_*, ... " << std::endl;
+        //     exit(-1);
+        // }
 
-        //std::cout << "meta_time_series_points = " << meta_time_series_points << " , meta_chs =  " << meta_chs << " \n";
+        // std::cout << "meta_time_series_points = " << meta_time_series_points << " , meta_chs =  " << meta_chs << " \n";
         if (chunk_size[0] == meta_time_series_points && chunk_size[1] == meta_chs)
         {
             is_column_major = true;
@@ -731,22 +731,22 @@ int main(int argc, char *argv[])
     A->SetChunkSize(chunk_size);
     A->SetOverlapSize(overlap_size);
 
-    //std::cout << "chunk_size = " << chunk_size[0] << " , " << chunk_size[1] << " \n";
+    // std::cout << "chunk_size = " << chunk_size[0] << " , " << chunk_size[1] << " \n";
 
     init_xcorr();
-    //Result data
+    // Result data
 
     AU::Array<double> *B;
     if (is_output_single_file)
     {
-        //Store into a single file
+        // Store into a single file
         B = new AU::Array<double>(output_type + ":" + output_file_dir + ":" + output_dataset);
     }
     else
     {
-        //Store into multiple file
+        // Store into multiple file
         B = new AU::Array<double>("EP_DIR:" + output_type + ":" + output_file_dir + ":" + output_dataset);
-        //Use the below rgx pattern to name the file
+        // Use the below rgx pattern to name the file
         std::vector<std::string> aug_output_replace_arg;
         aug_output_replace_arg.push_back(dir_output_match_rgx);
         aug_output_replace_arg.push_back(dir_output_replace_rgx);
@@ -756,18 +756,18 @@ int main(int argc, char *argv[])
             B->ControlEndpoint(DIR_OUPUT_REPLACE_RGX, aug_output_replace_arg);
     }
 
-    //Stride on execution
-    //Each chunk only runs the udf_decimate once
+    // Stride on execution
+    // Each chunk only runs the udf_decimate once
     A->EnableApplyStride(chunk_size);
 
     A->SetVectorDirection(AU_FLAT_OUTPUT_ROW);
 
-    //Run
-    //A->Transform<std::vector<double>>(udf_xcorr, B);
+    // Run
+    // A->Transform<std::vector<double>>(udf_xcorr, B);
     TRANSFORM(A, udf_xcorr, B, t, std::vector<double>);
     A->ReportCost();
 
-    //Clear
+    // Clear
     delete A;
     delete B;
 
@@ -833,8 +833,8 @@ int read_config_file(std::string file_name, int mpi_rank)
         input_search_rgx = reader.Get("parameter", "input_search_rgx", "^(.*)[1234]\\.tdms$");
     }
 
-    //chs_per_file = reader.GetInteger("parameter", "chs_per_file", 11648);
-    //lts_per_file = reader.GetInteger("parameter", "lts_per_file", 30000);
+    // chs_per_file = reader.GetInteger("parameter", "chs_per_file", 11648);
+    // lts_per_file = reader.GetInteger("parameter", "lts_per_file", 30000);
 
     temp_str = reader.Get("parameter", "is_channel_range", "false");
 
