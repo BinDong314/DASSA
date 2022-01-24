@@ -129,6 +129,7 @@ std::vector<std::string> aug_merge_index;
 
 double time_begin, time_end; // the time for the begin and the end of result series
 
+bool is_setview_in_main = true;
 void init_xcorr()
 {
     round_dt_dew_dt = round(DT_NEW / DT);
@@ -198,7 +199,7 @@ inline Stencil<std::vector<double>> udf_xcorr(const Stencil<TT> &iStencil)
         lts_per_file_udf = max_offset_upper[1] + 1;
     }
 
-    if (is_channel_range)
+    if (!is_setview_in_main && is_channel_range)
     {
         assert(channel_range_end - channel_range_start + 1 <= chs_per_file_udf);
         chs_per_file_udf = channel_range_end - channel_range_start + 1;
@@ -567,6 +568,18 @@ int main(int argc, char *argv[])
         exit(-1);
     }
 
+    if (is_channel_range)
+    {
+        if (is_column_major)
+        {
+            A->SetView(channel_range_start, channel_range_end - channel_range_start + 1, 1);
+        }
+        else
+        {
+            A->SetView(channel_range_start, channel_range_end - channel_range_start + 1, 0);
+        }
+    }
+
     A->GetStencilTag();
 
     if (is_input_search_rgx && is_input_single_file == false)
@@ -623,7 +636,7 @@ int main(int argc, char *argv[])
     }
 
     if (!ft_rank)
-        PrintVector("chunk_size = ", chunk_size);
+        PrintVector("Xcorr: chunk_size = ", chunk_size);
 
     // By default, the TDMS file is column major
     if (input_file_type == "EP_TDMS")
@@ -717,12 +730,22 @@ int main(int argc, char *argv[])
 
     if (is_column_major)
     {
+        if (is_channel_range)
+        {
+            chunk_size[1] = channel_range_end - channel_range_start + 1;
+            // A->SetView(channel_range_start, chunk_size[1], 1);
+        }
         chunk_size[0] = chunk_size[0] * n_files_to_concatenate;
         chs_per_file = chunk_size[1];
         lts_per_file = chunk_size[0];
     }
     else
     {
+        if (is_channel_range)
+        {
+            chunk_size[0] = channel_range_end - channel_range_start + 1;
+            // A->SetView(channel_range_start, chunk_size[0], 0);
+        }
         chunk_size[1] = chunk_size[1] * n_files_to_concatenate;
         chs_per_file = chunk_size[0];
         lts_per_file = chunk_size[1];
