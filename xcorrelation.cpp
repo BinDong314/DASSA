@@ -180,7 +180,8 @@ inline Stencil<std::vector<double>> udf_xcorr(const Stencil<TT> &iStencil)
 {
     std::vector<int> max_offset_upper;
     iStencil.GetOffsetUpper(max_offset_upper);
-    PrintVector("max_offset_upper = ", max_offset_upper);
+    if (ft_rank == 0 || ft_rank == (ft_size - 1))
+        PrintVector("max_offset_upper = ", max_offset_upper);
 
     // Here, we assume data is row-vector
     // int chs_per_file_udf = max_offset_upper[0] + 1, lts_per_file_udf = max_offset_upper[1] + 1;
@@ -457,7 +458,8 @@ inline Stencil<std::vector<double>> udf_xcorr(const Stencil<TT> &iStencil)
         vector_shape[1] = ts2d_ma[0].size();
     }
 
-    PrintVector("Output vector_shape: ", vector_shape);
+    if (ft_rank == 0 || ft_rank == (ft_size - 1))
+        PrintVector("Output vector_shape: ", vector_shape);
     // std::cout << "vector_shape[0] = " << vector_shape[0] << ",vector_shape[1] = " << vector_shape[1] << "\n";
     DasLib::clear_vector(ts2d_ma);
     oStencil.SetShape(vector_shape);
