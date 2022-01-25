@@ -597,8 +597,8 @@ int main(int argc, char *argv[])
             file_range_index.push_back(i);
         }
         file_range_indexes_str = Vector2String(file_range_index);
-        if (!ft_rank)
-            std::cout << " file_range_indexes_str =" << file_range_indexes_str << "\n";
+        // if (!ft_rank)
+        //     std::cout << " file_range_indexes_str =" << file_range_indexes_str << "\n";
 
         std::vector<std::string> index_param;
         index_param.push_back(file_range_indexes_str);
