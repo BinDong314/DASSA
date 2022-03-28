@@ -17,7 +17,7 @@ EIGEN3_DIR=/Users/dbin/work/dassa/Tools3rd
 SHELL:=/bin/bash
 
 CCC=mpicxx
-OTHER_FLAGS=-g3  -std=c++17 -I./DasLib/
+OTHER_FLAGS=-O3  -std=c++17 -I./DasLib/
 
 AU_FLAG=-I$(AU_DIR)/include -L$(AU_DIR)/lib -lFastensor
 HDF5_FLAG=-I$(HDF5_DIR)/include -L$(HDF5_DIR)/lib -lhdf5  -lhdf5_hl -lz
@@ -27,7 +27,7 @@ EIGEN3_FLAG=-I$(EIGEN3_DIR)
 ALL_FLAGS= $(OTHER_FLAGS) $(AU_FLAG) $(HDF5_FLAG) $(FFTW_FLAG)  $(DASH_FLAG) $(EIGEN3_FLAG) 
 
 .PHONY:all
-all:stack tdms2h5 xcorrelation decimate similarity  create_test_data
+all:stack tdms2h5 xcorrelation decimate similarity  create_test_data tmatch
 
 stack:stack.cpp
 	$(CCC) -o stack stack.cpp $(ALL_FLAGS)
@@ -43,6 +43,9 @@ decimate:decimate.cpp
 
 similarity:similarity.cpp
 	$(CCC) -o similarity similarity.cpp  $(ALL_FLAGS)
+
+tmatch:tmatch.cpp
+	$(CCC) -o tmatch tmatch.cpp $(ALL_FLAGS)
 
 create_test_data: create_test_data.cpp
 	$(CCC) -o create_test_data create_test_data.cpp $(ALL_FLAGS)

@@ -42,29 +42,57 @@
 #include <math.h>
 //#include "iir.h"
 
+void tukeywin(std::vector<double> &w, unsigned n, double r)
+{
+    // Tukey window.
+
+    // This window uses a cosine-shaped ramp-up and ramp-down, with an all-one part in the middle.
+    // The parameter 'r' defines the fraction of the window covered by the ramp-up and ramp-down.
+
+    // r <= 0 is identical to a rectangular window.
+    // r >= 1 is identical to a Hann window.
+    //
+    // In Matlab, the default value for parameter r is 0.5.
+    w.resize(n);
+    if (n == 1)
+    {
+        // Special case for n == 1.
+        w[0] = 1.0;
+    }
+    else
+    {
+        r = fmax(0.0, fmin(1.0, r)); // Clip between 0 and 1.
+
+        for (unsigned i = 0; i < n; ++i)
+        {
+            w[i] = (cos(fmax(fabs((double)i - (n - 1) / 2.0) * (2.0 / (n - 1) / r) - (1.0 / r - 1.0), 0.0) * M_PI) + 1.0) / 2.0;
+        }
+    }
+}
+
 /**********************************************************************
   binomial_mult - multiplies a series of binomials together and returns
   the coefficients of the resulting polynomial.
-  
+
   The multiplication has the following form:
-  
+
   (x+p[0])*(x+p[1])*...*(x+p[n-1])
 
-  The p[i] coefficients are assumed to be complex and are passed to the 
+  The p[i] coefficients are assumed to be complex and are passed to the
   function as a pointer to an array of doubles of length 2n.
 
   The resulting polynomial has the following form:
-  
+
   x^n + a[0]*x^n-1 + a[1]*x^n-2 + ... +a[n-2]*x + a[n-1]
-  
+
   The a[i] coefficients can in general be complex but should in most
   cases turn out to be real. The a[i] coefficients are returned by the
   function as a pointer to an array of doubles of length 2n. Storage
   for the array is allocated by the function and should be freed by the
   calling program when no longer needed.
-  
+
   Function arguments:
-  
+
   n  -  The number of binomials to multiply
   p  -  Pointer to an array of doubles where p[2i] (i=0...n-1) is
         assumed to be the real part of the coefficient of the ith binomial
@@ -97,7 +125,7 @@ double *binomial_mult(int n, double *p)
 /**********************************************************************
   trinomial_mult - multiplies a series of trinomials together and returns
   the coefficients of the resulting polynomial.
-  
+
   The multiplication has the following form:
 
   (x^2 + b[0]x + c[0])*(x^2 + b[1]x + c[1])*...*(x^2 + b[n-1]x + c[n-1])
@@ -108,18 +136,18 @@ double *binomial_mult(int n, double *p)
   array and the imaginary parts are stored in the odd numbered elements.
 
   The resulting polynomial has the following form:
-  
+
   x^2n + a[0]*x^2n-1 + a[1]*x^2n-2 + ... +a[2n-2]*x + a[2n-1]
-  
+
   The a[i] coefficients can in general be complex but should in most cases
   turn out to be real. The a[i] coefficients are returned by the function as
   a pointer to an array of doubles of length 4n. The real and imaginary
   parts are stored, respectively, in the even and odd elements of the array.
   Storage for the array is allocated by the function and should be freed by
   the calling program when no longer needed.
-  
+
   Function arguments:
-  
+
   n  -  The number of trinomials to multiply
   b  -  Pointer to an array of doubles of length 2n.
   c  -  Pointer to an array of doubles of length 2n.
@@ -162,7 +190,7 @@ double *trinomial_mult(int n, double *b, double *c)
 }
 
 /**********************************************************************
-  dcof_bwlp - calculates the d coefficients for a butterworth lowpass 
+  dcof_bwlp - calculates the d coefficients for a butterworth lowpass
   filter. The coefficients are returned as an array of doubles.
 
 */
@@ -209,7 +237,7 @@ double *dcof_bwlp(int n, double fcf)
 }
 
 /**********************************************************************
-  dcof_bwhp - calculates the d coefficients for a butterworth highpass 
+  dcof_bwhp - calculates the d coefficients for a butterworth highpass
   filter. The coefficients are returned as an array of doubles.
 
 */
@@ -220,7 +248,7 @@ double *dcof_bwhp(int n, double fcf)
 }
 
 /**********************************************************************
-  dcof_bwbp - calculates the d coefficients for a butterworth bandpass 
+  dcof_bwbp - calculates the d coefficients for a butterworth bandpass
   filter. The coefficients are returned as an array of doubles.
 
 */
@@ -276,7 +304,7 @@ double *dcof_bwbp(int n, double f1f, double f2f)
 }
 
 /**********************************************************************
-  dcof_bwbs - calculates the d coefficients for a butterworth bandstop 
+  dcof_bwbs - calculates the d coefficients for a butterworth bandstop
   filter. The coefficients are returned as an array of doubles.
 
 */
@@ -332,7 +360,7 @@ double *dcof_bwbs(int n, double f1f, double f2f)
 }
 
 /**********************************************************************
-  ccof_bwlp - calculates the c coefficients for a butterworth lowpass 
+  ccof_bwlp - calculates the c coefficients for a butterworth lowpass
   filter. The coefficients are returned as an array of integers.
 
 */
@@ -362,7 +390,7 @@ int *ccof_bwlp(int n)
 }
 
 /**********************************************************************
-  ccof_bwhp - calculates the c coefficients for a butterworth highpass 
+  ccof_bwhp - calculates the c coefficients for a butterworth highpass
   filter. The coefficients are returned as an array of integers.
 
 */
@@ -384,7 +412,7 @@ int *ccof_bwhp(int n)
 }
 
 /**********************************************************************
-  ccof_bwbp - calculates the c coefficients for a butterworth bandpass 
+  ccof_bwbp - calculates the c coefficients for a butterworth bandpass
   filter. The coefficients are returned as an array of integers.
 
 */
@@ -415,7 +443,7 @@ int *ccof_bwbp(int n)
 }
 
 /**********************************************************************
-  ccof_bwbs - calculates the c coefficients for a butterworth bandstop 
+  ccof_bwbs - calculates the c coefficients for a butterworth bandstop
   filter. The coefficients are returned as an array of integers.
 
 */
