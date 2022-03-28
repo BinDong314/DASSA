@@ -1,0 +1,15 @@
+#!/bin/bash -l
+#SBATCH -p debug     
+#SBATCH -N 2        
+#SBATCH -t 00:10:00  
+#SBATCH -J xcorr
+#SBATCH -e xcorr_%j.err
+#SBATCH -o xcorr_%j.out
+#SBATCH -D /project/projectdirs/m1248/dassa-new
+#SBATCH -L SCRATCH   #Job requires $SCRATCH file system
+#SBATCH -C haswell   #Use Haswell nodes
+
+srun -n 2  ./xcorrelation  -c xcorrelation-cori.config
+
+
+
