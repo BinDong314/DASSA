@@ -30,8 +30,9 @@ function run_command(){
         else
             echo "Checked output of $2 [FAILED]" >&2
         fi   
+
         h5diff ./test-data/$5/$3 ./test-data-good/$4 > /dev/null 2>&1
-        if [ $? -eq 0 ]
+ 	if [ $? -eq 0 ]
         then
             echo "Checked output of $3 [PASSED]"
         else
