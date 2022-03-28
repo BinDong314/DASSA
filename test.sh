@@ -23,7 +23,7 @@ function run_command(){
     fi
 
     if [ "$#" -gt 1 ]; then
-        h5diff  -v ./test-data/$5/$2 ./test-data-good/$4 > /dev/null 2>&1
+        h5diff  -d 0.0000000000001  -v ./test-data/$5/$2 ./test-data-good/$4 > /dev/null 2>&1
         if [ $? -eq 0 ]
         then
             echo "Checked output of $2 [PASSED]"
@@ -31,7 +31,7 @@ function run_command(){
             echo "Checked output of $2 [FAILED]" >&2
         fi   
 
-        h5diff ./test-data/$5/$3 ./test-data-good/$4 > /dev/null 2>&1
+        h5diff -d 0.0000000000001  ./test-data/$5/$3 ./test-data-good/$4 > /dev/null 2>&1
  	if [ $? -eq 0 ]
         then
             echo "Checked output of $3 [PASSED]"
