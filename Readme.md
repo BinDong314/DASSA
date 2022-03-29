@@ -120,7 +120,8 @@ To simplify the case, the two dataset names apply to all input files and output 
 Their file names can  be specified for different variables. 
 
 
-** 8 Notes on NERSC
+**8 Notes on NERSC
+
 Do NOT use "module load fftw" as the fftw on Cori is broken.
 We need to build them by ourself
 
