@@ -120,10 +120,11 @@ To simplify the case, the two dataset names apply to all input files and output 
 Their file names can  be specified for different variables. 
 
 
-**8 Notes on NERSC
+**8 Notes on NERSC**
 
 Do NOT use "module load fftw" as the fftw on Cori is broken.
-We need to build them by ourself
+
+We need to build it by ourself
 
 ```bash
 > wget http://www.fftw.org/fftw-3.3.10.tar.gz
@@ -133,7 +134,7 @@ We need to build them by ourself
 > make & make install
 ```
 
-Then, compile DASSA
+Then, we can compile DASSA
 ```dash
 > module load cray-hdf5-parallel/1.10.5.2
 > export HDF5_USE_FILE_LOCKING=FALSE
@@ -141,8 +142,7 @@ Then, compile DASSA
 > make -f Makefile.cori
 > ./xcorrelation
 ```
-Notes: "cray-hdf5-parallel/1.10.5.2" and "cray-hdf5-parallel/1.12.1.1"
-But the  "cray-hdf5-parallel/1.12.1.1" will report below error in compiling
+Notes: "cray-hdf5-parallel/1.10.5.2" and "cray-hdf5-parallel/1.12.1.1" are available on Cori. But the  "cray-hdf5-parallel/1.12.1.1" will report below error in compiling. So please use "cray-hdf5-parallel/1.10.5.2"
 ```dash
 /usr/lib64/gcc/x86_64-suse-linux/7/../../../../x86_64-suse-linux/bin/ld:
 /global/project/projectdirs/m1248/fasttensor-new/src/ft_endpoint_hdf5.cpp:1007: 
@@ -155,11 +155,15 @@ https://forum.hdfgroup.org/t/second-hdf5-1-12-0-alpha-release-is-available-for-t
 Example on Cori
 ```dash
 > sbatch xcorrelation-cori.bs
-  which uses "xcorrelation-cori.config" as config file
-  The "xcorrelation-cori.config" run corr on two files in my $SCRATCH /global/cscratch1/sd/dbin/DarkFiber_ambientTest_201110/
-  check progress from file xcorr_56717603.out and xcorr_56717603.err
+
+  # it uses "xcorrelation-cori.config" as config file
+  # The "xcorrelation-cori.config" run corr on two files in my
+  # $SCRATCH /global/cscratch1/sd/dbin/DarkFiber_ambientTest_201110/
+  # check progress from file xcorr_56717603.out and xcorr_56717603.err
+
 > h5dump  /global/cscratch1/sd/dbin/DarkFiber_ambientTest_201110_sample_output/DF__UTC_20201112_001132.602.h5
-  check result at /global/cscratch1/sd/dbin/DarkFiber_ambientTest_201110_sample_output/
+
+  # check result at /global/cscratch1/sd/dbin/DarkFiber_ambientTest_201110_sample_output/
 ```
 
 
