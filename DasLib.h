@@ -30,6 +30,19 @@ using namespace std;
 namespace DasLib
 {
 
+    // Function for calculating median
+    template <class T>
+    inline T Median(std::vector<T> &v)
+    {
+        sort(v.begin(), v.end());
+        size_t n = v.size();
+        // check for even case
+        if (n % 2 != 0)
+            return v[n / 2];
+
+        return (v[(n - 1) / 2] + v[n / 2]) / 2.0;
+    }
+
     // To be complete
     template <class T>
     int decimate(std::vector<T> &v, const int r, const std::vector<double> &cheby1_b, const std::vector<double> &cheby1_a)
@@ -544,18 +557,6 @@ namespace DasLib
             sum = sum + v[i];
         }
         return sum / v.size();
-    }
-    // Function for calculating median
-    template <class T>
-    inline T Median(std::vector<T> &v)
-    {
-        sort(v.begin(), v.end());
-        size_t n = v.size();
-        // check for even case
-        if (n % 2 != 0)
-            return v[n / 2];
-
-        return (v[(n - 1) / 2] + v[n / 2]) / 2.0;
     }
 
     template <class T>

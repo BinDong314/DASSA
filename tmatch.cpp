@@ -859,11 +859,11 @@ int read_config_file(std::string file_name, int mpi_rank)
         return 1;
     }
 
-    input_dir_file = reader.Get("parameter", "input_dir_file", "/Users/dbin/work/arrayudf-git-svn-test-on-bitbucket/examples/das/tdms-dir");
+    input_dir_file = reader.Get("parameter", "input_dir_file", "/Users/dbin/work/dassa/template-match/template-match-data");
 
-    input_h5_dataset = reader.Get("parameter", "input_dataset", "/dat");
+    input_h5_dataset = reader.Get("parameter", "input_dataset", "/Acoustic");
 
-    input_file_type = reader.Get("parameter", "input_file_type", "EP_TDMS");
+    input_file_type = reader.Get("parameter", "input_file_type", "EP_HDF5");
 
     std::string temp_str_str;
     temp_str_str = reader.Get("parameter", "input_data_type", "short");
@@ -975,9 +975,19 @@ int read_config_file(std::string file_name, int mpi_rank)
 
     DT = reader.GetReal("parameter", "dt", 0.002);
 
-    DT_NEW = reader.GetReal("parameter", "dt_new", 0.008);
+    decifac = reader.GetReal("parameter", "decifac", 10);
 
-    butter_order = reader.GetInteger("parameter", "butter_order", 3);
+    butter_order = reader.GetInteger("parameter", "butter_order", 2);
+
+    // fbands
+
+    temp_str = reader.Get("parameter", "is_output_single_file", "false");
+    if (temp_str == "true")
+    {
+        fbands.resize(1);
+        fbands[0] = reader.GetReal("parameter", "fbands_low", 0.5);
+        fbands[1] = reader.GetReal("parameter", "fbands_high", 16);
+    }
 
     if (!mpi_rank)
     {
@@ -1045,7 +1055,7 @@ int read_config_file(std::string file_name, int mpi_rank)
 
         std::cout << termcolor::magenta << "\n        DT = " << termcolor::green << DT;
 
-        std::cout << termcolor::magenta << "\n        DT_NEW = " << termcolor::green << DT_NEW;
+        std::cout << termcolor::magenta << "\n        decifac = " << termcolor::green << decifac;
 
         std::cout << termcolor::blue << "\n\n Output parameters: ";
 
