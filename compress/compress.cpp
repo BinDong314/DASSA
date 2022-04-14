@@ -22,7 +22,7 @@
 
 using namespace std;
 using namespace AU;
-//using namespace DasLib;
+// using namespace DasLib;
 
 int read_config_file(std::string file_name, int mpi_rank);
 std::string config_file = "./decimate.config";
@@ -79,7 +79,7 @@ bool is_tag_flag = true;
 /**
  * @brief input data type
  *    0 : short (by default)
- *    1 : unsigned short 
+ *    1 : unsigned short
  */
 int input_data_type = 0;
 
@@ -95,19 +95,19 @@ bool isNumber(const string &str)
 
 /**
  * @brief Split in_str into a vector string
- * 
- * @param in_str 
- * @param result_str_vector 
+ *
+ * @param in_str
+ * @param result_str_vector
  */
 void SplitStr2Vector(std::string in_str, char split_cha, std::vector<std::string> &result_str_vector)
 {
-	//std::vector<string> result;
+	// std::vector<string> result;
 	result_str_vector.clear();
-	std::stringstream s_stream(in_str); //create string stream from the string
+	std::stringstream s_stream(in_str); // create string stream from the string
 	while (s_stream.good())
 	{
 		std::string substr;
-		std::getline(s_stream, substr, split_cha); //get first string delimited by comma
+		std::getline(s_stream, substr, split_cha); // get first string delimited by comma
 		result_str_vector.push_back(substr);
 	}
 }
@@ -160,8 +160,8 @@ void FindCompressMethod(const std::string &compression_method_name, const std::s
 	}
 }
 
-//Here we just read and write data
-//Compression happens during the writing
+// Here we just read and write data
+// Compression happens during the writing
 std::vector<int> start_offset = {0, 0};
 std::vector<short> ts_short;
 std::vector<int> max_offset_upper;
@@ -174,22 +174,22 @@ inline int udf_compress(const Stencil<short> &iStencil, Stencil<std::vector<shor
 	iStencil.GetOffsetUpper(max_offset_upper);
 	if (!ft_rank)
 		PrintVector("max_offset_upper = ", max_offset_upper);
-	//std::vector<int> end_offset = {max_offset_upper[0], max_offset_upper[1]};
+	// std::vector<int> end_offset = {max_offset_upper[0], max_offset_upper[1]};
 	iStencil.ReadNeighbors(start_offset, max_offset_upper, ts_short);
 
-	//clock_t begin = clock();
+	// clock_t begin = clock();
 
 	if (is_tag_flag && iStencil.HasTagMap() && !is_stencil_tag_once)
 	{
 		std::map<std::string, std::string> tag_map;
 		iStencil.GetTagMap(tag_map);
 		oStencil.SetTagMap(tag_map);
-		if (is_output_single_file) //We only deal with meta once
+		if (is_output_single_file) // We only deal with meta once
 			is_stencil_tag_once = true;
 	}
-	//clock_t end = clock();
-	//double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
-	//std::cout << "Meta Data Cost = " << elapsed_secs << "[s]" << std::endl;
+	// clock_t end = clock();
+	// double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
+	// std::cout << "Meta Data Cost = " << elapsed_secs << "[s]" << std::endl;
 
 	vector_shape[0] = max_offset_upper[0] + 1;
 	vector_shape[1] = max_offset_upper[1] + 1;
@@ -222,7 +222,7 @@ int main(int argc, char *argv[])
 			break;
 		}
 
-	//Init the MPICH, etc.
+	// Init the MPICH, etc.
 	AU_Init(argc, argv);
 
 	char processor_name[MPI_MAX_PROCESSOR_NAME];
@@ -258,12 +258,12 @@ int main(int argc, char *argv[])
 		A_endpoint_id += input_h5_dataset;
 	}
 
-	//Input data
+	// Input data
 	AU::Array<short> *A = new AU::Array<short>(A_endpoint_id);
 
 	std::vector<std::string> aug_merge_index, aug_dir_sub_cmd, aug_input_search_rgx;
 
-	//Set fhe search reges on file
+	// Set fhe search reges on file
 	if (is_input_search_rgx && !is_input_single_file)
 	{
 		aug_input_search_rgx.push_back(input_search_rgx);
@@ -285,10 +285,10 @@ int main(int argc, char *argv[])
 		A->ControlEndpoint(DIR_FILE_SORT_INDEXES, index_param);
 	}
 
-	std::vector<std::string> p_null;
-	A->ControlEndpoint(DIR_SKIP_SIZE_CHECK, p_null);
+	// std::vector<std::string> p_null;
+	// A->ControlEndpoint(DIR_SKIP_SIZE_CHECK, p_null);
 
-	//Set the index to merge file
+	// Set the index to merge file
 	if (!is_input_single_file)
 	{
 		if (is_column_major)
@@ -317,20 +317,20 @@ int main(int argc, char *argv[])
 		chunk_size[1] = array_size[1];
 	}
 
-	//By default, the TDMS file is column major
+	// By default, the TDMS file is column major
 	if (input_file_type == "EP_TDMS")
 	{
-		is_column_major_from_config = true; //Set to skip the check from file
+		is_column_major_from_config = true; // Set to skip the check from file
 		is_column_major = true;
 	}
 
 	if (!is_column_major_from_config)
 	{
 		/*
-         * Here we try to read  MeasureLengthName/SpatialResolutionName/SamplingFrequencyName or nTrace/nPoint
-         *    to detect the layout of the file.
-         * 
-         */
+		 * Here we try to read  MeasureLengthName/SpatialResolutionName/SamplingFrequencyName or nTrace/nPoint
+		 *    to detect the layout of the file.
+		 *
+		 */
 		int meta_chs = -1, meta_time_series_points = -1;
 		std::string MeasureLength, SpatialResolution, SamplingFrequency;
 		A->GetTag(MeasureLengthName, MeasureLength);
@@ -366,7 +366,7 @@ int main(int argc, char *argv[])
 			meta_time_series_points = 60 * std::stoi(SamplingFrequency);
 		}
 
-		//std::cout << "meta_time_series_points = " << meta_time_series_points << " , meta_chs =  " << meta_chs << " \n";
+		// std::cout << "meta_time_series_points = " << meta_time_series_points << " , meta_chs =  " << meta_chs << " \n";
 		if (chunk_size[0] == meta_time_series_points && chunk_size[1] == meta_chs)
 		{
 			is_column_major = true;
@@ -411,11 +411,11 @@ int main(int argc, char *argv[])
 		PrintVector("chunk_size = ", chunk_size);
 		std::cout << "lts_per_file = " << lts_per_file << ",chs_per_file = " << chs_per_file << "\n";
 	}
-	///Users/dbin/work/arrayudf-git-svn-test-on-bitbucket/examples/das/tdms-dir", chunk_size, overlap_size);
+	/// Users/dbin/work/arrayudf-git-svn-test-on-bitbucket/examples/das/tdms-dir", chunk_size, overlap_size);
 	A->SetChunkSize(chunk_size);
 	A->SetOverlapSize(overlap_size);
 
-	//Extract tag to be along with Input Stencil
+	// Extract tag to be along with Input Stencil
 	A->GetStencilTag();
 
 	if (!is_column_major && input_file_type == "EP_TDMS")
@@ -424,18 +424,18 @@ int main(int argc, char *argv[])
 		A->ControlEndpoint(DIR_SUB_CMD_ARG, aug_dir_sub_cmd);
 	}
 
-	//Result data
-	//AU::Array<short> *B;
+	// Result data
+	// AU::Array<short> *B;
 
 	AU::Array<short> *B;
-	//AuEndpointDataType t;
+	// AuEndpointDataType t;
 	if (is_output_single_file)
 	{
-		//Store into a single file
-		//B = new AU::Array<short>(output_type + ":" + output_file_dir + ":" + output_dataset);
-		// if (input_data_type == 0)
-		// {
-		// 	t = AuEndpointDataType::AU_SHORT;
+		// Store into a single file
+		// B = new AU::Array<short>(output_type + ":" + output_file_dir + ":" + output_dataset);
+		//  if (input_data_type == 0)
+		//  {
+		//  	t = AuEndpointDataType::AU_SHORT;
 		B = new AU::Array<short>(output_type + ":" + output_file_dir + ":" + output_dataset);
 		// }
 		// else if (input_data_type == 1)
@@ -446,8 +446,8 @@ int main(int argc, char *argv[])
 	}
 	else
 	{
-		//Store into multiple file
-		//B = new AU::Array<short>("EP_DIR:" + output_type + ":" + output_file_dir + ":" + output_dataset);
+		// Store into multiple file
+		// B = new AU::Array<short>("EP_DIR:" + output_type + ":" + output_file_dir + ":" + output_dataset);
 
 		// if (input_data_type == 0)
 		// {
@@ -460,7 +460,7 @@ int main(int argc, char *argv[])
 		// 	B = new AU::Array<unsigned short>("EP_DIR:" + output_type + ":" + output_file_dir + ":" + output_dataset);
 		// }
 
-		//Use the below rgx pattern to name the file
+		// Use the below rgx pattern to name the file
 		std::vector<std::string> aug_output_replace_arg;
 		aug_output_replace_arg.push_back(dir_output_match_rgx);
 		aug_output_replace_arg.push_back(dir_output_replace_rgx);
@@ -492,7 +492,7 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	//Enable the filter ID
+	// Enable the filter ID
 	std::vector<std::string> filter_paramter;
 	std::vector<std::string> control_paramter_null;
 	// H5Z_FILTER_DEFLATE cd_values[0] = 9	Data compression filter, employing the gzip algorithm
@@ -551,13 +551,13 @@ int main(int argc, char *argv[])
 		}
 	}
 	//
-	//Stride on execution
-	//Each chunk only runs the udf_compress once
+	// Stride on execution
+	// Each chunk only runs the udf_compress once
 	A->EnableApplyStride(chunk_size);
 
 	A->SetVectorDirection(AU_FLAT_OUTPUT_ROW);
 
-	//Run
+	// Run
 	A->Transform(udf_compress, B);
 	// if (t == AuEndpointDataType::AU_SHORT)
 	// {
@@ -571,7 +571,7 @@ int main(int argc, char *argv[])
 	// }
 
 	A->ReportTime();
-	//Clear
+	// Clear
 	delete A;
 	delete B;
 
@@ -636,8 +636,8 @@ int read_config_file(std::string file_name, int mpi_rank)
 	chs_per_file = reader.GetInteger("parameter", "chs_per_file", 11648);
 	lts_per_file = reader.GetInteger("parameter", "lts_per_file", 30000);
 
-	//bool is_filter_chunk_size = false;
-	//std::vector<int> filter_chunk_size = {30000, 6912};
+	// bool is_filter_chunk_size = false;
+	// std::vector<int> filter_chunk_size = {30000, 6912};
 	temp_str = reader.Get("parameter", "is_compression_chunk_size", "false");
 	is_filter_chunk_size = (temp_str == "false" || temp_str == "0") ? false : true;
 	if (is_filter_chunk_size)
