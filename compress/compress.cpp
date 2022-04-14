@@ -642,6 +642,7 @@ int read_config_file(std::string file_name, int mpi_rank)
 	is_filter_chunk_size = (temp_str == "false" || temp_str == "0") ? false : true;
 	if (is_filter_chunk_size)
 	{
+		filter_chunk_size.clear();
 		temp_str = reader.Get("parameter", "compression_chunk_size", "30000, 6912");
 		String2Vector(temp_str, filter_chunk_size);
 	}
