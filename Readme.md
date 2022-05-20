@@ -59,7 +59,7 @@ Please see the section 7 for more about control for input, output control, and r
 > cd Tools3rd
 > tar zxvf fftw-3.3.8.tar.gz
 > cd fftw-3.3.8
-> ./configure  --prefix=$PWD/buildproperties
+> ./configure  --prefix=$PWD/build
 > make install
 ```
 
