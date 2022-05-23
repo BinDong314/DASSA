@@ -978,7 +978,7 @@ int read_config_file(std::string file_name, int mpi_rank)
     if (!mpi_rank)
     {
         std::cout << "\n\n";
-        std::cout << termcolor::red << "Parameters to run the Decimate: ";
+        std::cout << termcolor::red << "Parameters to run the Xcorrelate : ";
 
         std::cout << termcolor::blue << "\n\n Input parameters: ";
         std::cout << termcolor::magenta << "\n        input_dir_file = " << termcolor::green << input_dir_file;

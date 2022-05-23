@@ -13,8 +13,6 @@ DASSA provide an easy-to-use and scalable system for DAS data storage and analys
    :scale: 30 %
    :alt: DASSA Architecture
 
-   DASSA framework.
-
 
 DASSA has two  major components: DAS data storage engine (DASS) and a DAS data analysis engine (DASA). 
 
@@ -24,18 +22,22 @@ DASSA has two  major components: DAS data storage engine (DASS) and a DAS data a
 
 Installation 
 --------------
-* :ref:`Install guide <install2>`
-
-
-Where to start
---------------
 .. toctree::
-    :maxdepth: 1
-    
+    :glob:
+
     install
-   
 
+Functions and their usage 
+-------------------------
+.. toctree::
+    :glob:
 
+    xcorrelation   
+    stack
+    decimate
+    templatematch
+    selfsimilarity
+    compression
 
 Indices and tables
 ==================
