@@ -33,15 +33,15 @@ struct timeval begin_time, end_time;
 void printf_help(char *cmd);
 
 int read_config_file(std::string file_name, int mpi_rank);
-std::string config_file = "./template-match.config";
+std::string config_file = "./tmatch.config";
 
 // Input Parameter
 bool is_input_single_file = false;
-std::string input_dir_file = "/Users/dbin/work/dassa/template-match/template-match-data";
-std::string input_h5_dataset = "/Acoustic";
-std::string input_file_type = "EP_HDF5";
+std::string das_dir = "/Users/dbin/work/dassa/template-match/template-match-data";
+std::string das_h5_dataset = "/Acoustic";
+std::string das_file_type = "EP_HDF5";
 
-std::string template_file_tsstart = "/Users/dbin/work/dassa/template-match/template_dir/";
+std::string template_dir = "/Users/dbin/work/dassa/template-match/template_dir/";
 
 bool is_input_search_rgx = false;
 std::string input_search_rgx = "^(.*)[1234]\\.tdms$";
@@ -186,7 +186,7 @@ void init_xcorr()
 
     // tstart_ci39534271.txt
     AU::Array<double> *T_tsstart;
-    T_tsstart = new AU::Array<double>("EP_DIR:EP_CSV:" + template_file_tsstart);
+    T_tsstart = new AU::Array<double>("EP_DIR:EP_CSV:" + template_dir);
 
     std::vector<double> T_tstart_weight;
     std::vector<double> T_tstart;
@@ -210,7 +210,7 @@ void init_xcorr()
 
     // winlen_ci39534271.txt
     AU::Array<double> *T_winlen;
-    T_winlen = new AU::Array<double>("EP_DIR:EP_CSV:" + template_file_tsstart);
+    T_winlen = new AU::Array<double>("EP_DIR:EP_CSV:" + template_dir);
 
     std::vector<double> T_winlen_data;
     std::vector<int> chunk_size_winlen, overlap_size_winlen = {0, 0};
@@ -228,7 +228,7 @@ void init_xcorr()
     // ci39534271.h5
     // winlen_ci39534271.txt
     AU::Array<short> *T_h5;
-    T_h5 = new AU::Array<short>("EP_DIR:EP_HDF5:" + template_file_tsstart + ":/Acoustic");
+    T_h5 = new AU::Array<short>("EP_DIR:EP_HDF5:" + template_dir + ":/Acoustic");
 
     int T_pts, T_chs;
     std::vector<short> T_h5_data;
@@ -573,16 +573,16 @@ int main(int argc, char *argv[])
     std::vector<int> chunk_size(2);
     std::vector<int> overlap_size = {0, 0};
 
-    // std::cout << "EP_DIR:" + input_file_type + ":" + input_dir_file << ":" << input_h5_dataset << "\n";
+    // std::cout << "EP_DIR:" + das_file_type + ":" + das_dir << ":" << das_h5_dataset << "\n";
     std::string A_endpoint_id;
 
     if (!is_input_single_file)
     {
-        A_endpoint_id = "EP_DIR:" + input_file_type + ":" + input_dir_file + ":" + input_h5_dataset;
+        A_endpoint_id = "EP_DIR:" + das_file_type + ":" + das_dir + ":" + das_h5_dataset;
     }
     else
     {
-        A_endpoint_id = input_file_type + ":" + input_dir_file + ":" + input_h5_dataset;
+        A_endpoint_id = das_file_type + ":" + das_dir + ":" + das_h5_dataset;
     }
 
     // Input data
@@ -670,7 +670,7 @@ int main(int argc, char *argv[])
         PrintVector("Xcorr: chunk_size = ", chunk_size);
 
     // By default, the TDMS file is column major
-    if (input_file_type == "EP_TDMS")
+    if (das_file_type == "EP_TDMS")
     {
         is_column_major_from_config = true; // Set to skip the check from file
         is_column_major = true;
@@ -859,14 +859,16 @@ int read_config_file(std::string file_name, int mpi_rank)
         return 1;
     }
 
-    input_dir_file = reader.Get("parameter", "input_dir_file", "/Users/dbin/work/dassa/template-match/template-match-data");
+    template_dir = reader.Get("parameter", "template_dir", "/Users/dbin/work/dassa/template-match/template_dir/");
 
-    input_h5_dataset = reader.Get("parameter", "input_dataset", "/Acoustic");
+    das_dir = reader.Get("parameter", "das_dir", "/Users/dbin/work/dassa/template-match/template-match-data");
 
-    input_file_type = reader.Get("parameter", "input_file_type", "EP_HDF5");
+    das_h5_dataset = reader.Get("parameter", "input_dataset", "/Acoustic");
+
+    das_file_type = reader.Get("parameter", "das_file_type", "EP_HDF5");
 
     std::string temp_str_str;
-    temp_str_str = reader.Get("parameter", "input_data_type", "short");
+    temp_str_str = reader.Get("parameter", "das_data_type", "short");
     if (temp_str_str == "short" || temp_str_str == "0")
     {
         input_data_type = 0;
@@ -994,9 +996,13 @@ int read_config_file(std::string file_name, int mpi_rank)
         std::cout << "\n\n";
         std::cout << termcolor::red << "Parameters to run the Decimate: ";
 
+        // template_dir
+
         std::cout << termcolor::blue << "\n\n Input parameters: ";
-        std::cout << termcolor::magenta << "\n        input_dir_file = " << termcolor::green << input_dir_file;
-        std::cout << termcolor::magenta << "\n        input_file_type = " << termcolor::green << input_file_type;
+        std::cout << termcolor::magenta << "\n        template_dir = " << termcolor::green << template_dir;
+
+        std::cout << termcolor::magenta << "\n        das_dir = " << termcolor::green << das_dir;
+        std::cout << termcolor::magenta << "\n        das_file_type = " << termcolor::green << das_file_type;
         if (input_data_type == 0)
         {
             std::cout << termcolor::magenta << "\n        input_data_type = " << termcolor::green << "short";

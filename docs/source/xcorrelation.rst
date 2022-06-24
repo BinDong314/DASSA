@@ -199,6 +199,9 @@ The xcorrelation accepts one parameter `-c` which comes with the configuration f
     attribute_name_sampling_frequency = SamplingFrequency[Hz] ; the sampling frequency
 
 
+- is_input_single_file
+- input_file_type
+
 3, Documentation for Functions within the Xcorrelation
 ------------------------------------------------------
 
