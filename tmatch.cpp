@@ -240,9 +240,9 @@ void init_xcorr()
     T_h5->SetChunkSize(chunk_size_h5);
     T_h5->SetOverlapSize(overlap_size_h5);
 
-    std::string n_files_string;
-    T_h5->ControlEndpoint(DIR_N_FILES, n_files_string);
-    ntemplates = std::stoi(n_files_string);
+    T_h5->ControlEndpoint(DIR_N_FILES, file_size_str_h5);
+    // std::cout << "n_files_string = " << file_size_str_h5[0] << " \n";
+    ntemplates = std::stoi(file_size_str_h5[0]);
 
     if (!ft_rank)
         std::cout << "ntemplates = " << ntemplates << std::endl;
