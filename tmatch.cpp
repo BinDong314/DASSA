@@ -623,6 +623,9 @@ int main(int argc, char *argv[])
 
     // A->GetStencilTag();
 
+    std::vector<std::string> null_str;
+    A->ControlEndpoint(DIR_SKIP_SIZE_CHECK, null_str);
+
     if (is_input_search_rgx && is_input_single_file == false)
     {
         std::vector<std::string> aug_input_search_rgx;
