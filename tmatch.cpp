@@ -178,12 +178,6 @@ void init_xcorr()
 
     npts1_template = round(npts0 * nlen_template / decifac);
 
-    ntemplates = 1;
-    template_data.resize(ntemplates);
-    template_winlen.resize(ntemplates);
-    template_tstart.resize(ntemplates);
-    template_weights.resize(ntemplates);
-
     // tstart_ci39534271.txt
     AU::Array<double> *T_tsstart;
     T_tsstart = new AU::Array<double>("EP_DIR:EP_CSV:" + template_dir);
@@ -245,6 +239,17 @@ void init_xcorr()
     T_chs = chunk_size_h5[1];
     T_h5->SetChunkSize(chunk_size_h5);
     T_h5->SetOverlapSize(overlap_size_h5);
+
+    std::string n_files_string;
+    T_h5->ControlEndpoint(DIR_N_FILES, n_files_string);
+    ntemplates = std::stoi(n_files_string);
+
+    if (!ft_rank)
+        std::cout << "ntemplates = " << ntemplates << std::endl;
+    template_data.resize(ntemplates);
+    template_winlen.resize(ntemplates);
+    template_tstart.resize(ntemplates);
+    template_weights.resize(ntemplates);
 
     template_winlen.clear();
     std::vector<std::vector<double>> T_ts2d; //[Channels][Points]
