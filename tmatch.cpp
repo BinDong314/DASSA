@@ -186,8 +186,10 @@ void init_xcorr()
     std::vector<double> T_tstart;
     std::vector<double> T_weight;
 
-    std::vector<std::string> control_para_ve, aug_merge_index, aug_input_search_rgx, file_size_str;
+    std::vector<std::string> control_para_ve, aug_merge_index, aug_input_search_rgx, file_size_str, null_str;
     std::vector<int> chunk_size_tsstart, overlap_size_tsstart = {0, 0};
+
+    T_tsstart->ControlEndpoint(DIR_SKIP_SIZE_CHECK, null_str);
 
     control_para_ve.push_back(std::to_string(CSV_SET_DELIMITER));
     control_para_ve.push_back(" ");
@@ -206,6 +208,8 @@ void init_xcorr()
     AU::Array<double> *T_winlen;
     T_winlen = new AU::Array<double>("EP_DIR:EP_CSV:" + template_dir);
 
+    T_winlen->ControlEndpoint(DIR_SKIP_SIZE_CHECK, null_str);
+
     std::vector<double> T_winlen_data;
     std::vector<int> chunk_size_winlen, overlap_size_winlen = {0, 0};
     std::vector<std::string> aug_input_search_rgx_winlen, file_size_str_winlen;
@@ -223,6 +227,8 @@ void init_xcorr()
     // winlen_ci39534271.txt
     AU::Array<short> *T_h5;
     T_h5 = new AU::Array<short>("EP_DIR:EP_HDF5:" + template_dir + ":/Acoustic");
+
+    T_h5->ControlEndpoint(DIR_SKIP_SIZE_CHECK, null_str);
 
     int T_pts, T_chs;
     std::vector<short> T_h5_data;
@@ -321,7 +327,6 @@ void init_xcorr()
             // bfg1 = [0.412719392485785]
             // atemp2=filtfilt(bfsos1,bfg1,atemp2);
             // filtfilt(bfsos1, bfg1, T_ts2d[i], atemp2);
-
             //  PrintVector("Before ddff T_ts2d[0] = ", T_ts2d[i]);
             //  Apply detrend, decimate, filtfilt on the data, 10 is decimate factor
             atemp2 = ddff(T_ts2d[i], ctap_template1, 10, BUTTER_A, BUTTER_B, cheby1_b, cheby1_a);
