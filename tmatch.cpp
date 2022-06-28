@@ -304,7 +304,7 @@ void init_xcorr()
         tukeywin(ctap_template2, template_winlen[rc2], 0.04); // Put outside if template_winlen[rc2] is constent across tempaltes
         // PrintVector("ctap_template2 = ", ctap_template2);
 
-        std::vector<double> atemp2;
+        // std::vector<double> atemp2;
 
         // std::cout << " template_tstart[" << rc2 << "].size() = " << template_tstart[rc2].size() << " \n";
         // std::cout << " template_weights[" << rc2 << "].size() = " << template_weights[rc2].size() << " \n";
@@ -341,7 +341,7 @@ void init_xcorr()
             // filtfilt(bfsos1, bfg1, T_ts2d[i], atemp2);
             //  PrintVector("Before ddff T_ts2d[0] = ", T_ts2d[i]);
             //  Apply detrend, decimate, filtfilt on the data, 10 is decimate factor
-            atemp2 = ddff(T_ts2d[i], ctap_template1, 10, BUTTER_A, BUTTER_B, cheby1_b, cheby1_a);
+            std::vector<double> atemp2 = ddff(T_ts2d[i], ctap_template1, 10, BUTTER_A, BUTTER_B, cheby1_b, cheby1_a);
             //    PrintVector("After ddff atemp2 = ", atemp2);
             //   % SELECTING TEMPLATE-DEPENDENT WINDOW STARTING FROM CHANNEL
             //% DEPENDENT BEGIN TIME, DETRENDING, MULTPLYING WITH TAPER
