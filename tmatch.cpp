@@ -20,7 +20,10 @@
 #include <stdlib.h>
 #include <math.h>
 #include <sys/time.h>
-//#include <omp.h>
+
+#if defined(_OPENMP)
+#include <omp.h>
+#endif
 
 #include "ft.h"
 #include "DasLib.h"
@@ -310,11 +313,15 @@ void init_xcorr()
         T_ts2d = DasLib::Vector1D2DByColStride(T_chs, T_h5_data, 2, 3); // filter the data starting at ch (2-1) and every 3 chs
                                                                         // std::cout << "T_ts2d.size() = " << T_ts2d.size() << "\n";
 
-        // printf("We have openmp %d threads.\n", omp_get_num_threads());
-        //##pragma omp parallel for
+#if defined(_OPENMP)
+        printf("We have openmp %d threads.\n", omp_get_num_threads());
+#pragma omp parallel for
+#endif
         for (int i = 0; i < T_ts2d.size(); i++)
         {
-            // printf("I am thread %d.\n", omp_get_thread_num());
+#if defined(_OPENMP)
+            printf("I am thread %d.\n", omp_get_thread_num());
+#endif
             //  detrend(T_ts2d[i].data(), T_pts); // Detread
 
             // for (int j = 0; j < ctap_template1.size(); j++)
