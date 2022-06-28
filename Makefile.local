@@ -45,7 +45,7 @@ similarity:similarity.cpp
 	$(CCC) -o similarity similarity.cpp  $(ALL_FLAGS)
 
 tmatch:tmatch.cpp
-	$(CCC) -o tmatch tmatch.cpp $(ALL_FLAGS)
+	$(CCC) -openmp  -o tmatch tmatch.cpp $(ALL_FLAGS)
 
 create_test_data: create_test_data.cpp
 	$(CCC) -o create_test_data create_test_data.cpp $(ALL_FLAGS)
