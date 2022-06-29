@@ -817,8 +817,10 @@ int main(int argc, char *argv[])
         PrintVector("overlap_size = ", overlap_size);
     }
 
+    double init_xcorr_t_start = AU_WTIME;
     init_xcorr();
-
+    if (!ft_rank)
+        std::cout << "init_xcorr time (s) = " << AU_WTIME - init_xcorr_t_start << std::endl;
     // Result data
     AU::Array<double> *B;
     if (is_output_single_file)
