@@ -302,9 +302,9 @@ void init_xcorr()
         // PrintVector("T_h5_data = ", T_h5_data);
 
         tukeywin(ctap_template2, template_winlen[rc2], 0.04); // Put outside if template_winlen[rc2] is constent across tempaltes
-        // PrintVector("ctap_template2 = ", ctap_template2);
+                                                              // PrintVector("ctap_template2 = ", ctap_template2);
 
-        // std::vector<double> atemp2;
+        std::vector<double> atemp2;
 
         // std::cout << " template_tstart[" << rc2 << "].size() = " << template_tstart[rc2].size() << " \n";
         // std::cout << " template_weights[" << rc2 << "].size() = " << template_weights[rc2].size() << " \n";
@@ -314,16 +314,11 @@ void init_xcorr()
                                                                         // std::cout << "T_ts2d.size() = " << T_ts2d.size() << "\n";
 
 #if defined(_OPENMP)
-        printf("We have openmp %d threads.\n", omp_get_num_threads());
-#pragma omp parallel for
+#pragma omp parallel for private(atemp2)
 #endif
         for (int i = 0; i < T_ts2d.size(); i++)
         {
-#if defined(_OPENMP)
-            printf("I am thread %d.\n", omp_get_thread_num());
-#endif
             //  detrend(T_ts2d[i].data(), T_pts); // Detread
-
             // for (int j = 0; j < ctap_template1.size(); j++)
             //{
             //     T_ts2d[i][j] = T_ts2d[i][j] * ctap_template1[j];
@@ -341,7 +336,7 @@ void init_xcorr()
             // filtfilt(bfsos1, bfg1, T_ts2d[i], atemp2);
             //  PrintVector("Before ddff T_ts2d[0] = ", T_ts2d[i]);
             //  Apply detrend, decimate, filtfilt on the data, 10 is decimate factor
-            std::vector<double> atemp2 = ddff(T_ts2d[i], ctap_template1, 10, BUTTER_A, BUTTER_B, cheby1_b, cheby1_a);
+            atemp2 = ddff(T_ts2d[i], ctap_template1, 10, BUTTER_A, BUTTER_B, cheby1_b, cheby1_a);
             //    PrintVector("After ddff atemp2 = ", atemp2);
             //   % SELECTING TEMPLATE-DEPENDENT WINDOW STARTING FROM CHANNEL
             //% DEPENDENT BEGIN TIME, DETRENDING, MULTPLYING WITH TAPER
