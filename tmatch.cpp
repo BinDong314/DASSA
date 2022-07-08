@@ -207,6 +207,7 @@ void init_xcorr()
     PrintVector("chunk_size_tsstart = ", chunk_size_tsstart);
     T_tsstart->SetChunkSize(chunk_size_tsstart);
     T_tsstart->SetOverlapSize(overlap_size_tsstart);
+    T_tsstart->SetChunkSchedulingMethod(CHUNK_SCHEDULING_CR);
 
     // winlen_ci39534271.txt
     AU::Array<double> *T_winlen;
@@ -226,6 +227,7 @@ void init_xcorr()
     PrintVector("chunk_size_winlen = ", chunk_size_winlen);
     T_winlen->SetChunkSize(chunk_size_winlen);
     T_winlen->SetOverlapSize(overlap_size_winlen);
+    T_winlen->SetChunkSchedulingMethod(CHUNK_SCHEDULING_CR);
 
     // ci39534271.h5
     // winlen_ci39534271.txt
@@ -250,10 +252,16 @@ void init_xcorr()
     T_h5->SetChunkSize(chunk_size_h5);
     T_h5->SetOverlapSize(overlap_size_h5);
 
+    T_h5->SetChunkSchedulingMethod(CHUNK_SCHEDULING_CR);
+
+    unsigned long long my_chunk_start, my_chunk_end;
+    T_h5->GetMyChunkStartEnd(my_chunk_start, my_chunk_end);
+    std::cout << "rank [" << ft_rank << "]: my_chunk_start = " << my_chunk_start << ", my_chunk_end = " << my_chunk_end << "\n";
+
     T_h5->ControlEndpoint(DIR_N_FILES, file_size_str_h5);
     // std::cout << "n_files_string = " << file_size_str_h5[0] << " \n";
     ntemplates = std::stoi(file_size_str_h5[0]);
-
+    ntemplates = my_chunk_end - my_chunk_start;
     if (!ft_rank)
         std::cout << "ntemplates = " << ntemplates << std::endl;
     template_data.resize(ntemplates);
