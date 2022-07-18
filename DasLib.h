@@ -744,8 +744,9 @@ namespace DasLib
      * @return std::vector<std::vector<T2>>
      */
     template <class T1, class T2 = double>
-    inline int ConvertVector1DTo2D(const std::vector<T1> &data1d, const size_t rows, const size_t cols, std::vector<std::vector<T2>> &result, const bool row_layout_flag)
+    inline std::vector<std::vector<T2>> ConvertVector1DTo2D(const std::vector<T1> &data1d, const size_t rows, const size_t cols, const bool row_layout_flag)
     {
+        std::vector<std::vector<T2>> result;
         if (row_layout_flag)
         {
             // size_t rows = data1d.size() / cols;
