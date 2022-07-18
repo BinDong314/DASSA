@@ -131,11 +131,13 @@ std::vector<double> ctap0, ctap_template1, ctap_template2;
 int ntemplates;
 std::vector<std::vector<std::vector<double>>> template_data; //[template index][channel][points]
 std::vector<double> template_winlen;
-std::vector<std::vector<double>> template_tstart;
+std::vector<std::vector<double>> template_tstart;  //[template index][channel]
 std::vector<std::vector<double>> template_weights; //[template index][channel]
 
 std::vector<double> cheby1_b = {3.58632426674156e-09, 2.86905941339325e-08, 1.00417079468764e-07, 2.00834158937527e-07, 2.51042698671909e-07, 2.00834158937527e-07, 1.00417079468764e-07, 2.86905941339325e-08, 3.58632426674156e-09};
 std::vector<double> cheby1_a = {1, -7.39772047094363, 24.0727277609670, -44.9989146659833, 52.8434667669224, -39.9159143524684, 18.9376658097605, -5.15917942637567, 0.617869501520363};
+
+void all_gather_vector(const std::vector<double> &v_to_send, std::vector<double> &v_to_receive);
 
 void init_xcorr()
 {
@@ -252,28 +254,41 @@ void init_xcorr()
     T_h5->SetChunkSize(chunk_size_h5);
     T_h5->SetOverlapSize(overlap_size_h5);
 
-    T_h5->SetChunkSchedulingMethod(CHUNK_SCHEDULING_CR);
-
-    unsigned long long my_chunk_start, my_chunk_end;
-    T_h5->GetMyChunkStartEnd(my_chunk_start, my_chunk_end);
-    std::cout << "rank [" << ft_rank << "]: my_chunk_start = " << my_chunk_start << ", my_chunk_end = " << my_chunk_end << "\n";
-
+    int ntemplates_on_my_rank = 0;
+    if (ft_size > 1)
+    {
+        T_h5->SetChunkSchedulingMethod(CHUNK_SCHEDULING_CR);
+        unsigned long long my_chunk_start, my_chunk_end;
+        T_h5->GetMyChunkStartEnd(my_chunk_start, my_chunk_end);
+        std::cout << "rank [" << ft_rank << "]: my_chunk_start = " << my_chunk_start << ", my_chunk_end = " << my_chunk_end << "\n";
+        ntemplates_on_my_rank = my_chunk_end - my_chunk_start;
+    }
     T_h5->ControlEndpoint(DIR_N_FILES, file_size_str_h5);
-    // std::cout << "n_files_string = " << file_size_str_h5[0] << " \n";
     ntemplates = std::stoi(file_size_str_h5[0]);
-    ntemplates = my_chunk_end - my_chunk_start;
+
+    int ntemplates_to_go;
+    if (ft_size > 1)
+    {
+        ntemplates_to_go = ntemplates_on_my_rank;
+    }
+    else
+    {
+        ntemplates_to_go = ntemplates;
+    }
+
     if (!ft_rank)
-        std::cout << "ntemplates = " << ntemplates << std::endl;
-    template_data.resize(ntemplates);
-    template_winlen.resize(ntemplates);
-    template_tstart.resize(ntemplates);
-    template_weights.resize(ntemplates);
+        std::cout << "ntemplates = " << ntemplates << ", ntemplates_to_go " << ntemplates_to_go << std::endl;
+
+    template_data.resize(ntemplates_to_go);
+    template_winlen.resize(ntemplates_to_go);
+    template_tstart.resize(ntemplates_to_go);
+    template_weights.resize(ntemplates_to_go);
 
     template_winlen.clear();
     std::vector<std::vector<double>> T_ts2d; //[Channels][Points]
     double T_weight_sum = 0;
     size_t T_tstart_weight_size;
-    for (int rc2 = 0; rc2 < ntemplates; rc2++)
+    for (int rc2 = 0; rc2 < ntemplates_to_go; rc2++)
     {
         // Read winlen data
         T_winlen->ReadNextChunk(T_winlen_data);
@@ -367,6 +382,38 @@ void init_xcorr()
         PrintVector("template_tstart after norm = ", template_tstart[rc2]);
     } // end for each template
     std::cout << " end for each template\n";
+
+    if (ft_size > 1)
+    {
+        // we need to merge across nodes
+        // std::vector<std::vector<std::vector<double>>> template_data; //[template index][channel][points]
+        // std::vector<double> template_winlen;
+        // std::vector<std::vector<double>> template_tstart;  //[template index][channel]
+        // std::vector<std::vector<double>> template_weights; //[template index][channel]
+        std::vector<double> template_data_1D = Convert3DVTo1DV(template_data);
+        int channels = template_data[0].size(), max_channels;
+        int timepoints = template_data[0][0].size(), max_timepoints;
+        MPI_Allreduce(&channels, &max_channels, 1, MPI_INIT, MPI_MAX, MPI_COMM_WORLD);
+        MPI_Allreduce(&timepoints, &max_timepoints, 1, MPI_INIT, MPI_MAX, MPI_COMM_WORLD);
+
+        std::vector<double> template_data_1D_merged;
+        all_gather_vector(template_data_1D, template_data_1D_merged);
+        template_data = Convert1DVTo3DV(template_data_1D_merged, ntemplates, max_channels, max_timepoints);
+
+        std::vector<double> template_tstart_1D = Convert2DVTo1DV(template_tstart);
+        std::vector<double> template_tstart_1D_merged;
+        all_gather_vector(template_tstart_1D, template_tstart_1D_merged);
+        template_tstart = ConvertVector1DTo2D(template_tstart_1D_merged, ntemplates, max_channels, true);
+
+        std::vector<double> template_weights_1D = Convert2DVTo1DV(template_weights);
+        std::vector<double> template_weights_1D_merged;
+        all_gather_vector(template_weights_1D, template_weights_1D_merged);
+        template_weights = ConvertVector1DTo2D(template_weights_1D_merged, ntemplates, max_channels, true);
+
+        std::vector<double> template_winlen_merged;
+        all_gather_vector(template_winlen, template_winlen_merged);
+        template_winlen = template_winlen_merged;
+    }
 
     // std::cout << " template_data.size =" << template_data.size() << " , template_data[0].size = " << template_data[0].size() << " , template_data[0][0].size = " << template_data[0][0].size();
 }
@@ -1113,4 +1160,27 @@ int read_config_file(std::string file_name, int mpi_rank)
     fflush(stdout);
 
     return 0;
+}
+
+void all_gather_vector(const std::vector<double> &v_to_send, std::vector<double> &v_to_receive)
+{
+    // https://rookiehpc.github.io/mpi/docs/mpi_allgatherv/index.html
+    int local_sum = v_to_send.size();
+
+    std::vector<int> local_sum_vector;
+    local_sum_vector.resize(ft_size);
+    MPI_Allgather(&local_sum, 1, MPI_INT, local_sum_vector.data(), 1, MPI_INT, MPI_COMM_WORLD);
+
+    int global_sum = 0;
+    std::vector<int> displacements;
+    displacements.resize(ft_size);
+    displacements[0] = 0;
+    for (int i = 0; i < local_sum_vector.size(); i++)
+    {
+        global_sum = global_sum + local_sum_vector[i];
+        if (i > 0)
+            displacements[i] = displacements[i - 1] + local_sum_vector[i - 1];
+    }
+    v_to_receive.resize(global_sum);
+    MPI_Allgatherv(v_to_send.data(), local_sum, MPI_DOUBLE, v_to_receive.data(), local_sum_vector.data(), displacements.data(), MPI_DOUBLE, MPI_COMM_WORLD);
 }

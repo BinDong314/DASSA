@@ -800,11 +800,51 @@ inline std::vector<std::vector<T>> Vector1D2D(size_t cols, std::vector<T> &data1
         size_t rows = data2d.size();
         size_t cols = data2d[0].size();
 
+        data2d.reserve(rows * cols);
         for (std::size_t i = 0; i < rows; ++i)
         {
             copy(data2d[i].begin(), data2d[i].end(), back_inserter(result));
         }
         assert(result.size() == (rows * cols));
+        return result;
+    }
+
+    template <class T>
+    inline std::vector<T> Convert3DVTo1DV(std::vector<std::vector<std::vector<T>>> &data3d)
+    {
+        std::vector<T> result;
+        size_t size_dim0 = data3d.size();
+        size_t size_dim1 = data3d[0].size();
+        size_t size_dim2 = data3d[0][0].size();
+
+        data3d.reserve(size_dim0 * size_dim1 * size_dim2);
+        for (std::size_t i = 0; i < size_dim0; ++i)
+        {
+            for (std::size_t j = 0; j < size_dim2; ++j)
+            {
+                copy(data3d[i][j].begin(), data3d[i][j].end(), back_inserter(result));
+            }
+        }
+        assert(result.size() == (size_dim0 * size_dim1 * size_dim2));
+        return result;
+    }
+
+    template <class T>
+    inline std::vector<std::vector<std::vector<T>>> Convert1DVTo3DV(std::vector<T> data1d, size_t dim_0_size, size_t dim_1_size, size_t dim_2_size)
+    {
+        std::vector<std::vector<std::vector<T>>> result;
+        result.resize(dim_0_size);
+        for (int i = 0; i < dim_0_size; i++)
+        {
+            result[i].resize(dim_1_size);
+            for (int j = 0; j < dim_1_size; j++)
+            {
+                result[i][j].resize(dim_2_size);
+                for (int k = 0; k < dim_2_size; k++)
+                    result[i][j][k] = data1d[k + dim_2_size * (j + dim_1_size * i)];
+            }
+        }
+
         return result;
     }
 
