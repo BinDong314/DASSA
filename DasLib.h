@@ -821,7 +821,7 @@ inline std::vector<std::vector<T>> Vector1D2D(size_t cols, std::vector<T> &data1
         data3d.reserve(size_dim0 * size_dim1 * size_dim2);
         for (std::size_t i = 0; i < size_dim0; ++i)
         {
-            for (std::size_t j = 0; j < size_dim2; ++j)
+            for (std::size_t j = 0; j < size_dim1; ++j)
             {
                 copy(data3d[i][j].begin(), data3d[i][j].end(), back_inserter(result));
             }
