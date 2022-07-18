@@ -276,8 +276,7 @@ void init_xcorr()
         ntemplates_to_go = ntemplates;
     }
 
-    if (!ft_rank)
-        std::cout << "ntemplates = " << ntemplates << ", ntemplates_to_go " << ntemplates_to_go << std::endl;
+    std::cout << "Rank " << ft_rank << "ntemplates = " << ntemplates << ", ntemplates_to_go = " << ntemplates_to_go << std::endl;
 
     template_data.resize(ntemplates_to_go);
     template_winlen.resize(ntemplates_to_go);
@@ -390,8 +389,20 @@ void init_xcorr()
         // std::vector<double> template_winlen;
         // std::vector<std::vector<double>> template_tstart;  //[template index][channel]
         // std::vector<std::vector<double>> template_weights; //[template index][channel]
-        int channels = template_data[0].size(), max_channels;
-        int timepoints = template_data[0][0].size(), max_timepoints;
+
+        // std::cout << "Rank " << ft_rank << " template_data.size() = " << template_data.size() << "\n";
+        // if (template_data.size() > 0)
+        // {
+        //     std::cout << "Rank " << ft_rank << ": template_data[0].size() = " << template_data[0].size() << "\n";
+        // }
+
+        int channels, max_channels, timepoints, max_timepoints;
+        if ((!template_data.empty()) && (!template_data[0].empty()))
+        {
+            channels = template_data[0].size();
+            timepoints = template_data[0][0].size();
+        }
+
         MPI_Allreduce(&channels, &max_channels, 1, MPI_INT, MPI_MAX, MPI_COMM_WORLD);
         MPI_Allreduce(&timepoints, &max_timepoints, 1, MPI_INT, MPI_MAX, MPI_COMM_WORLD);
 
