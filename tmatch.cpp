@@ -390,12 +390,12 @@ void init_xcorr()
         // std::vector<double> template_winlen;
         // std::vector<std::vector<double>> template_tstart;  //[template index][channel]
         // std::vector<std::vector<double>> template_weights; //[template index][channel]
-        std::vector<double> template_data_1D = Convert3DVTo1DV(template_data);
         int channels = template_data[0].size(), max_channels;
         int timepoints = template_data[0][0].size(), max_timepoints;
         MPI_Allreduce(&channels, &max_channels, 1, MPI_INT, MPI_MAX, MPI_COMM_WORLD);
         MPI_Allreduce(&timepoints, &max_timepoints, 1, MPI_INT, MPI_MAX, MPI_COMM_WORLD);
 
+        std::vector<double> template_data_1D = Convert3DVTo1DV(template_data);
         std::vector<double> template_data_1D_merged;
         all_gather_vector(template_data_1D, template_data_1D_merged);
         template_data = Convert1DVTo3DV(template_data_1D_merged, ntemplates, max_channels, max_timepoints);
