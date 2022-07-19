@@ -432,6 +432,8 @@ void init_xcorr()
 template <class TT>
 inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStencil)
 {
+    double init_xcorr_t_start = AU_WTIME;
+
     // Input pramters
     std::vector<int> max_offset_upper; // Size of input data for the whole chunk, zero based
     iStencil.GetOffsetUpper(max_offset_upper);
@@ -509,9 +511,17 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
 
     iStencil.ReadNeighbors(start_offset, end_offset, ts_short);
 
-    ts2d = DasLib::Vector1D2DByColStride(chs_per_file_udf, ts_short, 2, 3);
     if (!ft_rank)
+        std::cout << "ReadNeighbors (s) = " << AU_WTIME - init_xcorr_t_start << std::endl;
+    init_xcorr_t_start = AU_WTIME;
+
+    ts2d = DasLib::Vector1D2DByColStride(chs_per_file_udf, ts_short, 2, 3);
+    if (!ft_rank || ft_rank == (ft_size - 1))
         std::cout << "chs = " << ts2d.size() << ", each with " << ts2d[0].size() << " points\n";
+
+    if (!ft_rank)
+        std::cout << "Vector1D2DByColStride (s) = " << AU_WTIME - init_xcorr_t_start << std::endl;
+    init_xcorr_t_start = AU_WTIME;
 
     chs_per_file_udf = ts2d.size();
     lts_per_file_udf = ts2d[0].size();
@@ -526,6 +536,10 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
         ts_temp2.pop_back();
         amat1[ii] = ts_temp2;
     }
+
+    if (!ft_rank)
+        std::cout << "ddff (s) = " << AU_WTIME - init_xcorr_t_start << std::endl;
+    init_xcorr_t_start = AU_WTIME;
 
     // PrintVV("amat1 =", amat1);
     //  ************************
@@ -586,6 +600,10 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
             // }
         }
     }
+
+    if (!ft_rank)
+        std::cout << "sdcn (for loop) (s) = " << AU_WTIME - init_xcorr_t_start << std::endl;
+    init_xcorr_t_start = AU_WTIME;
 
     // Set output
     ts_temp = Convert2DVTo1DV(xc0);
