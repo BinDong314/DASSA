@@ -550,9 +550,12 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
     nchan1 = chs_per_file_udf;
     double micro_init_xcorr_t_start = AU_WTIME;
 
+#if defined(_OPENMP)
+#pragma omp parallel for private(template_tstart_max, npts2, dx1, sdcn_v, xc1)
+#endif
     for (int rc2 = 0; rc2 < ntemplates; rc2++)
     {
-        micro_init_xcorr_t_start = AU_WTIME;
+        // micro_init_xcorr_t_start = AU_WTIME;
         template_tstart_max = *(std::max_element(std::begin(template_tstart[rc2]), std::end(template_tstart[rc2])));
         npts2 = npts1 - template_winlen[rc2] - template_tstart_max;
         // npts2=npts1-template_winlen(rc2)-max(template_tstart(:,rc2))+1; % [62182]
@@ -603,8 +606,8 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
             // }
         }
 
-        if (!ft_rank)
-            std::cout << "current template " << rc2 << " takes   " << AU_WTIME - micro_init_xcorr_t_start << " (sec)" << std::endl;
+        // if (!ft_rank)
+        //     std::cout << "current template " << rc2 << " takes   " << AU_WTIME - micro_init_xcorr_t_start << " (sec)" << std::endl;
     }
 
     if (!ft_rank)
@@ -940,7 +943,7 @@ int main(int argc, char *argv[])
 
     // Run
     // A->Transform<std::vector<double>>(udf_xcorr, B);
-    TRANSFORM(A, udf_template_match, B, t, std::vector<double>);
+    TRANSFORM_NO_MP(A, udf_template_match, B, t, std::vector<double>);
     A->ReportCost();
 
     // Clear
