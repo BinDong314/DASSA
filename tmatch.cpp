@@ -446,15 +446,13 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
     std::vector<std::vector<double>> ts2d; // Buffer to stored the converted from ts_short to 2D
                                            // ts2d[0] is a channel ....
 
-    double template_tstart_max;           // temporary value for the tstart
-    size_t npts2, dx1;                    // npts2 is the size of vector for cross-correlation
-                                          // dx1 is the start index for the points
-    std::vector<double> xc1;              // cross correlation per channel
+    // double template_tstart_max;           // temporary value for the tstart
+    // size_t dx1;                           // npts2 is the size of vector for cross-correlation
+    // dx1 is the start index for the points
     std::vector<std::vector<double>> xc0; // [template index][correlation]
 
     std::vector<std::vector<double>> amat1; // filter data , [channel][time points]
     std::vector<double> ts_temp2;           // temporary value for each ch during filter, try to remove it
-    std::vector<double> sdcn_v;
 
     // *************
     // Output Parameters
@@ -545,19 +543,20 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
     //  ************************
     //  Cross with Template    *
     //  ************************
-    xc1.resize(chs_per_file_udf);
     xc0.resize(ntemplates);
     nchan1 = chs_per_file_udf;
     double micro_init_xcorr_t_start = AU_WTIME;
 
 #if defined(_OPENMP)
-#pragma omp parallel for private(template_tstart_max, npts2, dx1, sdcn_v, xc1)
+#pragma omp parallel for private(xc1)
 #endif
     for (int rc2 = 0; rc2 < ntemplates; rc2++)
     {
+        std::vector<double> sdcn_v;
+        size_t dx1;
         // micro_init_xcorr_t_start = AU_WTIME;
-        template_tstart_max = *(std::max_element(std::begin(template_tstart[rc2]), std::end(template_tstart[rc2])));
-        npts2 = npts1 - template_winlen[rc2] - template_tstart_max;
+        double template_tstart_max = *(std::max_element(std::begin(template_tstart[rc2]), std::end(template_tstart[rc2])));
+        size_t npts2 = npts1 - template_winlen[rc2] - template_tstart_max;
         // npts2=npts1-template_winlen(rc2)-max(template_tstart(:,rc2))+1; % [62182]
         // % VECTOR WITH CROSS-CORRELATION RESULTS
         //     xc0=zeros(1,npts2); %
@@ -565,6 +564,8 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
         // Points rc3=1:npts2
         for (int rc3 = 0; rc3 < npts2; rc3++)
         {
+            std::vector<double> xc1; // cross correlation per channel
+            xc1.resize(chs_per_file_udf);
             // Channels rc1=1:nchan1
             for (int rc1 = 0; rc1 < nchan1; rc1++)
             {
