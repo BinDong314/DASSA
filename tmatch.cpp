@@ -548,7 +548,7 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
     double micro_init_xcorr_t_start = AU_WTIME;
 
 #if defined(_OPENMP)
-#pragma omp parallel for private(xc1)
+#pragma omp parallel for
 #endif
     for (int rc2 = 0; rc2 < ntemplates; rc2++)
     {
