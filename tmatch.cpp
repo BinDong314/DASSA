@@ -553,7 +553,10 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
     for (int rc2 = 0; rc2 < ntemplates; rc2++)
     {
 #if defined(_OPENMP)
-        printf("Inside the OpenMP parallel region, we are %d threads.\n", omp_get_num_threads());
+        if (!omp_get_thread_num())
+        {
+            printf("Inside the OpenMP parallel region thread 0, we have %d threads, at template %d .\n", omp_get_num_threads(), rc2);
+        }
 #endif
         std::vector<double> sdcn_v;
         size_t dx1;
