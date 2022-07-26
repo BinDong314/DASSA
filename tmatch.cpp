@@ -545,16 +545,19 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
     //  ************************
     xc0.resize(ntemplates);
     nchan1 = chs_per_file_udf;
-    double micro_init_xcorr_t_start = AU_WTIME;
+    // double micro_init_xcorr_t_start = AU_WTIME;
 
 #if defined(_OPENMP)
 #pragma omp parallel for
 #endif
     for (int rc2 = 0; rc2 < ntemplates; rc2++)
     {
+#if defined(_OPENMP)
+        printf("Inside the OpenMP parallel region, we are %d threads.\n", omp_get_num_threads());
+#endif
         std::vector<double> sdcn_v;
         size_t dx1;
-        // micro_init_xcorr_t_start = AU_WTIME;
+        // double micro_init_xcorr_t_start = AU_WTIME;
         double template_tstart_max = *(std::max_element(std::begin(template_tstart[rc2]), std::end(template_tstart[rc2])));
         size_t npts2 = npts1 - template_winlen[rc2] - template_tstart_max;
         // npts2=npts1-template_winlen(rc2)-max(template_tstart(:,rc2))+1; % [62182]
