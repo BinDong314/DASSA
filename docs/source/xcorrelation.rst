@@ -78,7 +78,7 @@ The xcorrelation accepts one parameter `-c` which comes with the configuration f
     #
     # Note: 
     #  Each config file starts with the "[parameter]"
-    #  The comment lines starting with "#" ";" and "%" will be skipped 
+    #  The comment lines starting with "#" ";" or "%" will be skipped 
     #  The ";" can also be used to comment the line at the end
     #
     #  In the blow text,
@@ -100,42 +100,45 @@ The xcorrelation accepts one parameter `-c` which comes with the configuration f
     #############################
 
     is_input_single_file = true   ; true / false (default),
-    input_file_type = EP_HDF5     ; only takes  EP_HDF5(default) / EP_TMDS
+                                  ; is input a single file or not
+    input_file_type = EP_HDF5     ; only takes two inputs now:  EP_HDF5(default) and EP_TMDS
     input_dir_file = test-data/test-das.h5 ; when is_input_single_file = true,  it points to a file
-                                        ; when is_input_single_file = false, it points to a directory
-    input_dataset=/dat    ; dataset name in HDF5, use (h5dump -A) to get it
+                                           ; when is_input_single_file = false, it points to a directory
+    input_dataset=/dat    ; dataset name in a HDF5 file, use (h5dump -A) to get it
 
-    input_data_type = short ;short (default)/double/float the data element type in dataset,  
+    input_data_type = short ; the type of data element in dataset, it accepts below values 
+                            ; short (default)/double/float 
 
     is_column_vector = true ; true (default)/false
                             ; column vector: each column is a time series (most cases)
                             ; row vector: each row is a time series 
 
     n_files_to_concatenate = 1 ; the number of files to concatenate
-                            ; only works when input is a directory
-                            ; 1 : not to concatenate
-                            ; 2 : concatenate every two files ...
-                            ; Note: better not to have leftover 
+                               ; only works when input is a directory
+                               ; 1 : not to concatenate
+                               ; 2 : concatenate every two files ...
+                               ; Note: better not to have leftover 
 
-    is_input_search_rgx = false  ; true / false(default) 
-    input_search_rgx = (.*?)[1](\.h5) ; filter the input file names as input
-                                    ; See : https://www.cplusplus.com/reference/regex/ECMAScript/
+    is_input_search_rgx = false       ; true / false(default) 
+    input_search_rgx = (.*?)[1](\.h5) ; only used when is_input_search_rgx = true
+                                      ; filter the input file names as input
+                                      ; See : https://www.cplusplus.com/reference/regex/ECMAScript/
 
 
     is_channel_range = false   ;  true / false(default) 
-    channel_range_start = 0    ;  Select a few channels to run xcorr
-    channel_range_end = 2      ;  channel_range_start is "0" based. 
+    channel_range_start = 0    ;  only used when is_channel_range = true
+    channel_range_end = 2      ;  Select a few contiguous channels to run xcorr 
+                               ;  channel_range_start/channel_range_end is "0" based. 
 
-    is_channel_stride = false     ; true / false (default)
-    channel_stride_size = 1       ; Only used when is_ch_stride = true
-                        ; Pick every [ch_stride_size] channel from the first (zero based)
-                        ; E.g.,  ch_stride_size = 99,
-                        ; It picks channels 0, 99, 198, ....
+    is_channel_stride = false   ; true / false (default)
+    channel_stride_size = 1     ; Only used when is_ch_stride = true
+                                ; Pick every [ch_stride_size] channel from the first (zero based)
+                                ; E.g.,  ch_stride_size = 99,
+                                ; It picks channels 0, 99, 198, ....
 
 
-
-    is_file_range = false      ; false or 0,  true/1 (by default 0) 
-                            ; only works when  is_input_single_file = flase, i.e., a directory
+    is_file_range = false   ; false or 0,  true/1 (by default 0) 
+                            ; only works when is_input_single_file = flase, i.e., a directory
                             ; pick the [file_range_start_index]th file to  [file_range_end_index]th file
                             ; All files are sorted by the filenames (kind of time order)
     file_range_start_index = 0 ; Note: zero based and inclusive
@@ -146,15 +149,16 @@ The xcorrelation accepts one parameter `-c` which comes with the configuration f
     #####################################
 
     is_output_single_file = true                     ; true / false(default)
-    output_type = EP_HDF5                            ; only takes EP_HDF5 now
+    output_type = EP_HDF5                            ; the type of file to store result 
+                                                     ; only takes EP_HDF5 now
     output_file_dir = test-data/test-das-xcorr.h5    ; when is_output_single_file = true,  it points to a file
-                                                    ; when is_output_single_file = false,  it points to a directory
+                                                     ; when is_output_single_file = false,  it points to a directory
     output_dataset = /dat                            ; dataset for output file
 
     is_dir_output_match_replace_rgx = false          ; true / false(default), only works in directory mode
-                                                    ; whether it has a way to auto generate the output file 
-                                                    ; name from the input file name
-    output_file_regex_match = ^(.*)\.h5$            ; regex pattern to match original file name
+                                                     ; It controls how to generate the output file 
+                                                     ; name from the input file name
+    output_file_regex_match = ^(.*)\.h5$             ; regex pattern to match original file name
     output_file_regex_replace = $1-xcorr.h5          ; regex pattern to replace original file name
 
 
@@ -164,15 +168,15 @@ The xcorrelation accepts one parameter `-c` which comes with the configuration f
     ################################
 
     master_index   = 0     ; master channel index ("0" based)
-                        ; if is_channel_range = true, "master_index = 0" means the "channel_range_start"
-                        ; so, it is relative channel index
+                           ; if is_channel_range = true, "master_index = 0" means the "channel_range_start"
+                           ; so, it is relative channel index
 
     butter_order = 3       ; The order for Butterworth filter
     dt = 0.002             ; original sampling interval (1/frequency) 
     dt_new = 0.008         ; new sampling interval (1/frequency) , for resample
 
-    winLen_sec = 0.5              ;window length (in second) for the move mean operation
-    z = 0, 0.5, 1.0, 1.0, 0.5, 0  ;for interp1
+    winLen_sec = 0.5              ; window length (in second) for the move mean operation
+    z = 0, 0.5, 1.0, 1.0, 0.5, 0  ; for interp1
     F1 = 0
     F2 = 0.002
     F3 = 0.006
@@ -199,8 +203,7 @@ The xcorrelation accepts one parameter `-c` which comes with the configuration f
     attribute_name_sampling_frequency = SamplingFrequency[Hz] ; the sampling frequency
 
 
-- is_input_single_file
-- input_file_type
+
 
 3, Documentation for Functions within the Xcorrelation
 ------------------------------------------------------
