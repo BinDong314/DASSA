@@ -545,7 +545,7 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
     //  ************************
     xc0.resize(ntemplates);
     nchan1 = chs_per_file_udf;
-    // double micro_init_xcorr_t_start = AU_WTIME;
+// double micro_init_xcorr_t_start = AU_WTIME;
 
 //#if defined(_OPENMP)
 //#endif
@@ -560,7 +560,7 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
         //#endif
         std::vector<double> sdcn_v;
         size_t dx1;
-        // double micro_init_xcorr_t_start = AU_WTIME;
+        double micro_init_xcorr_t_start = AU_WTIME;
         double template_tstart_max = *(std::max_element(std::begin(template_tstart[rc2]), std::end(template_tstart[rc2])));
         size_t npts2 = npts1 - template_winlen[rc2] - template_tstart_max;
         // npts2=npts1-template_winlen(rc2)-max(template_tstart(:,rc2))+1; % [62182]
@@ -613,8 +613,8 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
             // }
         }
 
-        // if (!ft_rank)
-        //     std::cout << "current template " << rc2 << " takes   " << AU_WTIME - micro_init_xcorr_t_start << " (sec)" << std::endl;
+        if (!ft_rank)
+            std::cout << "current template " << rc2 << " takes   " << AU_WTIME - micro_init_xcorr_t_start << " (sec)" << std::endl;
     }
 
     if (!ft_rank)
