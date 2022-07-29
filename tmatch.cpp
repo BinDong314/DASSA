@@ -340,6 +340,10 @@ void init_xcorr()
 #endif
         for (int i = 0; i < T_ts2d.size(); i++)
         {
+            if (!omp_get_thread_num())
+            {
+                printf("Inside the OpenMP parallel region thread 0, we have %d threads, at template %d .\n", omp_get_num_threads(), rc2);
+            }
             //  detrend(T_ts2d[i].data(), T_pts); // Detread
             // for (int j = 0; j < ctap_template1.size(); j++)
             //{
