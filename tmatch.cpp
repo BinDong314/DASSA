@@ -340,7 +340,7 @@ void init_xcorr()
 #endif
         for (int i = 0; i < T_ts2d.size(); i++)
         {
-            if (!omp_get_thread_num())
+            if (!ft_rank && !omp_get_thread_num())
             {
                 printf("Inside the OpenMP parallel region thread 0, we have %d threads, at template %d .\n", omp_get_num_threads(), rc2);
             }
@@ -557,14 +557,14 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
     for (int rc2 = 0; rc2 < ntemplates; rc2++)
     {
         //#if defined(_OPENMP)
-        if (!omp_get_thread_num())
+        if (!ft_rank && !omp_get_thread_num())
         {
             printf("Inside the OpenMP parallel region thread 0, we have %d threads, at template %d .\n", omp_get_num_threads(), rc2);
         }
         //#endif
         std::vector<double> sdcn_v;
         size_t dx1;
-        // double micro_init_xcorr_t_start = AU_WTIME;
+        double micro_init_xcorr_t_start = AU_WTIME;
         double template_tstart_max = *(std::max_element(std::begin(template_tstart[rc2]), std::end(template_tstart[rc2])));
         size_t npts2 = npts1 - template_winlen[rc2] - template_tstart_max;
         // npts2=npts1-template_winlen(rc2)-max(template_tstart(:,rc2))+1; % [62182]
@@ -617,8 +617,8 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
             // }
         }
 
-        /// if (!ft_rank)
-        //    std::cout << "current template " << rc2 << " takes   " << AU_WTIME - micro_init_xcorr_t_start << " (sec)" << std::endl;
+        if (!ft_rank && !omp_get_thread_num())
+            std::cout << "current template " << rc2 << " takes   " << AU_WTIME - micro_init_xcorr_t_start << " (sec)" << std::endl;
     }
 
     if (!ft_rank)
