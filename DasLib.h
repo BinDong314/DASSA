@@ -801,7 +801,7 @@ inline std::vector<std::vector<T>> Vector1D2D(size_t cols, std::vector<T> &data1
         size_t rows = data2d.size();
         size_t cols = data2d[0].size();
 
-        data2d.reserve(rows * cols);
+        result.reserve(rows * cols);
         for (std::size_t i = 0; i < rows; ++i)
         {
             copy(data2d[i].begin(), data2d[i].end(), back_inserter(result));
