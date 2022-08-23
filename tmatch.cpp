@@ -142,7 +142,8 @@ void all_gather_vector(const std::vector<double> &v_to_send, std::vector<double>
 void init_xcorr()
 {
     DT_NEW = decifac * DT;
-    PrintScalar("DT_NEW (dt1) = ", DT_NEW);
+    if (!ft_rank)
+        PrintScalar("DT_NEW (dt1) = ", DT_NEW);
 
     // fbands=[0.5 16];
     //  fs1=1/DT_NEW; % NEW SAMPLING FREQUENCY 50 (from 500 to 50)
@@ -180,7 +181,8 @@ void init_xcorr()
 
     // ctap_template1=tukeywin((npts0*nlen_template),5/(npts0*nlen_template*dt0));
     tukeywin(ctap_template1, (npts0 * nlen_template), 5 / (npts0 * nlen_template * dt0));
-    PrintVector("ctap_template1 = ", ctap_template1);
+    if (!ft_rank)
+        PrintVector("ctap_template1 = ", ctap_template1);
 
     npts1_template = round(npts0 * nlen_template / decifac);
 
@@ -276,7 +278,8 @@ void init_xcorr()
         ntemplates_to_go = ntemplates;
     }
 
-    std::cout << "Rank " << ft_rank << "ntemplates = " << ntemplates << ", ntemplates_to_go = " << ntemplates_to_go << std::endl;
+    if (!ft_rank)
+        std::cout << "Rank " << ft_rank << "ntemplates = " << ntemplates << ", ntemplates_to_go = " << ntemplates_to_go << std::endl;
 
     template_data.resize(ntemplates_to_go);
     template_winlen.resize(ntemplates_to_go);
@@ -314,8 +317,8 @@ void init_xcorr()
         {
             T_weight[i] = T_weight[i] / T_weight_sum;
         }
-        PrintVector("T_tstart = ", T_tstart);
-        PrintVector("T_weight = ", T_weight);
+        // PrintVector("T_tstart = ", T_tstart);
+        // PrintVector("T_weight = ", T_weight);
         template_tstart[rc2] = T_tstart;
         template_weights[rc2] = T_weight;
 
@@ -326,8 +329,6 @@ void init_xcorr()
         tukeywin(ctap_template2, template_winlen[rc2], 0.04); // Put outside if template_winlen[rc2] is constent across tempaltes
                                                               // PrintVector("ctap_template2 = ", ctap_template2);
 
-        std::vector<double> atemp2;
-
         // std::cout << " template_tstart[" << rc2 << "].size() = " << template_tstart[rc2].size() << " \n";
         // std::cout << " template_weights[" << rc2 << "].size() = " << template_weights[rc2].size() << " \n";
         // std::cout << "T_chs = " << T_chs << " \n";
@@ -336,13 +337,13 @@ void init_xcorr()
                                                                         // std::cout << "T_ts2d.size() = " << T_ts2d.size() << "\n";
 
 #if defined(_OPENMP)
-#pragma omp parallel for private(atemp2)
+#pragma omp parallel for
 #endif
         for (int i = 0; i < T_ts2d.size(); i++)
         {
-            if ((!ft_rank) && (!omp_get_thread_num()))
+            if ((!ft_rank && !omp_get_thread_num()))
             {
-                printf("Init Inside the OpenMP parallel region thread 0, we have %d threads, at template %d .\n", omp_get_num_threads(), rc2);
+                printf("Init Inside the OpenMP parallel region thread 0, we have %d threads, at template %d of MPI rank %d .\n", omp_get_num_threads(), rc2, ft_rank);
             }
             //  detrend(T_ts2d[i].data(), T_pts); // Detread
             // for (int j = 0; j < ctap_template1.size(); j++)
@@ -362,6 +363,7 @@ void init_xcorr()
             // filtfilt(bfsos1, bfg1, T_ts2d[i], atemp2);
             //  PrintVector("Before ddff T_ts2d[0] = ", T_ts2d[i]);
             //  Apply detrend, decimate, filtfilt on the data, 10 is decimate factor
+            std::vector<double> atemp2;
             atemp2 = ddff(T_ts2d[i], ctap_template1, 10, BUTTER_A, BUTTER_B, cheby1_b, cheby1_a);
             //    PrintVector("After ddff atemp2 = ", atemp2);
             //   % SELECTING TEMPLATE-DEPENDENT WINDOW STARTING FROM CHANNEL
