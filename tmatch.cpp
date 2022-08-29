@@ -633,6 +633,15 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
     init_xcorr_t_start = AU_WTIME;
 
     // Set output
+    if (!ft_rank)
+        std::cout << "xc0.size = " << xc0.size() << ", xc0[0].size =" << xc0[0].size() << " \n";
+    for (int si = 0; si < xc0.size(); si++)
+    {
+        if (xc0[i].size() != xc0[0].size())
+        {
+            std::cout << "Missed size matched found for xc0[ " << si << " ] = " << xc0[i].size() << " , xc0[0].size() = " << xc0[0].size();
+        }
+    }
     ts_temp = Convert2DVTo1DV(xc0);
     if (is_column_major)
     {
