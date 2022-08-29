@@ -574,7 +574,7 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
         double micro_init_xcorr_t_start = AU_WTIME;
         double template_tstart_max = *(std::max_element(std::begin(template_tstart[rc2]), std::end(template_tstart[rc2])));
         size_t npts2 = npts1 - template_winlen[rc2] - template_tstart_max;
-        std::cout << "npts1 = " << npts1 << ", npts2 = " << npts2 << "at template [" << rc2 "]"
+        std::cout << "npts1 = " << npts1 << ", npts2 = " << npts2 << "at template [" << rc2 << "]"
                   << ", mpi_rank =" << ft_rank << "\n";
         // npts2=npts1-template_winlen(rc2)-max(template_tstart(:,rc2))+1; % [62182]
         // % VECTOR WITH CROSS-CORRELATION RESULTS
