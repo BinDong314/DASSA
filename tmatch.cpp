@@ -637,9 +637,9 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
         std::cout << "xc0.size = " << xc0.size() << ", xc0[0].size =" << xc0[0].size() << " \n";
     for (int si = 0; si < xc0.size(); si++)
     {
-        if (xc0[i].size() != xc0[0].size())
+        if (xc0[si].size() != xc0[0].size())
         {
-            std::cout << "Missed size matched found for xc0[ " << si << " ] = " << xc0[i].size() << " , xc0[0].size() = " << xc0[0].size();
+            std::cout << "Missed size matched found for xc0[ " << si << " ] = " << xc0[si].size() << " , xc0[0].size() = " << xc0[0].size();
         }
     }
     ts_temp = Convert2DVTo1DV(xc0);
