@@ -250,7 +250,8 @@ void init_xcorr()
 
     T_h5->ControlEndpoint(DIR_GET_FILE_SIZE, file_size_str_h5);
     String2Vector(file_size_str_h5[0], chunk_size_h5);
-    PrintVector("chunk_size_h5 = ", chunk_size_h5);
+    if (!ft_rank)
+        PrintVector("chunk_size_h5 = ", chunk_size_h5);
     T_pts = chunk_size_h5[0];
     T_chs = chunk_size_h5[1];
     T_h5->SetChunkSize(chunk_size_h5);
@@ -262,7 +263,8 @@ void init_xcorr()
         T_h5->SetChunkSchedulingMethod(CHUNK_SCHEDULING_CR);
         unsigned long long my_chunk_start, my_chunk_end;
         T_h5->GetMyChunkStartEnd(my_chunk_start, my_chunk_end);
-        std::cout << "rank [" << ft_rank << "]: my_chunk_start = " << my_chunk_start << ", my_chunk_end = " << my_chunk_end << "\n";
+        if (!ft_rank)
+            std::cout << "rank [" << ft_rank << "]: my_chunk_start = " << my_chunk_start << ", my_chunk_end = " << my_chunk_end << "\n";
         ntemplates_on_my_rank = my_chunk_end - my_chunk_start;
     }
     T_h5->ControlEndpoint(DIR_N_FILES, file_size_str_h5);
@@ -341,10 +343,10 @@ void init_xcorr()
 #endif
         for (int i = 0; i < T_ts2d.size(); i++)
         {
-            if ((!ft_rank && !omp_get_thread_num()))
-            {
-                printf("Init Inside the OpenMP parallel region thread 0, we have %d threads, at template %d of MPI rank %d .\n", omp_get_num_threads(), rc2, ft_rank);
-            }
+            // if ((!ft_rank && !omp_get_thread_num()))
+            // {
+            //     printf("Init Inside the OpenMP parallel region thread 0, we have %d threads, at template %d of MPI rank %d .\n", omp_get_num_threads(), rc2, ft_rank);
+            // }
             //  detrend(T_ts2d[i].data(), T_pts); // Detread
             // for (int j = 0; j < ctap_template1.size(); j++)
             //{
@@ -378,15 +380,18 @@ void init_xcorr()
             T_ts2d[i] = atemp2;
             // std::cout << " end for  channel #" << i << "\n";
         } // end for all channels of each template
-        std::cout << " end for all channels of each template \n";
+        if (!ft_rank)
+            std::cout << " end for all channels of each template \n";
         // PrintVV("T_ts2d cha x points = ", T_ts2d);
         template_data[rc2] = T_ts2d;
 
         double template_tstart_min = *(std::min_element(template_tstart[rc2].begin(), template_tstart[rc2].end()));
         VectorMinusByScalar(template_tstart[rc2], template_tstart_min);
-        PrintVector("template_tstart after norm = ", template_tstart[rc2]);
+        if (!ft_rank)
+            PrintVector("template_tstart after norm = ", template_tstart[rc2]);
     } // end for each template
-    std::cout << " end for each template\n";
+    if (!ft_rank)
+        std::cout << " end for each template\n";
 
     if (ft_size > 1)
     {
@@ -561,7 +566,7 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
         //#if defined(_OPENMP)
         if ((!ft_rank) && (!omp_get_thread_num()))
         {
-            printf("Corr: Inside the OpenMP parallel region thread 0, we have %d threads, at template %d .\n", omp_get_num_threads(), rc2);
+            printf("Corr: Inside the OpenMP parallel region thread 0, we have %d threads, at template %d, at MPI rank %d .\n", omp_get_num_threads(), rc2, ft_rank);
         }
         //#endif
         std::vector<double> sdcn_v;
