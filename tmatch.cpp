@@ -556,7 +556,28 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
     //  ************************
     xc0.resize(ntemplates);
     nchan1 = chs_per_file_udf;
-// double micro_init_xcorr_t_start = AU_WTIME;
+    // double micro_init_xcorr_t_start = AU_WTIME;
+
+    size_t npts2_max = 0;
+    std::vector<size_t> npts2_vector;
+    npts2_vector.resize(ntemplates, 0);
+    double template_tstart_max;
+    for (int rc2 = 0; rc2 < ntemplates; rc2++)
+    {
+        npts2_vector[rc2] = *(std::max_element(std::begin(template_tstart[rc2]), std::end(template_tstart[rc2])));
+        if (npts1 - template_winlen[rc2] - npts2_vector[rc2] > npts2_max)
+        {
+            npts2_max = npts1 - template_winlen[rc2] - npts2_vector[rc2];
+        }
+    }
+
+    for (int rc2 = 0; rc2 < ntemplates; rc2++)
+    {
+        xc0[rc2].resize(npts2_max, 0);
+    }
+
+    if (!ft_rank)
+        std::cout << "npts1 = " << npts1 << ", npts2 = " << npts2_max << ", chs_per_file_udf =" << chs_per_file_udf << "nchan1 = " << nchan1 << ", mpi_rank =" << ft_rank << "\n";
 
 //#if defined(_OPENMP)
 //#endif
@@ -572,19 +593,17 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
         std::vector<double> sdcn_v;
         size_t dx1;
         double micro_init_xcorr_t_start = AU_WTIME;
-        double template_tstart_max = *(std::max_element(std::begin(template_tstart[rc2]), std::end(template_tstart[rc2])));
-        size_t npts2 = npts1 - template_winlen[rc2] - template_tstart_max;
-        std::cout << "npts1 = " << npts1 << ", npts2 = " << npts2 << "at template [" << rc2 << "]"
-                  << ", mpi_rank =" << ft_rank << "\n";
-        // npts2=npts1-template_winlen(rc2)-max(template_tstart(:,rc2))+1; % [62182]
-        // % VECTOR WITH CROSS-CORRELATION RESULTS
-        //     xc0=zeros(1,npts2); %
-        xc0[rc2].resize(npts2);
-        // Points rc3=1:npts2
-        for (int rc3 = 0; rc3 < npts2; rc3++)
+        // double template_tstart_max = *(std::max_element(std::begin(template_tstart[rc2]), std::end(template_tstart[rc2])));
+        // size_t npts2 = npts1 - template_winlen[rc2] - template_tstart_max;
+        //  npts2=npts1-template_winlen(rc2)-max(template_tstart(:,rc2))+1; % [62182]
+        //  % VECTOR WITH CROSS-CORRELATION RESULTS
+        //      xc0=zeros(1,npts2); %
+        //  xc0[rc2].resize(npts2);
+        //  Points rc3=1:npts2
+        std::vector<double> xc1; // cross correlation per channel
+        xc1.resize(chs_per_file_udf);
+        for (int rc3 = 0; rc3 < npts2_vector[rc2]; rc3++)
         {
-            std::vector<double> xc1; // cross correlation per channel
-            xc1.resize(chs_per_file_udf);
             // Channels rc1=1:nchan1
             for (int rc1 = 0; rc1 < nchan1; rc1++)
             {
@@ -645,7 +664,7 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
             std::cout << "Missed size matched found for xc0[ " << si << " ] = " << xc0[si].size() << " , xc0[0].size() = " << xc0[0].size() << ", at mpi rank = " << ft_rank << "\n";
         }
     }
-    exit(-1);
+    // exit(-1);
 
     ts_temp = Convert2DVTo1DV(xc0);
     if (is_column_major)
