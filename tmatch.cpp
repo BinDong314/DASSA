@@ -687,7 +687,7 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
     DasLib::clear_vector(xc0);
     oStencil.SetShape(vector_shape);
     oStencil = ts_temp;
-    exit(0);
+    // exit(0);
     return oStencil;
 }
 
