@@ -655,16 +655,15 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
 
     // Set output
     // if (!ft_rank)
-    std::cout << "xc0.size = " << xc0.size() << ", xc0[0].size =" << xc0[0].size() << ", at mpi rank = " << ft_rank << " \n";
-
-    for (int si = 0; si < xc0.size(); si++)
-    {
-        if (xc0[si].size() != xc0[0].size())
-        {
-            std::cout << "Missed size matched found for xc0[ " << si << " ] = " << xc0[si].size() << " , xc0[0].size() = " << xc0[0].size() << ", at mpi rank = " << ft_rank << "\n";
-        }
-    }
-    // exit(-1);
+    // std::cout << "xc0.size = " << xc0.size() << ", xc0[0].size =" << xc0[0].size() << ", at mpi rank = " << ft_rank << " \n";
+    // for (int si = 0; si < xc0.size(); si++)
+    // {
+    //     if (xc0[si].size() != xc0[0].size())
+    //     {
+    //         std::cout << "Missed size matched found for xc0[ " << si << " ] = " << xc0[si].size() << " , xc0[0].size() = " << xc0[0].size() << ", at mpi rank = " << ft_rank << "\n";
+    //     }
+    // }
+    // // exit(-1);
 
     ts_temp = Convert2DVTo1DV(xc0);
     if (is_column_major)
@@ -688,7 +687,7 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
     DasLib::clear_vector(xc0);
     oStencil.SetShape(vector_shape);
     oStencil = ts_temp;
-
+    exit(0);
     return oStencil;
 }
 
