@@ -773,7 +773,8 @@ int main(int argc, char *argv[])
 
     // A->GetStencilTag();
 
-    A->SkipTailChunk();
+    A->SkipFileTail();
+    A->ExecuteUDFOnce();
     std::vector<std::string> null_str;
     A->ControlEndpoint(DIR_SKIP_SIZE_CHECK, null_str);
 
