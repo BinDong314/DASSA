@@ -665,6 +665,7 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
     // }
     // // exit(-1);
 
+    PrintVV("Finish UDF, xc0 = ", xc0);
     ts_temp = Convert2DVTo1DV(xc0);
     if (is_column_major)
     {
