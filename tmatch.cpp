@@ -528,6 +528,7 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
     if (!ft_rank || ft_rank == (ft_size - 1))
         std::cout << "chs = " << ts2d.size() << ", each with " << ts2d[0].size() << " points\n";
 
+    PrintVV("ts2d = ", ts2d);
     if (!ft_rank)
         std::cout << "Vector1D2DByColStride (s) = " << AU_WTIME - init_xcorr_t_start << std::endl;
     init_xcorr_t_start = AU_WTIME;
@@ -577,7 +578,7 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
     }
 
     if (!ft_rank)
-        std::cout << "npts1 = " << npts1 << ", npts2_max = " << npts2_max << ", chs_per_file_udf =" << chs_per_file_udf << ", nchan1 = " << nchan1 << ", mpi_rank =" << ft_rank << "\n";
+        std::cout << "npts1 = " << npts1 << ", npts2_max = " << npts2_max << ", chs_per_file_udf =" << chs_per_file_udf << ", nchan1 = " << nchan1 << ", mpi_rank =" << ft_rank << ", ntemplates = " << ntemplates << ", nchan1 = " << nchan1 << "\n";
 
 //#if defined(_OPENMP)
 //#endif
