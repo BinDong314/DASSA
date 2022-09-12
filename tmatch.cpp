@@ -679,6 +679,7 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
             std::cout << i + 1 << ": " << xc0[0][i + 1] << " \n";
             std::cout << i + 2 << ": " << xc0[0][i + 2] << " \n";
             std::cout << i + 3 << ": " << xc0[0][i + 3] << " \n";
+            break;
         }
     }
     ts_temp = Convert2DVTo1DV(xc0);
