@@ -670,22 +670,22 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
     // // exit(-1);
 
     // PrintVV("Finish UDF, xc0 = ", xc0);
-    for (int i = 0; i < xc0[0].size(); i++)
-    {
-        if (xc0[0][i] == 0)
-        {
-            std::cout << i - 5 << ": " << xc0[0][i - 5] << " \n";
-            std::cout << i - 4 << ": " << xc0[0][i - 4] << " \n";
-            std::cout << i - 3 << ": " << xc0[0][i - 3] << " \n";
-            std::cout << i - 2 << ": " << xc0[0][i - 2] << " \n";
-            std::cout << i - 1 << ": " << xc0[0][i - 1] << " \n";
-            std::cout << i << ": " << xc0[0][i] << " \n";
-            std::cout << i + 1 << ": " << xc0[0][i + 1] << " \n";
-            std::cout << i + 2 << ": " << xc0[0][i + 2] << " \n";
-            std::cout << i + 3 << ": " << xc0[0][i + 3] << " \n";
-            break;
-        }
-    }
+    // for (int i = 0; i < xc0[0].size(); i++)
+    // {
+    //     if (xc0[0][i] == 0)
+    //     {
+    //         std::cout << i - 5 << ": " << xc0[0][i - 5] << " \n";
+    //         std::cout << i - 4 << ": " << xc0[0][i - 4] << " \n";
+    //         std::cout << i - 3 << ": " << xc0[0][i - 3] << " \n";
+    //         std::cout << i - 2 << ": " << xc0[0][i - 2] << " \n";
+    //         std::cout << i - 1 << ": " << xc0[0][i - 1] << " \n";
+    //         std::cout << i << ": " << xc0[0][i] << " \n";
+    //         std::cout << i + 1 << ": " << xc0[0][i + 1] << " \n";
+    //         std::cout << i + 2 << ": " << xc0[0][i + 2] << " \n";
+    //         std::cout << i + 3 << ": " << xc0[0][i + 3] << " \n";
+    //         break;
+    //     }
+    // }
     ts_temp = Convert2DVTo1DV(xc0);
     if (is_column_major)
     {
