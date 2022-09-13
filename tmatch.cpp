@@ -528,7 +528,7 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
     if (!ft_rank || ft_rank == (ft_size - 1))
         std::cout << "chs = " << ts2d.size() << ", each with " << ts2d[0].size() << " points\n";
 
-    PrintVV("ts2d = ", ts2d);
+    // PrintVV("ts2d = ", ts2d);
     if (!ft_rank)
         std::cout << "Vector1D2DByColStride (s) = " << AU_WTIME - init_xcorr_t_start << std::endl;
     init_xcorr_t_start = AU_WTIME;
@@ -547,7 +547,7 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
         amat1[ii] = ts_temp2;
     }
 
-    PrintVV("amat1 = ", amat1);
+    // PrintVV("amat1 = ", amat1);
 
     if (!ft_rank)
         std::cout << "ddff (s) = " << AU_WTIME - init_xcorr_t_start << std::endl;
@@ -669,7 +669,7 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
     // }
     // // exit(-1);
 
-    PrintVV("Finish UDF, xc0 = ", xc0);
+    // PrintVV("Finish UDF, xc0 = ", xc0);
     for (int i = 0; i < xc0[0].size(); i++)
     {
         if (xc0[0][i] == 0)
