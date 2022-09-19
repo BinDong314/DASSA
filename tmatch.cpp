@@ -264,12 +264,14 @@ void init_xcorr()
 
     if (is_template_file_range)
     {
+        std::cout << "Set range for template files ! \n";
         std::vector<std::string> index_param;
         index_param.push_back(template_file_indexes_str);
         T_h5->ControlEndpoint(DIR_FILE_SORT_INDEXES, index_param);
         T_winlen->ControlEndpoint(DIR_FILE_SORT_INDEXES, index_param);
         T_tsstart->ControlEndpoint(DIR_FILE_SORT_INDEXES, index_param);
     }
+
     int ntemplates_on_my_rank = 0;
     if (ft_size > 1)
     {
