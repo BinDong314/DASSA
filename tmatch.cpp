@@ -146,6 +146,9 @@ void all_gather_vector(const std::vector<double> &v_to_send, std::vector<double>
 
 void init_xcorr()
 {
+    std::vector<std::string> index_param;
+    index_param.push_back(template_file_indexes_str);
+
     DT_NEW = decifac * DT;
     if (!ft_rank)
         PrintScalar("DT_NEW (dt1) = ", DT_NEW);
@@ -202,6 +205,11 @@ void init_xcorr()
     std::vector<std::string> control_para_ve, aug_merge_index, aug_input_search_rgx, file_size_str, null_str;
     std::vector<int> chunk_size_tsstart, overlap_size_tsstart = {0, 0};
 
+    if (is_template_file_range)
+    {
+        T_tsstart->ControlEndpoint(DIR_FILE_SORT_INDEXES, index_param);
+    }
+
     T_tsstart->ControlEndpoint(DIR_SKIP_SIZE_CHECK, null_str);
 
     control_para_ve.push_back(std::to_string(CSV_SET_DELIMITER));
@@ -228,6 +236,11 @@ void init_xcorr()
     std::vector<int> chunk_size_winlen, overlap_size_winlen = {0, 0};
     std::vector<std::string> aug_input_search_rgx_winlen, file_size_str_winlen;
 
+    if (is_template_file_range)
+    {
+        T_winlen->ControlEndpoint(DIR_FILE_SORT_INDEXES, index_param);
+    }
+
     aug_input_search_rgx_winlen.push_back("(.*)winlen(.*)txt$"); // tstart_ci39534271.txt
     T_winlen->EndpointControl(DIR_INPUT_SEARCH_RGX, aug_input_search_rgx_winlen);
 
@@ -250,6 +263,11 @@ void init_xcorr()
     std::vector<int> chunk_size_h5, overlap_size_h5 = {0, 0};
     std::vector<std::string> aug_input_search_rgx_h5, file_size_str_h5;
 
+    if (is_template_file_range)
+    {
+        T_h5->ControlEndpoint(DIR_FILE_SORT_INDEXES, index_param);
+    }
+
     aug_input_search_rgx_h5.push_back("(.*)h5$"); // tstart_ci39534271.txt
     T_h5->EndpointControl(DIR_INPUT_SEARCH_RGX, aug_input_search_rgx_h5);
 
@@ -261,16 +279,6 @@ void init_xcorr()
     T_chs = chunk_size_h5[1];
     T_h5->SetChunkSize(chunk_size_h5);
     T_h5->SetOverlapSize(overlap_size_h5);
-
-    if (is_template_file_range)
-    {
-        std::cout << "Set range for template files ! \n";
-        std::vector<std::string> index_param;
-        index_param.push_back(template_file_indexes_str);
-        T_h5->ControlEndpoint(DIR_FILE_SORT_INDEXES, index_param);
-        T_winlen->ControlEndpoint(DIR_FILE_SORT_INDEXES, index_param);
-        T_tsstart->ControlEndpoint(DIR_FILE_SORT_INDEXES, index_param);
-    }
 
     int ntemplates_on_my_rank = 0;
     if (ft_size > 1)
