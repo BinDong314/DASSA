@@ -137,6 +137,11 @@ std::vector<std::vector<double>> template_weights; //[template index][channel]
 std::vector<double> cheby1_b = {3.58632426674156e-09, 2.86905941339325e-08, 1.00417079468764e-07, 2.00834158937527e-07, 2.51042698671909e-07, 2.00834158937527e-07, 1.00417079468764e-07, 2.86905941339325e-08, 3.58632426674156e-09};
 std::vector<double> cheby1_a = {1, -7.39772047094363, 24.0727277609670, -44.9989146659833, 52.8434667669224, -39.9159143524684, 18.9376658097605, -5.15917942637567, 0.617869501520363};
 
+bool is_template_file_range = false;
+int template_file_range_start_index = 0;
+int template_file_range_end_index = 1;
+std::string template_file_indexes_str;
+
 void all_gather_vector(const std::vector<double> &v_to_send, std::vector<double> &v_to_receive);
 
 void init_xcorr()
@@ -257,6 +262,14 @@ void init_xcorr()
     T_h5->SetChunkSize(chunk_size_h5);
     T_h5->SetOverlapSize(overlap_size_h5);
 
+    if (is_template_file_range)
+    {
+        std::vector<std::string> index_param;
+        index_param.push_back(template_file_indexes_str);
+        T_h5->ControlEndpoint(DIR_FILE_SORT_INDEXES, index_param);
+        T_winlen->ControlEndpoint(DIR_FILE_SORT_INDEXES, index_param);
+        T_tsstart->ControlEndpoint(DIR_FILE_SORT_INDEXES, index_param);
+    }
     int ntemplates_on_my_rank = 0;
     if (ft_size > 1)
     {
@@ -982,6 +995,16 @@ int main(int argc, char *argv[])
         PrintVector("overlap_size = ", overlap_size);
     }
 
+    std::vector<int> tempalte_file_indexes;
+    if (is_template_file_range)
+    {
+        for (int i = template_file_range_start_index; i <= template_file_range_end_index; i++)
+        {
+            tempalte_file_indexes.push_back(sorted_indexes[i]);
+        }
+    }
+    template_file_indexes_str = Vector2String(tempalte_file_indexes);
+
     double init_xcorr_t_start = AU_WTIME;
     init_xcorr();
     if (!ft_rank)
@@ -1086,6 +1109,26 @@ int read_config_file(std::string file_name, int mpi_rank)
         input_search_rgx = reader.Get("parameter", "input_search_rgx", "^(.*)[1234]\\.tdms$");
     }
 
+    std::string is_file_range_str = reader.Get("parameter", "is_file_range", "false");
+    if (is_file_range_str == "false" || is_file_range_str == "0")
+    {
+        is_file_range = false;
+    }
+    else if (is_file_range_str == "true" || is_file_range_str == "1")
+    {
+        is_file_range = true;
+    }
+    else
+    {
+        AU_EXIT("Don't read the is_file_range's value " + is_file_range_str);
+    }
+
+    if (is_file_range)
+    {
+        file_range_start_index = reader.GetInteger("parameter", "file_range_start_index", 0);
+        file_range_end_index = reader.GetInteger("parameter", "file_range_end_index", 1);
+    }
+
     // chs_per_file = reader.GetInteger("parameter", "chs_per_file", 11648);
     // lts_per_file = reader.GetInteger("parameter", "lts_per_file", 30000);
 
@@ -1116,24 +1159,24 @@ int read_config_file(std::string file_name, int mpi_rank)
         is_column_major_from_config = true;
     }
 
-    std::string is_file_range_str = reader.Get("parameter", "is_file_range", "false");
-    if (is_file_range_str == "false" || is_file_range_str == "0")
+    std::string is_template_file_range_str = reader.Get("parameter", "is_template_file_range", "false");
+    if (is_template_file_range_str == "false" || is_template_file_range_str == "0")
     {
-        is_file_range = false;
+        is_template_file_range = false;
     }
-    else if (is_file_range_str == "true" || is_file_range_str == "1")
+    else if (is_template_file_range_str == "true" || is_template_file_range_str == "1")
     {
-        is_file_range = true;
+        is_template_file_range = true;
     }
     else
     {
-        AU_EXIT("Don't read the is_file_range's value " + is_file_range_str);
+        AU_EXIT("Don't read the is_template_file_range's value " + is_template_file_range);
     }
 
-    if (is_file_range)
+    if (is_template_file_range)
     {
-        file_range_start_index = reader.GetInteger("parameter", "file_range_start_index", 0);
-        file_range_end_index = reader.GetInteger("parameter", "file_range_end_index", 1);
+        template_file_range_start_index = reader.GetInteger("parameter", "tempalte_file_range_start_index", 0);
+        template_file_range_end_index = reader.GetInteger("parameter", "tempalte_file_range_end_index", 1);
     }
 
     MeasureLengthName = reader.Get("parameter", "attribute_name_measure_length", "MeasureLength[m]");
@@ -1214,6 +1257,13 @@ int read_config_file(std::string file_name, int mpi_rank)
             {
                 std::cout << termcolor::magenta << "\n        is_column_vector = " << termcolor::green << "false";
             }
+        }
+
+        std::cout << termcolor::magenta << "\n        is_template_file_range = " << termcolor::green << is_template_file_range;
+        if (is_template_file_range)
+        {
+            std::cout << termcolor::magenta << "\n        template_file_range_start_index = " << termcolor::green << template_file_range_start_index;
+            std::cout << termcolor::magenta << "\n        template_file_range_end_index = " << termcolor::green << template_file_range_end_index;
         }
 
         if (is_channel_range)
