@@ -1000,7 +1000,7 @@ int main(int argc, char *argv[])
     {
         for (int i = template_file_range_start_index; i <= template_file_range_end_index; i++)
         {
-            tempalte_file_indexes.push_back(sorted_indexes[i]);
+            tempalte_file_indexes.push_back(i);
         }
     }
     template_file_indexes_str = Vector2String(tempalte_file_indexes);
