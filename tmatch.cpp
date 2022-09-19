@@ -1175,8 +1175,8 @@ int read_config_file(std::string file_name, int mpi_rank)
 
     if (is_template_file_range)
     {
-        template_file_range_start_index = reader.GetInteger("parameter", "tempalte_file_range_start_index", 0);
-        template_file_range_end_index = reader.GetInteger("parameter", "tempalte_file_range_end_index", 1);
+        template_file_range_start_index = reader.GetInteger("parameter", "template_file_range_start_index", 0);
+        template_file_range_end_index = reader.GetInteger("parameter", "template_file_range_end_index", 1);
     }
 
     MeasureLengthName = reader.Get("parameter", "attribute_name_measure_length", "MeasureLength[m]");
