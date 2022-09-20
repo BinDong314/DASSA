@@ -1124,7 +1124,7 @@ int read_config_file(std::string file_name, int mpi_rank)
         input_search_rgx = reader.Get("parameter", "input_search_rgx", "^(.*)[1234]\\.tdms$");
     }
 
-    std::string is_file_range_str = reader.Get("parameter", "is_file_range", "false");
+    std::string is_file_range_str = reader.Get("parameter", "is_das_file_range", "false");
     if (is_file_range_str == "false" || is_file_range_str == "0")
     {
         is_file_range = false;
