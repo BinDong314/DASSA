@@ -606,9 +606,9 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
     if (!ft_rank)
         std::cout << "npts1 = " << npts1 << ", npts2_max = " << npts2_max << ", chs_per_file_udf =" << chs_per_file_udf << ", nchan1 = " << nchan1 << ", mpi_rank =" << ft_rank << ", ntemplates = " << ntemplates << ", nchan1 = " << nchan1 << ", npts2_vector[0] = " << npts2_vector[0] << "\n";
 
-//#if defined(_OPENMP)
-//#endif
-#pragma omp parallel for
+    //#if defined(_OPENMP)
+    //#endif
+    ////#pragma omp parallel for
     for (int rc2 = 0; rc2 < ntemplates; rc2++)
     {
         //#if defined(_OPENMP)
@@ -617,8 +617,8 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
             printf("Corr: Inside the OpenMP parallel region thread 0, we have %d threads, at template %d, at MPI rank %d .\n", omp_get_num_threads(), rc2, ft_rank);
         }
         //#endif
-        std::vector<double> sdcn_v;
-        size_t dx1;
+        ////std::vector<double> sdcn_v;
+        /// size_t dx1;
         double micro_init_xcorr_t_start = AU_WTIME;
         // double template_tstart_max = *(std::max_element(std::begin(template_tstart[rc2]), std::end(template_tstart[rc2])));
         // size_t npts2 = npts1 - template_winlen[rc2] - template_tstart_max;
@@ -627,11 +627,16 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
         //      xc0=zeros(1,npts2); %
         //  xc0[rc2].resize(npts2);
         //  Points rc3=1:npts2
-        std::vector<double> xc1; // cross correlation per channel
-        xc1.resize(chs_per_file_udf);
+        /////std::vector<double> xc1; // cross correlation per channel
+        /////xc1.resize(chs_per_file_udf);
+#pragma omp parallel for
         for (int rc3 = 0; rc3 < npts2_vector[rc2]; rc3++)
         {
-            // Channels rc1=1:nchan1
+            std::vector<double> sdcn_v;
+            size_t dx1;
+            std::vector<double> xc1(chs_per_file_udf, 0); // cross correlation per channel
+            // xc1.resize(chs_per_file_udf);
+            //  Channels rc1=1:nchan1
             for (int rc1 = 0; rc1 < nchan1; rc1++)
             {
 
