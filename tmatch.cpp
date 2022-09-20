@@ -1281,11 +1281,11 @@ int read_config_file(std::string file_name, int mpi_rank)
             std::cout << termcolor::magenta << "\n        template_file_range_end_index = " << termcolor::green << template_file_range_end_index;
         }
 
-        std::cout << termcolor::magenta << "\n        is_das_file_range = " << termcolor::green << is_das_file_range;
-        if (is_template_file_range)
+        std::cout << termcolor::magenta << "\n        is_das_file_range = " << termcolor::green << is_file_range;
+        if (is_file_range)
         {
-            std::cout << termcolor::magenta << "\n        das_file_range_start_index = " << termcolor::green << das_file_range_start_index;
-            std::cout << termcolor::magenta << "\n        das_file_range_end_index = " << termcolor::green << das_file_range_end_index;
+            std::cout << termcolor::magenta << "\n        das_file_range_start_index = " << termcolor::green << file_range_start_index;
+            std::cout << termcolor::magenta << "\n        das_file_range_end_index = " << termcolor::green << file_range_end_index;
         }
 
         if (is_channel_range)
