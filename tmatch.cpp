@@ -1140,8 +1140,8 @@ int read_config_file(std::string file_name, int mpi_rank)
 
     if (is_file_range)
     {
-        file_range_start_index = reader.GetInteger("parameter", "file_range_start_index", 0);
-        file_range_end_index = reader.GetInteger("parameter", "file_range_end_index", 1);
+        file_range_start_index = reader.GetInteger("parameter", "das_file_range_start_index", 0);
+        file_range_end_index = reader.GetInteger("parameter", "das_file_range_end_index", 1);
     }
 
     // chs_per_file = reader.GetInteger("parameter", "chs_per_file", 11648);
