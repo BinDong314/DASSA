@@ -167,14 +167,14 @@ namespace DasLib
 
 #define VectorElementMultiNormal(v1, v2)    \
     {                                       \
-        T v_sum = 0;                        \
+        double v_sum = 0;                   \
         assert(v1.size() == v2.size());     \
         for (int i = 0; i < v1.size(); i++) \
         {                                   \
             v1[i] = v1[i] * v2[i];          \
             v_sum = v_sum + v1[i];          \
         }                                   \
-        T v_sum_sqrt = sqrt(v_sum);         \
+        double v_sum_sqrt = sqrt(v_sum);    \
         for (int i = 0; i < v1.size(); i++) \
         {                                   \
             v1[i] = v1[i] / v_sum_sqrt;     \
