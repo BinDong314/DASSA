@@ -366,10 +366,10 @@ void init_xcorr()
 #endif
         for (int i = 0; i < T_ts2d.size(); i++)
         {
-            // if ((!ft_rank && !omp_get_thread_num()))
-            // {
-            //     printf("Init Inside the OpenMP parallel region thread 0, we have %d threads, at template %d of MPI rank %d .\n", omp_get_num_threads(), rc2, ft_rank);
-            // }
+            if ((!ft_rank && !omp_get_thread_num()))
+            {
+                printf("Init Inside the OpenMP parallel region thread 0, we have %d threads, at template %d of MPI rank %d .\n", omp_get_num_threads(), rc2, ft_rank);
+            }
             //  detrend(T_ts2d[i].data(), T_pts); // Detread
             // for (int j = 0; j < ctap_template1.size(); j++)
             //{
@@ -612,10 +612,10 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
     for (int rc2 = 0; rc2 < ntemplates; rc2++)
     {
         //#if defined(_OPENMP)
-        if ((!ft_rank) && (!omp_get_thread_num()))
-        {
-            printf("Corr: Inside the OpenMP parallel region thread 0, we have %d threads, at template %d, at MPI rank %d .\n", omp_get_num_threads(), rc2, ft_rank);
-        }
+        // if ((!ft_rank) && (!omp_get_thread_num()))
+        //{
+        //   printf("Corr: Inside the OpenMP parallel region thread 0, we have %d threads, at template %d, at MPI rank %d .\n", omp_get_num_threads(), rc2, ft_rank);
+        //}
         //#endif
         ////std::vector<double> sdcn_v;
         /// size_t dx1;
@@ -632,6 +632,11 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
 #pragma omp parallel for
         for (int rc3 = 0; rc3 < npts2_vector[rc2]; rc3++)
         {
+            if ((!ft_rank) && (!omp_get_thread_num()))
+            {
+                printf("Corr: Inside the OpenMP parallel region thread 0, we have %d threads, at template %d, at MPI rank %d .\n", omp_get_num_threads(), rc3, ft_rank);
+            }
+
             std::vector<double> sdcn_v;
             size_t dx1;
             std::vector<double> xc1(chs_per_file_udf, 0); // cross correlation per channel
