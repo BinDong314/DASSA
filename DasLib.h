@@ -165,6 +165,22 @@ namespace DasLib
         }                                   \
     }
 
+#define VectorElementMultiNormal(v1, v2)    \
+    {                                       \
+        T v_sum = 0;                        \
+        assert(v1.size() == v2.size());     \
+        for (int i = 0; i < v1.size(); i++) \
+        {                                   \
+            v1[i] = v1[i] * v2[i];          \
+            v_sum = v_sum + v1[i];          \
+        }                                   \
+        T v_sum_sqrt = sqrt(v_sum);         \
+        for (int i = 0; i < v1.size(); i++) \
+        {                                   \
+            v1[i] = v1[i] / v_sum_sqrt;     \
+        }                                   \
+    }
+
 #define VectorDivideByScalar(v, k)                                                  \
     {                                                                               \
         transform(v.begin(), v.end(), v.begin(), [k](double &c) { return c / k; }); \
@@ -210,14 +226,14 @@ namespace DasLib
     }
 
     template <typename T>
-    T norm_matlab(const vector<T> &v)
+    inline void norm_matlab(vector<T> &v)
     {
-        // T x = std::inner_product(v.begin(), v.end(), v.begin(), 0);
         T x = 0;
         for (size_t i = 0; i < v.size(); i++)
             x = x + v[i] * v[i];
-        // std::cout << "norm_matlab:  x = " << x << "\n";
-        return sqrt(x);
+        T sqrt_x = sqrt(x);
+        for (size_t i = 0; i < v.size(); i++)
+            v[i] = v[i] / sqrt_x;
     }
 
     /*   subset, detrend, ctap, norm
@@ -244,9 +260,11 @@ namespace DasLib
         std::vector<T> newV(v.begin() + subset_start, v.begin() + subset_start + subset_count);
         detrend(newV.data(), newV.size());
         // std::cout << "newV.size() = " << newV.size() << ", ctap = " << ctap.size() << "\n";
-        VectorElementMulti(newV, ctap);
-        double atemp2_norm = norm_matlab(newV);
-        VectorDivideByScalar(newV, atemp2_norm);
+        // VectorElementMulti(newV, ctap);
+        // double atemp2_norm = norm_matlab(newV);
+        // VectorDivideByScalar(newV, atemp2_norm);
+        // norm_matlab(newV);
+        VectorElementMultiNormal(newV, ctap);
         v_out = newV;
     }
 
