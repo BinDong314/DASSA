@@ -397,9 +397,10 @@ void init_xcorr()
             slice(atemp2, template_tstart[rc2][i] - 1, template_tstart[rc2][i] - 1 + template_winlen[rc2] - 1);
             // std::cout << " atemp2.size() = " << atemp2.size() << ", template_tstart[rc2][i] = " << template_tstart[rc2][i] << ", template_winlen[rc2] = " << template_winlen[rc2] << ",  ctap_template2.size= " << ctap_template2.size() << "\n";
             detrend(atemp2.data(), atemp2.size());
-            VectorElementMulti(atemp2, ctap_template2);
-            double atemp2_norm = norm_matlab(atemp2);
-            VectorDivideByScalar(atemp2, atemp2_norm);
+            // VectorElementMulti(atemp2, ctap_template2);
+            // double atemp2_norm = norm_matlab(atemp2);
+            // VectorDivideByScalar(atemp2, atemp2_norm);
+            VectorElementMultiNormal(atemp2, ctap_template2);
             T_ts2d[i] = atemp2;
             // std::cout << " end for  channel #" << i << "\n";
         } // end for all channels of each template
