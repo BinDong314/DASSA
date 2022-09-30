@@ -276,10 +276,11 @@ namespace DasLib
         // std::vector<T>::const_iterator last = v.begin() + subset_start + subset_count;
         // std::cout << "subset_start = " << subset_start << ", subset_count = " << subset_count << "\n";
         v_out.resize(subset_count);
-        for (size_t i = 0; i < subset_count; i++)
-        {
-            v_out[i] = v[i + subset_start];
-        }
+        // for (size_t i = 0; i < subset_count; i++)
+        //{
+        //     v_out[i] = v[i + subset_start];
+        // }
+        memcpy(&v_out[0], &v[subset_start], subset_count * sizeof(T));
         // std::vector<T> newV(v.begin() + subset_start, v.begin() + subset_start + subset_count);
         // detrend(newV.data(), newV.size());
         detrend(v_out.data(), v_out.size());
