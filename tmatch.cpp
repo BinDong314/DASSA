@@ -633,7 +633,7 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
 #pragma omp parallel for
         for (int rc3 = 0; rc3 < npts2_vector[rc2]; rc3++)
         {
-            if ((!ft_rank) && (!omp_get_thread_num()))
+            if ((!ft_rank) && (!omp_get_thread_num()) && (!rc3))
             {
                 printf("Corr: Inside the OpenMP parallel region thread 0, we have %d threads, at template %d, at MPI rank %d .\n", omp_get_num_threads(), rc3, ft_rank);
             }
