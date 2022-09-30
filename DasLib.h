@@ -251,7 +251,7 @@ namespace DasLib
 
      */
     template <typename T>
-    inline void sdcn(const std::vector<T> &v, std::vector<T> &v_out, const size_t subset_start, const size_t subset_count, const std::vector<T> &ctap)
+    inline void sdcn_old(const std::vector<T> &v, std::vector<T> &v_out, const size_t subset_start, const size_t subset_count, const std::vector<T> &ctap)
     {
         // slice(atemp2, template_tstart[rc2][i] - 1, template_tstart[rc2][i] - 1 + template_winlen[rc2] - 1);
         // std::vector<T>::const_iterator first = v.begin() + subset_start;
@@ -266,6 +266,30 @@ namespace DasLib
         // norm_matlab(newV);
         VectorElementMultiNormal(newV, ctap);
         v_out = newV;
+    }
+
+    template <typename T>
+    inline void sdcn(const std::vector<T> &v, std::vector<T> &v_out, const size_t subset_start, const size_t subset_count, const std::vector<T> &ctap)
+    {
+        // slice(atemp2, template_tstart[rc2][i] - 1, template_tstart[rc2][i] - 1 + template_winlen[rc2] - 1);
+        // std::vector<T>::const_iterator first = v.begin() + subset_start;
+        // std::vector<T>::const_iterator last = v.begin() + subset_start + subset_count;
+        // std::cout << "subset_start = " << subset_start << ", subset_count = " << subset_count << "\n";
+        v_out.resize(subset_count);
+        for (size_t i = 0; i < subset_count; i++)
+        {
+            v_out[i] = v[i + subset_start];
+        }
+        // std::vector<T> newV(v.begin() + subset_start, v.begin() + subset_start + subset_count);
+        // detrend(newV.data(), newV.size());
+        detrend(v_out.data(), v_out.size());
+        // std::cout << "newV.size() = " << newV.size() << ", ctap = " << ctap.size() << "\n";
+        // VectorElementMulti(newV, ctap);
+        // double atemp2_norm = norm_matlab(newV);
+        // VectorDivideByScalar(newV, atemp2_norm);
+        // norm_matlab(newV);
+        VectorElementMultiNormal(v_out, ctap);
+        // v_out = newV;
     }
 
     template <typename T>
