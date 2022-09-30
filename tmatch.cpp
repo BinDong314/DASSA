@@ -635,7 +635,7 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
         {
             if ((!ft_rank) && (!omp_get_thread_num()) && (!rc3))
             {
-                printf("Corr: Inside the OpenMP parallel region thread 0, we have %d threads, at channels %d, at MPI rank %d .\n", omp_get_num_threads(), rc3, ft_rank);
+                printf("Corr: Inside the OpenMP parallel region thread 0, we have %d threads, at channels %d of template %d, at MPI rank %d .\n", omp_get_num_threads(), rc3, rc2, ft_rank);
             }
 
             std::vector<double> sdcn_v;
