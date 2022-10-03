@@ -779,10 +779,10 @@ int main(int argc, char *argv[])
     // MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
     // unsigned int thread_qty = atoi(std::getenv("OMP_NUM_THREADS"));
-    // omp_set_num_threads(omp_num_threads_p);
+    omp_set_num_threads(omp_num_threads_p);
 
-    // if (!ft_rank)
-    //     std::cout << "Set [omp_set_num_threads] to " << omp_num_threads_p << ", the env [OMP_NUM_THREADS] = " << thread_qty << "\n";
+    if (!ft_rank)
+        std::cout << "Set [omp_set_num_threads] to " << omp_num_threads_p << "\n";
 
     gettimeofday(&begin_time, 0);
 
@@ -1243,6 +1243,10 @@ int read_config_file(std::string file_name, int mpi_rank)
     butter_order = reader.GetInteger("parameter", "butter_order", 2);
 
     omp_num_threads_p = reader.GetInteger("parameter", " omp_num_threads", 32);
+    if (omp_num_threads_p < 0)
+    {
+        AU_EXIT("omp_num_threads must be positive integer : " + std::to_string(omp_num_threads_p));
+    }
 
     // fbands
 
