@@ -142,6 +142,8 @@ int template_file_range_start_index = 0;
 int template_file_range_end_index = 1;
 std::string template_file_indexes_str;
 
+int omp_num_threads_p = 32;
+
 void all_gather_vector(const std::vector<double> &v_to_send, std::vector<double> &v_to_receive);
 
 void init_xcorr()
@@ -659,6 +661,7 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
                     //     std::vector<double> debug_v(amat1[rc1].begin() + dx1, amat1[rc1].begin() + dx1 + template_winlen[rc2]);
                     //     PrintVector("amat1[rc1] debug_v =", debug_v);
                     // }
+
                     sdcn(amat1[rc1], sdcn_v, dx1, template_winlen[rc2], ctap_template2);
 
                     xc1[rc1] = dot_product(sdcn_v, template_data[rc2][rc1]);
@@ -774,6 +777,12 @@ int main(int argc, char *argv[])
     int numprocs, rank, namelen;
     MPI_Comm_size(MPI_COMM_WORLD, &numprocs);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+    unsigned int thread_qty = atoi(std::getenv("OMP_NUM_THREADS"));
+    omp_set_num_threads(omp_num_threads_p);
+
+    if (!ft_rank)
+        std::cout << "Set [omp_set_num_threads] to " << omp_num_threads_p << ", the env [OMP_NUM_THREADS] = " << thread_qty << "\n";
 
     gettimeofday(&begin_time, 0);
 
@@ -1232,6 +1241,8 @@ int read_config_file(std::string file_name, int mpi_rank)
     decifac = reader.GetReal("parameter", "decifac", 10);
 
     butter_order = reader.GetInteger("parameter", "butter_order", 2);
+
+    omp_num_threads_p = reader.GetInteger("parameter", " omp_num_threads", 32);
 
     // fbands
 
