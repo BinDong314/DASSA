@@ -13,7 +13,7 @@ FFTW_DIR=/project/projectdirs/m1248/fasttensor-new/tools3rd/fftw-3.3.10/build
 SHELL:=/bin/bash
 
 CCC=CC
-OTHER_FLAGS=-O3  -std=c++17 -I./DasLib/
+OTHER_FLAGS=-g3  -qopenmp  -std=c++17 -I./DasLib/
 
 FT_FLAG=-I$(FT_DIR)/include -L$(FT_DIR)/lib -lFastensor
 HDF5_FLAG=-I$(HDF5_DIR)/include -L$(HDF5_DIR)/lib -lhdf5  -lhdf5_hl -lz
