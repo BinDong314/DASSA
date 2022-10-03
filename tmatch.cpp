@@ -773,16 +773,16 @@ int main(int argc, char *argv[])
     // Init the MPICH, etc.
     AU_Init(argc, argv);
 
-    char processor_name[MPI_MAX_PROCESSOR_NAME];
-    int numprocs, rank, namelen;
-    MPI_Comm_size(MPI_COMM_WORLD, &numprocs);
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    // char processor_name[MPI_MAX_PROCESSOR_NAME];
+    // int numprocs, rank, namelen;
+    // MPI_Comm_size(MPI_COMM_WORLD, &numprocs);
+    // MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-    unsigned int thread_qty = atoi(std::getenv("OMP_NUM_THREADS"));
-    omp_set_num_threads(omp_num_threads_p);
+    // unsigned int thread_qty = atoi(std::getenv("OMP_NUM_THREADS"));
+    // omp_set_num_threads(omp_num_threads_p);
 
-    if (!ft_rank)
-        std::cout << "Set [omp_set_num_threads] to " << omp_num_threads_p << ", the env [OMP_NUM_THREADS] = " << thread_qty << "\n";
+    // if (!ft_rank)
+    //     std::cout << "Set [omp_set_num_threads] to " << omp_num_threads_p << ", the env [OMP_NUM_THREADS] = " << thread_qty << "\n";
 
     gettimeofday(&begin_time, 0);
 
