@@ -1350,6 +1350,7 @@ int read_config_file(std::string file_name, int mpi_rank)
         std::cout << termcolor::magenta << "\n        output_type = " << termcolor::green << output_type;
         std::cout << termcolor::magenta << "\n        output_file_dir = " << termcolor::green << output_file_dir;
         std::cout << termcolor::magenta << "\n        output_dataset = " << termcolor::green << output_dataset;
+        std::cout << termcolor::magenta << "\n        omp_num_threads = " << termcolor::green << omp_num_threads_p;
 
         if (is_dir_output_match_replace_rgx)
         {
