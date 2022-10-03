@@ -1242,7 +1242,7 @@ int read_config_file(std::string file_name, int mpi_rank)
 
     butter_order = reader.GetInteger("parameter", "butter_order", 2);
 
-    omp_num_threads_p = reader.GetInteger("parameter", " omp_num_threads", 32);
+    omp_num_threads_p = reader.GetInteger("parameter", "omp_num_threads", 32);
     if (omp_num_threads_p < 0)
     {
         AU_EXIT("omp_num_threads must be positive integer : " + std::to_string(omp_num_threads_p));
