@@ -773,6 +773,12 @@ int main(int argc, char *argv[])
     // Init the MPICH, etc.
     AU_Init(argc, argv);
 
+    // MPI_Get_processor_name(processor_name, &namelen);
+    // printf("Process %d on %s out of %d\n", rank, processor_name, numprocs);
+
+    if (has_config_file_flag)
+        read_config_file(config_file, ft_rank);
+
     // char processor_name[MPI_MAX_PROCESSOR_NAME];
     // int numprocs, rank, namelen;
     // MPI_Comm_size(MPI_COMM_WORLD, &numprocs);
@@ -785,12 +791,6 @@ int main(int argc, char *argv[])
         std::cout << "Set [omp_set_num_threads] to " << omp_num_threads_p << "\n";
 
     gettimeofday(&begin_time, 0);
-
-    // MPI_Get_processor_name(processor_name, &namelen);
-    // printf("Process %d on %s out of %d\n", rank, processor_name, numprocs);
-
-    if (has_config_file_flag)
-        read_config_file(config_file, ft_rank);
 
     // set up the chunk size and the overlap size
     // 11648, 30000 for each dataset
@@ -1343,6 +1343,7 @@ int read_config_file(std::string file_name, int mpi_rank)
         std::cout << termcolor::magenta << "\n        DT = " << termcolor::green << DT;
 
         std::cout << termcolor::magenta << "\n        decifac = " << termcolor::green << decifac;
+        std::cout << termcolor::magenta << "\n        OpenMP_num_threads = " << termcolor::green << omp_num_threads_p;
 
         std::cout << termcolor::blue << "\n\n Output parameters: ";
 
@@ -1350,7 +1351,6 @@ int read_config_file(std::string file_name, int mpi_rank)
         std::cout << termcolor::magenta << "\n        output_type = " << termcolor::green << output_type;
         std::cout << termcolor::magenta << "\n        output_file_dir = " << termcolor::green << output_file_dir;
         std::cout << termcolor::magenta << "\n        output_dataset = " << termcolor::green << output_dataset;
-        std::cout << termcolor::magenta << "\n        omp_num_threads = " << termcolor::green << omp_num_threads_p;
 
         if (is_dir_output_match_replace_rgx)
         {
