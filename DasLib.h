@@ -280,10 +280,12 @@ namespace DasLib
         //{
         //     v_out[i] = v[i + subset_start];
         // }
-        memcpy(&v_out[0], &v[subset_start], subset_count * sizeof(T));
+        // memcpy(&v_out[0], &v[subset_start], subset_count * sizeof(T));
         // std::vector<T> newV(v.begin() + subset_start, v.begin() + subset_start + subset_count);
         // detrend(newV.data(), newV.size());
-        detrend(v_out.data(), v_out.size());
+        // detrend(v_out.data(), v_out.size());
+
+        detrend_range(v, subset_start, subset_count, v_out);
         // std::cout << "newV.size() = " << newV.size() << ", ctap = " << ctap.size() << "\n";
         // VectorElementMulti(newV, ctap);
         // double atemp2_norm = norm_matlab(newV);
