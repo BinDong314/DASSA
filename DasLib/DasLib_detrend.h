@@ -58,10 +58,10 @@ void detrend(T *y, int m)
 }
 
 template <typename T>
-void detrend_range(const std::vector<T> &y, const size_t start, const size_t count, std::vector<T> &out_vector)
+inline void detrend_range(const std::vector<T> &y, const size_t start, const size_t count, std::vector<T> &out_vector)
 {
-    size_t m = count;
-    out_vector.resize(m);
+    // size_t m = count;
+    out_vector.resize(count);
     T xmean, ymean;
     int i;
     T Sxy;
@@ -83,26 +83,27 @@ void detrend_range(const std::vector<T> &y, const size_t start, const size_t cou
     *********************************/
     xmean = 0;
     ymean = 0;
-    for (i = 0; i < m; i++)
+    for (i = 0; i < count; i++)
     {
-        out_vector[i] = i;
-        xmean += out_vector[i];
+        // out_vector[i] = i;
+        xmean += i;
         ymean += y[start + i];
     }
-    xmean /= m;
-    ymean /= m;
+    xmean /= count;
+    ymean /= count;
 
     /********************************
     Calculate Covariance
     *********************************/
 
     Sxy = 0;
-    for (i = 0; i < m; i++)
-        Sxy += (out_vector[i] - xmean) * (y[start + i] - ymean);
-
     Sxx = 0;
-    for (i = 0; i < m; i++)
-        Sxx += (out_vector[i] - xmean) * (out_vector[i] - xmean);
+    for (i = 0; i < count; i++)
+    {
+        Sxy += (i - xmean) * (y[start + i] - ymean);
+        Sxx += (i - xmean) * (i - xmean);
+    }
+    // for (i = 0; i < m; i++)
 
     /********************************
     Calculate Gradient and Y intercept
@@ -113,7 +114,7 @@ void detrend_range(const std::vector<T> &y, const size_t start, const size_t cou
     /********************************
     Removing Linear Trend
     *********************************/
-    for (i = 0; i < m; i++)
+    for (i = 0; i < count; i++)
     {
         out_vector[i] = y[start + i] - (grad * i + yint);
     }
