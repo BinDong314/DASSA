@@ -63,7 +63,7 @@ inline void detrend_range(const std::vector<T> &y, const size_t start, const siz
     // size_t m = count;
     out_vector.resize(count);
     T xmean, ymean;
-    int i;
+    size_t i;
     T Sxy;
     T Sxx;
 
@@ -118,4 +118,6 @@ inline void detrend_range(const std::vector<T> &y, const size_t start, const siz
     {
         out_vector[i] = y[start + i] - (grad * i + yint);
     }
+    // std::cout << "yint = " << yint << " , grad = " << grad << ", Sxy = " << Sxy << ", Sxx = " << Sxx << ", xmean = " << xmean << ", ymean = " << ymean << " \n";
+    // PrintVector("After detrend_range out_vector =", out_vector);
 }

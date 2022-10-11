@@ -368,10 +368,12 @@ void init_xcorr()
 #endif
         for (int i = 0; i < T_ts2d.size(); i++)
         {
+#if defined(_OPENMP)
             if ((!ft_rank && !omp_get_thread_num() && (!i)))
             {
                 printf("Init Inside the OpenMP parallel region thread 0, we have %d threads, at template %d of MPI rank %d .\n", omp_get_num_threads(), i, ft_rank);
             }
+#endif
             //  detrend(T_ts2d[i].data(), T_pts); // Detread
             // for (int j = 0; j < ctap_template1.size(); j++)
             //{
@@ -632,14 +634,17 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
         //  Points rc3=1:npts2
         /////std::vector<double> xc1; // cross correlation per channel
         /////xc1.resize(chs_per_file_udf);
+#if defined(_OPENMP)
 #pragma omp parallel for
+#endif
         for (int rc3 = 0; rc3 < npts2_vector[rc2]; rc3++)
         {
+#if defined(_OPENMP)
             if ((!ft_rank) && (!omp_get_thread_num()) && (!rc3))
             {
                 printf("Corr: Inside the OpenMP parallel region thread 0, we have %d threads, at channels %d of template %d, at MPI rank %d .\n", omp_get_num_threads(), rc3, rc2, ft_rank);
             }
-
+#endif
             std::vector<double> sdcn_v(template_winlen[0], 0);
             size_t dx1;
             std::vector<double> xc1(chs_per_file_udf, 0); // cross correlation per channel
@@ -661,9 +666,9 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
                     //     std::vector<double> debug_v(amat1[rc1].begin() + dx1, amat1[rc1].begin() + dx1 + template_winlen[rc2]);
                     //     PrintVector("amat1[rc1] debug_v =", debug_v);
                     // }
-
+                    // subset dettrend , ctap, normalization
                     sdcn(amat1[rc1], sdcn_v, dx1, template_winlen[rc2], ctap_template2);
-
+                    // PrintVector("After sdcn sdcn_v =", sdcn_v);
                     xc1[rc1] = dot_product(sdcn_v, template_data[rc2][rc1]);
                     // if (rc1 < 3)
                     // {
@@ -686,8 +691,10 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
             // }
         }
 
+#if defined(_OPENMP)
         if ((!ft_rank) && (!omp_get_thread_num()))
             std::cout << "current template " << rc2 << " takes   " << AU_WTIME - micro_init_xcorr_t_start << " (sec)" << std::endl;
+#endif
     }
 
     if (!ft_rank)
@@ -779,16 +786,17 @@ int main(int argc, char *argv[])
     if (has_config_file_flag)
         read_config_file(config_file, ft_rank);
 
-    // char processor_name[MPI_MAX_PROCESSOR_NAME];
-    // int numprocs, rank, namelen;
-    // MPI_Comm_size(MPI_COMM_WORLD, &numprocs);
-    // MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+        // char processor_name[MPI_MAX_PROCESSOR_NAME];
+        // int numprocs, rank, namelen;
+        // MPI_Comm_size(MPI_COMM_WORLD, &numprocs);
+        // MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
+#if defined(_OPENMP)
     // unsigned int thread_qty = atoi(std::getenv("OMP_NUM_THREADS"));
     omp_set_num_threads(omp_num_threads_p);
-
     if (!ft_rank)
         std::cout << "Set [omp_set_num_threads] to " << omp_num_threads_p << "\n";
+#endif
 
     gettimeofday(&begin_time, 0);
 

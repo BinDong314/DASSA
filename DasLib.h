@@ -172,7 +172,7 @@ namespace DasLib
         for (int i = 0; i < v1.size(); i++) \
         {                                   \
             v1[i] = v1[i] * v2[i];          \
-            v_sum = v_sum + v1[i];          \
+            v_sum = v_sum + v1[i] * v1[i];  \
         }                                   \
         double v_sum_sqrt = sqrt(v_sum);    \
         for (int i = 0; i < v1.size(); i++) \
@@ -291,8 +291,12 @@ namespace DasLib
         // double atemp2_norm = norm_matlab(newV);
         // VectorDivideByScalar(newV, atemp2_norm);
         // norm_matlab(newV);
+        // PrintVector("Before VectorElementMultiNormal v_out =", v_out);
+
         VectorElementMultiNormal(v_out, ctap);
-        // v_out = newV;
+
+        // PrintVector("After VectorElementMultiNormal v_out =", v_out);
+        //  v_out = newV;
     }
 
     template <typename T>
