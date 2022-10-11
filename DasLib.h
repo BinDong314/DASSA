@@ -1316,12 +1316,12 @@ inline std::vector<std::vector<T>> Vector1D2D(size_t cols, std::vector<T> &data1
         return ov;
     }
 
-    // template <class T>
-    // inline void clear_vector(std::vector<T> &v)
-    // {
-    //     v.clear();
-    //     std::vector<T>().swap(v);
-    // }
+    template <class T>
+    inline void clear_vector(std::vector<T> &v)
+    {
+        v.clear();
+        std::vector<T>().swap(v);
+    }
 
     void transpose_data(int16_t *src, int16_t *dst, const int N, const int M)
     {
