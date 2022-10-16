@@ -650,6 +650,7 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
             std::vector<double> xc1(chs_per_file_udf, 0); // cross correlation per channel
             // xc1.resize(chs_per_file_udf);
             //  Channels rc1=1:nchan1
+            //
             for (int rc1 = 0; rc1 < nchan1; rc1++)
             {
 
@@ -679,6 +680,7 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
                     // }
                 }
             }
+            // Stack of all channels at time rc2
             xc0[rc2][rc3] = sum_weight(xc1, template_weights[rc2]);
             // if (rc3 < 3)
             // {
