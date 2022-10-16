@@ -650,7 +650,6 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
             std::vector<double> xc1(chs_per_file_udf, 0); // cross correlation per channel
             // xc1.resize(chs_per_file_udf);
             //  Channels rc1=1:nchan1
-            //
             for (int rc1 = 0; rc1 < nchan1; rc1++)
             {
 
@@ -660,38 +659,15 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
                     dx1 = rc3 + template_tstart[rc2][rc1] + 1;
                     // atemp3=(detrend(amat1(idx1:(idx1+template_winlen(rc2)-1),rc1))).*ctap_template2;
                     // atemp3=atemp3./norm(atemp3);
-                    // if (rc1 < 3)
-                    // {
-                    //     std::cout << "++dx1 =" << dx1 << " \n";
-                    //     PrintVector("Before sdcn amat1[rc1] =", amat1[rc1]);
-                    //     std::vector<double> debug_v(amat1[rc1].begin() + dx1, amat1[rc1].begin() + dx1 + template_winlen[rc2]);
-                    //     PrintVector("amat1[rc1] debug_v =", debug_v);
-                    // }
                     // subset dettrend , ctap, normalization
                     std::cout << "tempalte id = " << rc2 << ", channel id = " << rc1 << ", start = " << dx1 << ", count = " << template_winlen[rc2] << std::endl;
                     sdcn(amat1[rc1], sdcn_v, dx1, template_winlen[rc2], ctap_template2);
                     // PrintVector("After sdcn sdcn_v =", sdcn_v);
                     xc1[rc1] = dot_product(sdcn_v, template_data[rc2][rc1]);
-                    // if (rc1 < 3)
-                    // {
-                    //     PrintVector("sdcn_v =", sdcn_v);
-                    //     PrintVector("template_data[rc2][rc1]", template_data[rc2][rc1]);
-                    //     std::cout << "xc1[rc1] = " << xc1[rc1] << "\n";
-                    // }
                 }
             }
-            // Stack of all channels at time rc2
+            // Stack of all channels at time rc3 [template index][time] for template rc2
             xc0[rc2][rc3] = sum_weight(xc1, template_weights[rc2]);
-            // if (rc3 < 3)
-            // {
-            //     PrintVector(" * xc1 =", xc1);
-            //     PrintVector(" * template_weights[rc2] =", template_weights[rc2]);
-            //     std::cout << " * xc0[rc2][rc3] = " << xc0[rc2][rc3] << "\n\n\n";
-            // }
-            // else
-            // {
-            //     exit(0);
-            // }
         }
 
 #if defined(_OPENMP)
