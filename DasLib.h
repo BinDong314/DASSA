@@ -156,6 +156,41 @@ namespace DasLib
         return sum;
     }
 
+    // template <typename T>
+    inline void sum_weight_by_time(const std::vector<std::vector<double>> &v, const std::vector<double> &w, std::vector<double> &out)
+    {
+        // v is channel x time
+        // w is channel x 1
+        // out is template x time
+        assert(v.size() == w.size());
+        // assert(v.size() == out.size());
+
+        // double sum = 0;
+        size_t n_chs = v.size();
+        size_t n_points;
+        if (n_chs > 0)
+        {
+            n_points = v[0].size();
+        }
+        else
+        {
+            AU_EXIT("Error empty input v")
+        }
+        assert(n_points <= out.size());
+
+        for (int j = 0; j < n_points; j++)
+        {
+            out[j] = 0;
+            for (size_t i = 0; i < n_chs; i++)
+            {
+                // std::cout << i << ",  sum = " << sum << ", v[i] = " << v[i] << ", w[i]= " << w[i] << "\n";
+                out[j] = out[j] + v[i][j] * w[i];
+            }
+        }
+        // std::cout << "sum =" << sum << "\n";
+        // return sum;
+    }
+
 #define VectorElementMulti(v1, v2)          \
     {                                       \
         assert(v1.size() == v2.size());     \

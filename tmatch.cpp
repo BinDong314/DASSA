@@ -634,45 +634,30 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
         //  Points rc3=1:npts2
         /////std::vector<double> xc1; // cross correlation per channel
         /////xc1.resize(chs_per_file_udf);
+        std::vector<std::vector<double>> xc_channel_time;
+        xc_channel_time.resize(nchan1);
 #if defined(_OPENMP)
 #pragma omp parallel for
 #endif
-        for (int rc3 = 0; rc3 < npts2_vector[rc2]; rc3++)
+        for (int rc1 = 0; rc1 < nchan1; rc1++)
         {
-#if defined(_OPENMP)
-            if ((!ft_rank) && (!omp_get_thread_num()) && (!rc3))
-            {
-                printf("Corr: Inside the OpenMP parallel region thread 0, we have %d threads, at channels %d of template %d, at MPI rank %d .\n", omp_get_num_threads(), rc3, rc2, ft_rank);
-            }
-#endif
             std::vector<double> sdcn_v(template_winlen[0], 0);
             size_t dx1;
-            std::vector<double> xc1(chs_per_file_udf, 0); // cross correlation per channel
-            // xc1.resize(chs_per_file_udf);
-            //  Channels rc1=1:nchan1
-            for (int rc1 = 0; rc1 < nchan1; rc1++)
+            std::vector<double> xc1(npts2_vector[rc2], 0); // cross correlation per channel Channels rc1=1:nchan1
+            for (int rc3 = 0; rc3 < npts2_vector[rc2]; rc3++)
             {
-
                 if (template_weights[rc2][rc1] > 0)
                 {
-                    // dx1=rc3+template_tstart(rc1,rc2);
                     dx1 = rc3 + template_tstart[rc2][rc1] + 1;
-                    // atemp3=(detrend(amat1(idx1:(idx1+template_winlen(rc2)-1),rc1))).*ctap_template2;
-                    // atemp3=atemp3./norm(atemp3);
-                    // subset dettrend , ctap, normalization
                     sdcn(amat1[rc1], sdcn_v, dx1, template_winlen[rc2], ctap_template2);
                     // PrintVector("After sdcn sdcn_v =", sdcn_v);
-                    xc1[rc1] = dot_product(sdcn_v, template_data[rc2][rc1]);
+                    xc1[rc3] = dot_product(sdcn_v, template_data[rc2][rc1]);
                 }
             }
-            // Stack of all channels at time rc3 [template index][time] for template rc2
-            xc0[rc2][rc3] = sum_weight(xc1, template_weights[rc2]);
+            xc_channel_time[rc1] = xc1;
         }
-
-#if defined(_OPENMP)
-        if ((!ft_rank) && (!omp_get_thread_num()))
-            std::cout << "current template " << rc2 << " takes   " << AU_WTIME - micro_init_xcorr_t_start << " (sec)" << std::endl;
-#endif
+        // Stack of all channels at time rc3 [template index][time] for template rc2
+        sum_weight_by_time(xc_channel_time, template_weights[rc2], xc0[rc2]);
     }
 
     if (!ft_rank)
