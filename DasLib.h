@@ -178,6 +178,9 @@ namespace DasLib
         }
         assert(n_points <= out.size());
 
+#if defined(_OPENMP)
+#pragma omp parallel for
+#endif
         for (int j = 0; j < n_points; j++)
         {
             out[j] = 0;
