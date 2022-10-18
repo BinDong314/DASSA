@@ -637,7 +637,7 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
         std::vector<std::vector<double>> xc_channel_time;
         xc_channel_time.resize(nchan1);
 #if defined(_OPENMP)
-#pragma omp parallel for
+#pragma omp parallel for schedule(static, 1)
 #endif
         for (int rc1 = 0; rc1 < nchan1; rc1++)
         {
