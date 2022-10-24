@@ -95,6 +95,7 @@ int &nchan0 = chs_per_file;
 double &dt0 = DT;
 int npts1;
 
+double taperwidth = 5;
 int round_dt_dew_dt;
 int decifac = 10;
 double DT_NEW; // = decifac * DT
@@ -177,11 +178,11 @@ void init_xcorr()
     nof1 = round(tsegment / (dt0 * npts0)) + 1; // 21, NUMBER OF FILES IT WILL PROCESS AT ONE TIME, ADDING 1
 
     // ctap0=tukeywin((nof1*npts0),5/(nof1*npts0*dt0));
-    tukeywin(ctap0, nof1 * npts0, 5 / (nof1 * npts0 * dt0));
+    tukeywin(ctap0, nof1 * npts0, taperwidth / (nof1 * npts0 * dt0));
 
     if (!ft_rank)
     {
-        PrintScalar("5 / (nof1 * npts0 * dt0) = ", 5 / (nof1 * npts0 * dt0));
+        PrintScalar("taperwidth / (nof1 * npts0 * dt0) = ", taperwidth / (nof1 * npts0 * dt0));
         PrintScalar("nof1 * npts0 = ", nof1 * npts0);
         PrintVector("ctap0 = ", ctap0);
     }
@@ -190,7 +191,7 @@ void init_xcorr()
     npts1 = round((nof1 * npts0) / decifac);
 
     // ctap_template1=tukeywin((npts0*nlen_template),5/(npts0*nlen_template*dt0));
-    tukeywin(ctap_template1, (npts0 * nlen_template), 5 / (npts0 * nlen_template * dt0));
+    tukeywin(ctap_template1, (npts0 * nlen_template), taperwidth / (npts0 * nlen_template * dt0));
     if (!ft_rank)
         PrintVector("ctap_template1 = ", ctap_template1);
 
@@ -413,7 +414,7 @@ void init_xcorr()
         // PrintVV("T_ts2d cha x points = ", T_ts2d);
         template_data[rc2] = T_ts2d;
 
-        double template_tstart_min = *(std::min_element(template_tstart[rc2].begin(), template_tstart[rc2].end()));
+        double template_tstart_min = *(std::min_element(template_tstart[rc2].begin(), template_tstart[rc2].end())) - 1;
         VectorMinusByScalar(template_tstart[rc2], template_tstart_min);
         if (!ft_rank)
             PrintVector("template_tstart after norm = ", template_tstart[rc2]);
@@ -565,13 +566,20 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
     lts_per_file_udf = ts2d[0].size();
 
     amat1.resize(chs_per_file_udf);
+
+    int npts1_new = round(((nof1 - 1) * npts0) / decifac) + round(taperwidth / dt1) + MaxVector(template_winlen) + MaxVectorVector(template_tstart) + 1;
+    if (npts1_new < npts1)
+        npts1 = npts1_new;
+    // npts1 = min([npts1 npts1_new]) ;
+
     // Resample in time-domain
     for (int ii = 0; ii < chs_per_file_udf; ii++)
     {
         // if (ii % 1000 == 0)
         //     std::cout << "ts2d[" << ii << " ], chs_per_file_udf = " << chs_per_file_udf << "\n";
         ts_temp2 = ddff(ts2d[ii], ctap0, 10, BUTTER_A, BUTTER_B, cheby1_b, cheby1_a);
-        ts_temp2.pop_back();
+        // ts_temp2.pop_back();
+        ts_temp2.resize(npts1);
         amat1[ii] = ts_temp2;
     }
 
@@ -634,30 +642,45 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
         //  Points rc3=1:npts2
         /////std::vector<double> xc1; // cross correlation per channel
         /////xc1.resize(chs_per_file_udf);
-        std::vector<std::vector<double>> xc_channel_time;
-        xc_channel_time.resize(nchan1);
 #if defined(_OPENMP)
-#pragma omp parallel for schedule(static, 1)
+#pragma omp parallel for
 #endif
-        for (int rc1 = 0; rc1 < nchan1; rc1++)
+        for (int rc3 = 0; rc3 < npts2_vector[rc2]; rc3++)
         {
+#if defined(_OPENMP)
+            if ((!ft_rank) && (!omp_get_thread_num()) && (!rc3))
+            {
+                printf("Corr: Inside the OpenMP parallel region thread 0, we have %d threads, at channels %d of template %d, at MPI rank %d .\n", omp_get_num_threads(), rc3, rc2, ft_rank);
+            }
+#endif
             std::vector<double> sdcn_v(template_winlen[0], 0);
             size_t dx1;
-            std::vector<double> xc1(npts2_vector[rc2], 0); // cross correlation per channel Channels rc1=1:nchan1
-            for (int rc3 = 0; rc3 < npts2_vector[rc2]; rc3++)
+            std::vector<double> xc1(chs_per_file_udf, 0); // cross correlation per channel
+            // xc1.resize(chs_per_file_udf);
+            //  Channels rc1=1:nchan1
+            for (int rc1 = 0; rc1 < nchan1; rc1++)
             {
+
                 if (template_weights[rc2][rc1] > 0)
                 {
+                    // dx1=rc3+template_tstart(rc1,rc2);
                     dx1 = rc3 + template_tstart[rc2][rc1] + 1;
+                    // atemp3=(detrend(amat1(idx1:(idx1+template_winlen(rc2)-1),rc1))).*ctap_template2;
+                    // atemp3=atemp3./norm(atemp3);
+                    // subset dettrend , ctap, normalization
                     sdcn(amat1[rc1], sdcn_v, dx1, template_winlen[rc2], ctap_template2);
                     // PrintVector("After sdcn sdcn_v =", sdcn_v);
-                    xc1[rc3] = dot_product(sdcn_v, template_data[rc2][rc1]);
+                    xc1[rc1] = dot_product(sdcn_v, template_data[rc2][rc1]);
                 }
             }
-            xc_channel_time[rc1] = xc1;
+            // Stack of all channels at time rc3 [template index][time] for template rc2
+            xc0[rc2][rc3] = sum_weight(xc1, template_weights[rc2]);
         }
-        // Stack of all channels at time rc3 [template index][time] for template rc2
-        sum_weight_by_time(xc_channel_time, template_weights[rc2], xc0[rc2]);
+
+#if defined(_OPENMP)
+        if ((!ft_rank) && (!omp_get_thread_num()))
+            std::cout << "current template " << rc2 << " takes   " << AU_WTIME - micro_init_xcorr_t_start << " (sec)" << std::endl;
+#endif
     }
 
     if (!ft_rank)
@@ -1184,6 +1207,8 @@ int read_config_file(std::string file_name, int mpi_rank)
     SpatialResolutionName = reader.Get("parameter", "attribute_name_spatial_resolution", "SpatialResolution[m]");
     SamplingFrequencyName = reader.Get("parameter", "attribute_name_sampling_frequency", "SamplingFrequency[Hz]");
 
+    taperwidth = reader.GetInteger("parameter", "taperwidth", 5);
+
     n_files_to_concatenate = reader.GetInteger("parameter", "n_files_to_concatenate", 1);
 
     temp_str = reader.Get("parameter", "is_output_single_file", "false");
@@ -1322,6 +1347,7 @@ int read_config_file(std::string file_name, int mpi_rank)
         std::cout << termcolor::magenta << "\n        output_type = " << termcolor::green << output_type;
         std::cout << termcolor::magenta << "\n        output_file_dir = " << termcolor::green << output_file_dir;
         std::cout << termcolor::magenta << "\n        output_dataset = " << termcolor::green << output_dataset;
+        std::cout << termcolor::magenta << "\n        taperwidth     = " << termcolor::green << taperwidth;
 
         if (is_dir_output_match_replace_rgx)
         {

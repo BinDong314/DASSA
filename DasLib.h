@@ -32,6 +32,25 @@ namespace DasLib
 
     // Function for calculating median
     template <class T>
+    inline T MaxVector(std::vector<T> &v)
+    {
+        return *std::max_element(v.begin(), v.end());
+    }
+
+    template <class T>
+    inline T MaxVectorVector(std::vector<std::vector<T>> &v)
+    {
+        std::vector<T> max_v;
+        max_v.resize(v.size());
+        for (size_t i = 0; i < v.size(); i++)
+        {
+            max_v[i] = MaxVector(v[i]);
+        }
+        return *std::max_element(max_v.begin(), max_v.end());
+    }
+
+    // Function for calculating median
+    template <class T>
     inline T Median(std::vector<T> &v)
     {
         sort(v.begin(), v.end());
