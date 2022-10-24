@@ -658,6 +658,7 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
             std::vector<double> xc1(chs_per_file_udf, 0); // cross correlation per channel
             // xc1.resize(chs_per_file_udf);
             //  Channels rc1=1:nchan1
+
             for (int rc1 = 0; rc1 < nchan1; rc1++)
             {
 
