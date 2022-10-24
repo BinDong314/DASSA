@@ -572,6 +572,12 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
         npts1 = npts1_new;
     // npts1 = min([npts1 npts1_new]) ;
 
+    if (!ft_rank)
+        std::cout << "round(((nof1 - 1) * npts0) / decifac) = " << round(((nof1 - 1) * npts0) / decifac)
+                  << ", round(taperwidth / dt1) = " << round(taperwidth / dt1)
+                  << ", MaxVector(template_winlen) = " << MaxVector(template_winlen)
+                  << ", MaxVectorVector(template_tstart) = " << MaxVectorVector(template_tstart) << "\n";
+
     // Resample in time-domain
     for (int ii = 0; ii < chs_per_file_udf; ii++)
     {
