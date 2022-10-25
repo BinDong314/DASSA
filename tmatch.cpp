@@ -364,6 +364,8 @@ void init_xcorr()
         T_ts2d = DasLib::Vector1D2DByColStride(T_chs, T_h5_data, 2, 3); // filter the data starting at ch (2-1) and every 3 chs
                                                                         // std::cout << "T_ts2d.size() = " << T_ts2d.size() << "\n";
 
+        PrintVV("T_ts2d = ", T_ts2d);
+
 #if defined(_OPENMP)
 #pragma omp parallel for
 #endif
@@ -583,7 +585,7 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
         PrintVV("template_tstart = ", template_tstart);
     }
 
-    PrintVV("ts2d = ", amat1);
+    PrintVV("ts2d  ", amat1);
 
     // Resample in time-domain
     for (int ii = 0; ii < chs_per_file_udf; ii++)
@@ -598,7 +600,7 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
 
     std::cout << " amat1.size =" << amat1.size() << " , amat1[0].size = " << amat1[0].size() << " \n";
 
-    PrintVV("amat1 = ", amat1);
+    PrintVV("amat1  ", amat1);
 
     PrintVV("template_data[0] = ", template_data[0]);
 
