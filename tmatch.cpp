@@ -685,7 +685,7 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
                 if (template_weights[rc2][rc1] > 0)
                 {
                     // dx1=rc3+template_tstart(rc1,rc2);
-                    dx1 = rc3 + template_tstart[rc2][rc1] + 1;
+                    dx1 = rc3 + template_tstart[rc2][rc1];
                     // atemp3=(detrend(amat1(idx1:(idx1+template_winlen(rc2)-1),rc1))).*ctap_template2;
                     // atemp3=atemp3./norm(atemp3);
                     // subset dettrend , ctap, normalization
