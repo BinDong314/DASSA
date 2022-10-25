@@ -699,6 +699,7 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
                     if (rc1 < 10 && rc3 == 0)
                         PrintVector("After sdcn sdcn_v =", sdcn_v);
                     xc1[rc1] = dot_product(sdcn_v, template_data[rc2][rc1]);
+                    exit(0);
                 }
             }
             // Stack of all channels at time rc3 [template index][time] for template rc2

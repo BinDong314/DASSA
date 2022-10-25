@@ -341,6 +341,7 @@ namespace DasLib
         // std::vector<T> newV(v.begin() + subset_start, v.begin() + subset_start + subset_count);
         // detrend(newV.data(), newV.size());
         // detrend(v_out.data(), v_out.size());
+        PrintVector("Before detrend_range v_out =", v);
 
         detrend_range(v, subset_start, subset_count, v_out);
         // std::cout << "newV.size() = " << newV.size() << ", ctap = " << ctap.size() << "\n";
@@ -348,9 +349,11 @@ namespace DasLib
         // double atemp2_norm = norm_matlab(newV);
         // VectorDivideByScalar(newV, atemp2_norm);
         // norm_matlab(newV);
-        // PrintVector("Before VectorElementMultiNormal v_out =", v_out);
+        PrintVector("Before VectorElementMultiNormal v_out =", v_out);
 
         VectorElementMultiNormal(v_out, ctap);
+
+        PrintVector("After VectorElementMultiNormal v_out =", v_out);
 
         // PrintVector("After VectorElementMultiNormal v_out =", v_out);
         //  v_out = newV;
