@@ -414,7 +414,7 @@ void init_xcorr()
         // PrintVV("T_ts2d cha x points = ", T_ts2d);
         template_data[rc2] = T_ts2d;
 
-        double template_tstart_min = *(std::min_element(template_tstart[rc2].begin(), template_tstart[rc2].end())) - 1;
+        double template_tstart_min = *(std::min_element(template_tstart[rc2].begin(), template_tstart[rc2].end()));
         VectorMinusByScalar(template_tstart[rc2], template_tstart_min);
         if (!ft_rank)
             PrintVector("template_tstart after norm = ", template_tstart[rc2]);
