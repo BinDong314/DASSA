@@ -178,7 +178,7 @@ void init_xcorr()
     nof1 = round(tsegment / (dt0 * npts0)) + 1; // 21, NUMBER OF FILES IT WILL PROCESS AT ONE TIME, ADDING 1
 
     // ctap0=tukeywin((nof1*npts0),5/(nof1*npts0*dt0));
-    tukeywin(ctap0, nof1 * npts0, taperwidth / (nof1 * npts0 * dt0));
+    tukeywin(ctap0, nof1 * npts0, 5 / (nof1 * npts0 * dt0));
 
     if (!ft_rank)
     {
