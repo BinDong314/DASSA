@@ -46,7 +46,7 @@ namespace DasLib
         {
             max_v[i] = MaxVector(v[i]);
         }
-        return *std::max_element(max_v.begin(), max_v.end());
+        return MaxVector(max_v);
     }
 
     // Function for calculating median
