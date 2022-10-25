@@ -583,6 +583,8 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
         PrintVV("template_tstart = ", template_tstart);
     }
 
+    PrintVV("ts2d = ", amat1);
+
     // Resample in time-domain
     for (int ii = 0; ii < chs_per_file_udf; ii++)
     {
