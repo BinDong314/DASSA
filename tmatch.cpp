@@ -638,6 +638,7 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
     if (!ft_rank)
         std::cout << "npts1 = " << npts1 << ", npts2_max = " << npts2_max << ", chs_per_file_udf =" << chs_per_file_udf << ", nchan1 = " << nchan1 << ", mpi_rank =" << ft_rank << ", ntemplates = " << ntemplates << ", nchan1 = " << nchan1 << ", npts2_vector[0] = " << npts2_vector[0] << ", npts1_new = " << npts1_new << "\n";
 
+    PrintVector("ctap_template2 ", ctap_template2);
     //#if defined(_OPENMP)
     //#endif
     ////#pragma omp parallel for
@@ -688,8 +689,11 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
                     // atemp3=(detrend(amat1(idx1:(idx1+template_winlen(rc2)-1),rc1))).*ctap_template2;
                     // atemp3=atemp3./norm(atemp3);
                     // subset dettrend , ctap, normalization
+                    if (rc1 < 1)
+                        PrintVector("Before sdcn amat1[rc1] =", amat1[rc1]);
                     sdcn(amat1[rc1], sdcn_v, dx1, template_winlen[rc2], ctap_template2);
-                    // PrintVector("After sdcn sdcn_v =", sdcn_v);
+                    if (rc1 < 1)
+                        PrintVector("After sdcn sdcn_v =", sdcn_v);
                     xc1[rc1] = dot_product(sdcn_v, template_data[rc2][rc1]);
                 }
             }
