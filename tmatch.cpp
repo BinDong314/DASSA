@@ -594,7 +594,7 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
         //     std::cout << "ts2d[" << ii << " ], chs_per_file_udf = " << chs_per_file_udf << "\n";
         ts_temp2 = ddff(ts2d[ii], ctap0, 10, BUTTER_A, BUTTER_B, cheby1_b, cheby1_a);
         // ts_temp2.pop_back();
-        // ts_temp2.resize(npts1);
+        ts_temp2.resize(npts1);
         amat1[ii] = ts_temp2;
     }
 
