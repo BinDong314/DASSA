@@ -592,7 +592,9 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
         amat1[ii] = ts_temp2;
     }
 
-    // PrintVV("amat1 = ", amat1);
+    PrintVV("amat1 = ", amat1);
+
+    PrintVV("template_data[0] = ", template_data[0]);
 
     if (!ft_rank)
         std::cout << "ddff (s) = " << AU_WTIME - init_xcorr_t_start << std::endl;
