@@ -182,7 +182,7 @@ void init_xcorr()
 
     if (!ft_rank)
     {
-        PrintScalar("taperwidth / (nof1 * npts0 * dt0) = ", taperwidth / (nof1 * npts0 * dt0));
+        PrintScalar("taperwidth / (nof1 * npts0 * dt0) = ", 5 / (nof1 * npts0 * dt0));
         PrintScalar("nof1 * npts0 = ", nof1 * npts0);
         PrintVector("ctap0 = ", ctap0);
     }
@@ -191,7 +191,7 @@ void init_xcorr()
     npts1 = round((nof1 * npts0) / decifac);
 
     // ctap_template1=tukeywin((npts0*nlen_template),5/(npts0*nlen_template*dt0));
-    tukeywin(ctap_template1, (npts0 * nlen_template), taperwidth / (npts0 * nlen_template * dt0));
+    tukeywin(ctap_template1, (npts0 * nlen_template), 5 / (npts0 * nlen_template * dt0));
     if (!ft_rank)
         PrintVector("ctap_template1 = ", ctap_template1);
 
@@ -593,6 +593,8 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
         ts_temp2.resize(npts1);
         amat1[ii] = ts_temp2;
     }
+
+    std::cout << " amat1.size =" << amat1.size() << " , amat1[0].size = " << amat1[0].size() << " \n";
 
     PrintVV("amat1 = ", amat1);
 
