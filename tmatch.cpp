@@ -690,7 +690,11 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
                     // atemp3=atemp3./norm(atemp3);
                     // subset dettrend , ctap, normalization
                     if (rc1 < 1)
+                    {
+                        std::cout << "dx1 = " << dx1 << " \n";
+                        PrintVector("template_tstart =", template_tstart[rc2]);
                         PrintVector("Before sdcn amat1[rc1] =", amat1[rc1]);
+                    }
                     sdcn(amat1[rc1], sdcn_v, dx1, template_winlen[rc2], ctap_template2);
                     if (rc1 < 1)
                         PrintVector("After sdcn sdcn_v =", sdcn_v);
