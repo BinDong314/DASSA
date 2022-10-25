@@ -466,7 +466,9 @@ void init_xcorr()
         template_winlen = template_winlen_merged;
     }
 
-    // std::cout << " template_data.size =" << template_data.size() << " , template_data[0].size = " << template_data[0].size() << " , template_data[0][0].size = " << template_data[0][0].size();
+    std::cout << " template_data.size =" << template_data.size() << " , template_data[0].size = " << template_data[0].size() << " , template_data[0][0].size = " << template_data[0][0].size();
+
+    PrintVV("template_data[0] = ", template_data[0]);
 }
 
 template <class TT>
