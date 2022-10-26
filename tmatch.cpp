@@ -364,7 +364,7 @@ void init_xcorr()
         T_ts2d = DasLib::Vector1D2DByColStride(T_chs, T_h5_data, 2, 3); // filter the data starting at ch (2-1) and every 3 chs
                                                                         // std::cout << "T_ts2d.size() = " << T_ts2d.size() << "\n";
 
-        PrintVV("T_ts2d of template = ", T_ts2d);
+        // PrintVV("T_ts2d of template = ", T_ts2d);
 
 #if defined(_OPENMP)
 #pragma omp parallel for
@@ -418,8 +418,8 @@ void init_xcorr()
 
         double template_tstart_min = *(std::min_element(template_tstart[rc2].begin(), template_tstart[rc2].end()));
         VectorMinusByScalar(template_tstart[rc2], template_tstart_min);
-        if (!ft_rank)
-            PrintVector("template_tstart after norm = ", template_tstart[rc2]);
+        // if (!ft_rank)
+        //     PrintVector("template_tstart after norm = ", template_tstart[rc2]);
     } // end for each template
     if (!ft_rank)
         std::cout << " end for each template\n";
@@ -468,9 +468,9 @@ void init_xcorr()
         template_winlen = template_winlen_merged;
     }
 
-    std::cout << " template_data.size =" << template_data.size() << " , template_data[0].size = " << template_data[0].size() << " , template_data[0][0].size = " << template_data[0][0].size();
+    // std::cout << " template_data.size =" << template_data.size() << " , template_data[0].size = " << template_data[0].size() << " , template_data[0][0].size = " << template_data[0][0].size();
 
-    PrintVV("template_data[0] = ", template_data[0]);
+    // PrintVV("template_data[0] = ", template_data[0]);
 }
 
 template <class TT>
@@ -576,16 +576,16 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
         npts1 = npts1_new;
     // npts1 = min([npts1 npts1_new]) ;
 
-    if (!ft_rank)
-    {
-        std::cout << "round(((nof1 - 1) * npts0) / decifac) = " << round(((nof1 - 1) * npts0) / decifac)
-                  << ", round(taperwidth / dt1) = " << round(taperwidth / dt1)
-                  << ", MaxVector(template_winlen) = " << MaxVector(template_winlen)
-                  << ", MaxVectorVector(template_tstart) = " << MaxVectorVector(template_tstart) << "\n";
-        PrintVV("template_tstart = ", template_tstart);
-    }
+    // if (!ft_rank)
+    // {
+    //     std::cout << "round(((nof1 - 1) * npts0) / decifac) = " << round(((nof1 - 1) * npts0) / decifac)
+    //               << ", round(taperwidth / dt1) = " << round(taperwidth / dt1)
+    //               << ", MaxVector(template_winlen) = " << MaxVector(template_winlen)
+    //               << ", MaxVectorVector(template_tstart) = " << MaxVectorVector(template_tstart) << "\n";
+    //     PrintVV("template_tstart = ", template_tstart);
+    // }
 
-    PrintVV("ts2d  of das data ", ts2d);
+    // PrintVV("ts2d  of das data ", ts2d);
 
     // Resample in time-domain
     for (int ii = 0; ii < chs_per_file_udf; ii++)
@@ -598,9 +598,8 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
         amat1[ii] = ts_temp2;
     }
 
-    std::cout << " amat1.size =" << amat1.size() << " , amat1[0].size = " << amat1[0].size() << " \n";
-
-    PrintVV("amat1  ", amat1);
+    // std::cout << " amat1.size =" << amat1.size() << " , amat1[0].size = " << amat1[0].size() << " \n";
+    // PrintVV("amat1  ", amat1);
 
     // PrintVV("template_data[0] = ", template_data[0]);
 
@@ -638,7 +637,7 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
     if (!ft_rank)
         std::cout << "npts1 = " << npts1 << ", npts2_max = " << npts2_max << ", chs_per_file_udf =" << chs_per_file_udf << ", nchan1 = " << nchan1 << ", mpi_rank =" << ft_rank << ", ntemplates = " << ntemplates << ", nchan1 = " << nchan1 << ", npts2_vector[0] = " << npts2_vector[0] << ", npts1_new = " << npts1_new << "\n";
 
-    PrintVector("ctap_template2 ", ctap_template2);
+    // PrintVector("ctap_template2 ", ctap_template2);
     //#if defined(_OPENMP)
     //#endif
     ////#pragma omp parallel for
