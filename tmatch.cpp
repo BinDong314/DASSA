@@ -622,8 +622,8 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
     double template_tstart_max;
     for (int rc2 = 0; rc2 < ntemplates; rc2++)
     {
-        temp_value = *(std::max_element(std::begin(template_tstart[rc2]), std::end(template_tstart[rc2])));
-        npts2_vector[rc2] = npts1 - template_winlen[rc2] - temp_value;
+        temp_value = MaxVector(template_tstart[rc2]); //*(std::max_element(std::begin(template_tstart[rc2]), std::end(template_tstart[rc2])));
+        npts2_vector[rc2] = npts1 - template_winlen[rc2] - temp_value + 1;
         if (npts2_vector[rc2] > npts2_max)
         {
             npts2_max = npts2_vector[rc2];
