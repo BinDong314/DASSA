@@ -25,7 +25,7 @@ ALL_FLAGS= $(OTHER_FLAGS) $(FT_FLAG) $(HDF5_FLAG) $(FFTW_FLAG)  $(DASH_FLAG) $(E
 
 
 .PHONY:all
-all:stack tdms2h5 xcorrelation decimate similarity  create_test_data tmatch
+all:stack tdms2h5 xcorrelation decimate similarity  create_test_data tmatch tmatch-reoganized
 
 stack:stack.cpp
 	$(CCC) -o stack stack.cpp $(ALL_FLAGS)
@@ -44,6 +44,10 @@ similarity:similarity.cpp
 
 tmatch:tmatch.cpp
 	$(CCC) -o tmatch tmatch.cpp $(ALL_FLAGS)
+
+tmatch-reoganized:tmatch-reoganized.cpp
+	$(CCC) -o tmatch-reoganized tmatch-reoganized.cpp $(ALL_FLAGS)
+
 
 create_test_data: create_test_data.cpp
 	$(CCC) -o create_test_data create_test_data.cpp $(ALL_FLAGS)
