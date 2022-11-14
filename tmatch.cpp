@@ -638,17 +638,17 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
         std::cout << "npts1 = " << npts1 << ", npts2_max = " << npts2_max << ", chs_per_file_udf =" << chs_per_file_udf << ", nchan1 = " << nchan1 << ", mpi_rank =" << ft_rank << ", ntemplates = " << ntemplates << ", nchan1 = " << nchan1 << ", npts2_vector[0] = " << npts2_vector[0] << ", npts1_new = " << npts1_new << "\n";
 
     // PrintVector("ctap_template2 ", ctap_template2);
-    //#if defined(_OPENMP)
-    //#endif
+    // #if defined(_OPENMP)
+    // #endif
     ////#pragma omp parallel for
     for (int rc2 = 0; rc2 < ntemplates; rc2++)
     {
-        //#if defined(_OPENMP)
-        // if ((!ft_rank) && (!omp_get_thread_num()))
+        // #if defined(_OPENMP)
+        //  if ((!ft_rank) && (!omp_get_thread_num()))
         //{
-        //   printf("Corr: Inside the OpenMP parallel region thread 0, we have %d threads, at template %d, at MPI rank %d .\n", omp_get_num_threads(), rc2, ft_rank);
-        //}
-        //#endif
+        //    printf("Corr: Inside the OpenMP parallel region thread 0, we have %d threads, at template %d, at MPI rank %d .\n", omp_get_num_threads(), rc2, ft_rank);
+        // }
+        // #endif
         ////std::vector<double> sdcn_v;
         /// size_t dx1;
         double micro_init_xcorr_t_start = AU_WTIME;
@@ -685,15 +685,6 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
                 {
                     // dx1=rc3+template_tstart(rc1,rc2);
                     dx1 = rc3 + template_tstart[rc2][rc1];
-                    // atemp3=(detrend(amat1(idx1:(idx1+template_winlen(rc2)-1),rc1))).*ctap_template2;
-                    // atemp3=atemp3./norm(atemp3);
-                    // subset dettrend , ctap, normalization
-                    // if (rc1 < 10 && rc3 == 0)
-                    // {
-                    //     std::cout << "dx1 = " << dx1 << " \n";
-                    //     PrintVector("template_tstart =", template_tstart[rc2]);
-                    //     PrintVector("Before sdcn amat1[rc1] =", amat1[rc1]);
-                    // }
                     sdcn(amat1[rc1], sdcn_v, dx1, template_winlen[rc2], ctap_template2);
                     // if (rc1 < 10 && rc3 == 0)
                     //     PrintVector("After sdcn sdcn_v =", sdcn_v);
