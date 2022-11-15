@@ -80,7 +80,6 @@ namespace DasLib
                     sum_temp += X[i] * Y[j];
                 }
             }
-            xcross_result[delay + N - 1] = sum_temp;
             if (max_temp < sum_temp)
             {
                 max_temp = sum_temp;
