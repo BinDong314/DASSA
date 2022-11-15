@@ -147,6 +147,8 @@ int omp_num_threads_p = 32;
 
 void all_gather_vector(const std::vector<double> &v_to_send, std::vector<double> &v_to_receive);
 
+bool is_xcross = false;
+
 void init_xcorr()
 {
     std::vector<std::string> index_param;
@@ -688,7 +690,14 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
                     sdcn(amat1[rc1], sdcn_v, dx1, template_winlen[rc2], ctap_template2);
                     // if (rc1 < 10 && rc3 == 0)
                     //     PrintVector("After sdcn sdcn_v =", sdcn_v);
-                    xc1[rc1] = dot_product(sdcn_v, template_data[rc2][rc1]);
+                    if (is_xcross)
+                    {
+                        xc1[rc1] = xcross_max(sdcn_v, template_data[rc2][rc1]);
+                    }
+                    else
+                    {
+                        xc1[rc1] = dot_product(sdcn_v, template_data[rc2][rc1]);
+                    }
                     // exit(0);
                 }
             }
@@ -1213,7 +1222,21 @@ int read_config_file(std::string file_name, int mpi_rank)
     }
     else
     {
-        AU_EXIT("Don't read the is_template_file_range's value " + is_template_file_range);
+        AU_EXIT("Don't understand the is_template_file_range's value " + is_template_file_range);
+    }
+
+    std::string is_xcross_str = reader.Get("parameter", "is_xcross", "false");
+    if (is_xcross_str == "false" || is_xcross_str == "0")
+    {
+        is_xcross = false;
+    }
+    else if (is_xcross_str == "true" || is_xcross_str == "1")
+    {
+        is_xcross = true;
+    }
+    else
+    {
+        AU_EXIT("Don't understand the is_xcross's value " + is_xcross_str);
     }
 
     if (is_template_file_range)

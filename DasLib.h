@@ -30,6 +30,66 @@ using namespace std;
 namespace DasLib
 {
 
+    // Computes the cross correlation coefficients for series_x and series_y
+    template <class T>
+    void xcross(const std::vector<T> &X, const std::vector<T> &Y, std::vector<double> &xcross_result)
+    {
+
+        assert(X.size() == Y.size());
+        int N = X.size();
+        xcross_result.resize(N * 2 - 1, 0);
+        double sum_temp;
+        for (int delay = -N + 1; delay <= N; delay++)
+        {
+            sum_temp = 0;
+            for (int i = 0; i < N; i++)
+            {
+                int j = i - delay;
+                if (j < 0 || j >= N)
+                {
+                    sum_temp += 0;
+                }
+                else
+                {
+                    sum_temp += X[i] * Y[j];
+                }
+            }
+            xcross_result[delay + N - 1] = sum_temp;
+        }
+    }
+
+    template <class T>
+    double xcross_max(const std::vector<T> &X, const std::vector<T> &Y)
+    {
+
+        assert(X.size() == Y.size());
+        int N = X.size();
+        double sum_temp, max_temp = -1 * numeric_limits<double>::max();
+        for (int delay = -N + 1; delay <= N; delay++)
+        {
+            sum_temp = 0;
+            for (int i = 0; i < N; i++)
+            {
+                int j = i - delay;
+                if (j < 0 || j >= N)
+                {
+                    sum_temp += 0;
+                }
+                else
+                {
+                    sum_temp += X[i] * Y[j];
+                }
+            }
+            xcross_result[delay + N - 1] = sum_temp;
+            if (max_temp < sum_temp)
+            {
+                max_temp = sum_temp;
+            }
+        }
+
+        return max_temp;
+    }
+
     // Function for calculating median
     template <class T>
     inline T MaxVector(std::vector<T> &v)
