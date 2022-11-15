@@ -32,7 +32,7 @@ namespace DasLib
 
     // Computes the cross correlation coefficients for series_x and series_y
     template <class T>
-    void xcross(const std::vector<T> &X, const std::vector<T> &Y, std::vector<double> &xcross_result)
+    inline void xcross(const std::vector<T> &X, const std::vector<T> &Y, std::vector<double> &xcross_result)
     {
 
         assert(X.size() == Y.size());
@@ -59,7 +59,7 @@ namespace DasLib
     }
 
     template <class T>
-    double xcross_max(const std::vector<T> &X, const std::vector<T> &Y)
+    inline double xcross_max(const std::vector<T> &X, const std::vector<T> &Y)
     {
 
         assert(X.size() == Y.size());
