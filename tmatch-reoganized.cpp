@@ -643,30 +643,33 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
     for (int rc2 = 0; rc2 < ntemplates; rc2++)
     {
         double micro_init_xcorr_t_start = AU_WTIME;
-        std::vector<std::vector<double>> xc_channel_time;
-        xc_channel_time.resize(nchan1);
+        // std::vector<std::vector<double>> xc_channel_time;
+        // xc_channel_time.resize(nchan1);
 #if defined(_OPENMP)
 #pragma omp parallel for schedule(static, 1)
 #endif
         for (int rc1 = 0; rc1 < nchan1; rc1++)
         {
-            std::vector<double> sdcn_v(template_winlen[0], 0);
-            size_t dx1;
-            std::vector<double> xc1(npts2_vector[rc2], 0); // cross correlation per channel Channels rc1=1:nchan1
-            for (int rc3 = 0; rc3 < npts2_vector[rc2]; rc3++)
+            if (template_weights[rc2][rc1] > 0)
             {
-                if (template_weights[rc2][rc1] > 0)
+                std::vector<double> sdcn_v(template_winlen[0], 0);
+                size_t dx1;
+                // cross correlation per channel Channels rc1=1:nchan1
+                // std::vector<double> xc1(npts2_vector[rc2], 0);
+                for (int rc3 = 0; rc3 < npts2_vector[rc2]; rc3++)
                 {
+
                     dx1 = rc3 + template_tstart[rc2][rc1];
                     sdcn(amat1[rc1], sdcn_v, dx1, template_winlen[rc2], ctap_template2);
                     // PrintVector("After sdcn sdcn_v =", sdcn_v);
-                    xc1[rc3] = dot_product(sdcn_v, template_data[rc2][rc1]);
+                    // xc1[rc3] = dot_product(sdcn_v, template_data[rc2][rc1]);
+                    xc0[rc2][rc3] = xc0[rc2][rc3] + template_weights[rc2][rc1] * dot_product(sdcn_v, template_data[rc2][rc1])
                 }
             }
-            xc_channel_time[rc1] = xc1;
         }
         // Stack of all channels at time rc3 [template index][time] for template rc2
-        sum_weight_by_time(xc_channel_time, template_weights[rc2], xc0[rc2]);
+        // sum_weight_by_time(xc_channel_time, template_weights[rc2], xc0[rc2]);
+        // xc_channel_time[rc1] = xc1;
     }
 
     if (!ft_rank)
