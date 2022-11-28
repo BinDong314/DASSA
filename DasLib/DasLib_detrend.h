@@ -58,7 +58,7 @@ void detrend(T *y, int m)
 }
 
 template <typename T>
-inline void detrend_range(const std::vector<T> &y, const size_t start, const size_t count, std::vector<T> &out_vector)
+inline void detrend_range(const std::vector<T> &y, const size_t start, const size_t count, const std::vector<T> &ctap, std::vector<T> &out_vector)
 {
     // size_t m = count;
     out_vector.resize(count);
@@ -114,10 +114,20 @@ inline void detrend_range(const std::vector<T> &y, const size_t start, const siz
     /********************************
     Removing Linear Trend
     *********************************/
+    double v_sum = 0;
     for (i = 0; i < count; i++)
     {
         out_vector[i] = y[start + i] - (grad * i + yint);
+        out_vector[i] = out_vector[i] * ctap[i];
+        v_sum = out_vector[i] * out_vector[i];
     }
+
+    double v_sum_sqrt = sqrt(v_sum);
+    for (i = 0; i < count; i++)
+    {
+        out_vector[i] = out_vector[i] / v_sum_sqrt;
+    }
+
     // std::cout << "yint = " << yint << " , grad = " << grad << ", Sxy = " << Sxy << ", Sxx = " << Sxx << ", xmean = " << xmean << ", ymean = " << ymean << " \n";
     // PrintVector("After detrend_range out_vector =", out_vector);
 }
