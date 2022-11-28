@@ -658,11 +658,18 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
                 size_t dx1;
                 // cross correlation per channel Channels rc1=1:nchan1
                 // std::vector<double> xc1(npts2_vector[rc2], 0);
+                double xmean, Sxx = 0;
+                xmean = (1 + template_winlen[rc2]) / 2;
+                for (int iiii = 0; iiii < template_winlen[rc2]; iiii++)
+                {
+                    Sxx += (iiii - xmean) * (iiii - xmean);
+                }
                 for (int rc3 = 0; rc3 < npts2_vector[rc2]; rc3++)
                 {
 
                     dx1 = rc3 + template_tstart[rc2][rc1];
-                    sdcn(amat1[rc1], sdcn_v, dx1, template_winlen[rc2], ctap_template2);
+                    // sdcn(amat1[rc1], sdcn_v, dx1, template_winlen[rc2], ctap_template2);
+                    detrend_range(amat1[rc1], dx1, template_winlen[rc2], ctap_template2, xmean, Sxx, sdcn_v);
                     // PrintVector("After sdcn sdcn_v =", sdcn_v);
                     // xc1[rc3] = dot_product(sdcn_v, template_data[rc2][rc1]);
                     xc0[rc2][rc3] = xc0[rc2][rc3] + template_weights[rc2][rc1] * dot_product(sdcn_v, template_data[rc2][rc1]);

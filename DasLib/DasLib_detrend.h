@@ -58,14 +58,15 @@ void detrend(T *y, int m)
 }
 
 template <typename T>
-inline void detrend_range(const std::vector<T> &y, const size_t start, const size_t count, const std::vector<T> &ctap, std::vector<T> &out_vector)
+inline void detrend_range(const std::vector<T> &y, const size_t start, const size_t count, const std::vector<T> &ctap, const double xmean, const double Sxx, std::vector<T> &out_vector)
 {
     // size_t m = count;
     out_vector.resize(count);
-    T xmean, ymean;
+    // T xmean, ymean;
+    T ymean;
     size_t i;
     T Sxy;
-    T Sxx;
+    // T Sxx;
 
     T grad;
     T yint;
@@ -81,15 +82,16 @@ inline void detrend_range(const std::vector<T> &y, const size_t start, const siz
     /********************************
     Calculate the mean of x and y
     *********************************/
-    xmean = 0;
+    // xmean = 0;
     ymean = 0;
     for (i = 0; i < count; i++)
     {
         // out_vector[i] = i;
-        xmean += i;
+        // xmean += i;
         ymean += y[start + i];
     }
-    xmean /= count;
+    // xmean / = count;
+    // xmean = (1 + count) / 2;
     ymean /= count;
 
     /********************************
@@ -97,11 +99,11 @@ inline void detrend_range(const std::vector<T> &y, const size_t start, const siz
     *********************************/
 
     Sxy = 0;
-    Sxx = 0;
+    // Sxx = 0;
     for (i = 0; i < count; i++)
     {
         Sxy += (i - xmean) * (y[start + i] - ymean);
-        Sxx += (i - xmean) * (i - xmean);
+        // Sxx += (i - xmean) * (i - xmean);
     }
     // for (i = 0; i < m; i++)
 
