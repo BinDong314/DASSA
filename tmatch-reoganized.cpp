@@ -665,7 +665,7 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
                     sdcn(amat1[rc1], sdcn_v, dx1, template_winlen[rc2], ctap_template2);
                     // PrintVector("After sdcn sdcn_v =", sdcn_v);
                     // xc1[rc3] = dot_product(sdcn_v, template_data[rc2][rc1]);
-                    xc0[rc2][rc3] = xc0[rc2][rc3] + template_weights[rc2][rc1] * dot_product(sdcn_v, template_data[rc2][rc1])
+                    xc0[rc2][rc3] = xc0[rc2][rc3] + template_weights[rc2][rc1] * dot_product(sdcn_v, template_data[rc2][rc1]);
                 }
             }
         }
