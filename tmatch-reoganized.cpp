@@ -147,6 +147,8 @@ int omp_num_threads_p = 32;
 
 void all_gather_vector(const std::vector<double> &v_to_send, std::vector<double> &v_to_receive);
 
+bool is_xcross = false;
+
 void init_xcorr()
 {
     std::vector<std::string> index_param;
