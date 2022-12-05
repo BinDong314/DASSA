@@ -20,6 +20,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <sys/time.h>
+#include <deque>
 
 #if defined(_OPENMP)
 #include <omp.h>
@@ -639,6 +640,7 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
     if (!ft_rank)
         std::cout << "npts1 = " << npts1 << ", npts2_max = " << npts2_max << ", chs_per_file_udf =" << chs_per_file_udf << ", nchan1 = " << nchan1 << ", mpi_rank =" << ft_rank << ", ntemplates = " << ntemplates << ", nchan1 = " << nchan1 << ", npts2_vector[0] = " << npts2_vector[0] << ", npts1_new = " << npts1_new << "\n";
 
+    std::deque<double> ch_window_buffer(template_winlen[0], 0);
     // #if defined(_OPENMP)
     // #endif
     ////#pragma omp parallel for
@@ -647,8 +649,9 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
         double micro_init_xcorr_t_start = AU_WTIME;
         // std::vector<std::vector<double>> xc_channel_time;
         // xc_channel_time.resize(nchan1);
+        // https://stackoverflow.com/questions/15349695/pre-allocated-private-stdvector-in-openmp-parallelized-for-loop-in-c
 #if defined(_OPENMP)
-#pragma omp parallel for schedule(static, 1)
+#pragma omp parallel for schedule(static, 1) firstprivate(ch_window_buffer)
 #endif
         for (int rc1 = 0; rc1 < nchan1; rc1++)
         {
@@ -664,12 +667,27 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
                 {
                     Sxx += (iiii - xmean) * (iiii - xmean);
                 }
+
                 for (int rc3 = 0; rc3 < npts2_vector[rc2]; rc3++)
                 {
 
                     dx1 = rc3 + template_tstart[rc2][rc1];
+                    if (rc3 == 0)
+                    {
+                        ch_window_buffer.resize(template_winlen[rc2]);
+                        // amat1[rc1], dx1, template_winlen[rc2];
+                        // memcpy(&ch_window_buffer[0], &amat1[rc1][dx1], template_winlen[rc2] * sizeof(double));
+                        std::copy(template_winlen[rc2].begin() + dx1, template_winlen[rc2].end() + dx1 + template_winlen[rc2], ch_window_buffer.begin());
+                    }
+                    else
+                    {
+                        ch_window_buffer.pop_front();
+                        ch_window_buffer.push_back(template_winlen[rc2][dx1 + template_winlen[rc2]]);
+                    }
+
                     // sdcn(amat1[rc1], sdcn_v, dx1, template_winlen[rc2], ctap_template2);
-                    detrend_range(amat1[rc1], dx1, template_winlen[rc2], ctap_template2, xmean, Sxx, sdcn_v);
+                    // detrend_range(amat1[rc1], dx1, template_winlen[rc2], ctap_template2, xmean, Sxx, sdcn_v);
+                    detrend_range(ch_window_buffer, 0, template_winlen[rc2], ctap_template2, xmean, Sxx, sdcn_v);
                     // PrintVector("After sdcn sdcn_v =", sdcn_v);
                     // xc1[rc3] = dot_product(sdcn_v, template_data[rc2][rc1]);
                     xc0[rc2][rc3] = xc0[rc2][rc3] + template_weights[rc2][rc1] * dot_product(sdcn_v, template_data[rc2][rc1]);
