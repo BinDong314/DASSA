@@ -686,12 +686,12 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
                     else
                     {
                         ch_window_buffer.pop_front();
-                        ch_window_buffer.push_back(template_winlen[rc2][dx1 + template_winlen[rc2]]);
+                        ch_window_buffer.push_back(amat1[rc1][dx1 + template_winlen[rc2] - 1]);
                     }
 
                     // sdcn(amat1[rc1], sdcn_v, dx1, template_winlen[rc2], ctap_template2);
                     // detrend_range(amat1[rc1], dx1, template_winlen[rc2], ctap_template2, xmean, Sxx, sdcn_v);
-                    detrend_range_dqueue(ch_window_buffer, 0, template_winlen[rc2], ctap_template2, xmean, Sxx, sdcn_v);
+                    detrend_range_dqueue(ch_window_buffer, template_winlen[rc2], ctap_template2, xmean, Sxx, sdcn_v);
                     // PrintVector("After sdcn sdcn_v =", sdcn_v);
                     // xc1[rc3] = dot_product(sdcn_v, template_data[rc2][rc1]);
                     xc0[rc2][rc3] = xc0[rc2][rc3] + template_weights[rc2][rc1] * dot_product(sdcn_v, template_data[rc2][rc1]);
