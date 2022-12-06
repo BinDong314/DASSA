@@ -677,7 +677,11 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
                         ch_window_buffer.resize(template_winlen[rc2]);
                         // amat1[rc1], dx1, template_winlen[rc2];
                         // memcpy(&ch_window_buffer[0], &amat1[rc1][dx1], template_winlen[rc2] * sizeof(double));
-                        std::copy(template_winlen[rc2].begin() + dx1, template_winlen[rc2].end() + dx1 + template_winlen[rc2], ch_window_buffer.begin());
+                        // std::copy(template_winlen[rc2].begin() + dx1, template_winlen[rc2].end() + dx1 + template_winlen[rc2], ch_window_buffer.begin());
+                        for (int kkkk = 0; kkkk < template_winlen[rc2]; kkkk++)
+                        {
+                            ch_window_buffer[kkkk] = amat1[rc1][dx1 + kkkk]
+                        }
                     }
                     else
                     {
@@ -687,7 +691,7 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
 
                     // sdcn(amat1[rc1], sdcn_v, dx1, template_winlen[rc2], ctap_template2);
                     // detrend_range(amat1[rc1], dx1, template_winlen[rc2], ctap_template2, xmean, Sxx, sdcn_v);
-                    detrend_range(ch_window_buffer, 0, template_winlen[rc2], ctap_template2, xmean, Sxx, sdcn_v);
+                    detrend_range_dqueue(ch_window_buffer, 0, template_winlen[rc2], ctap_template2, xmean, Sxx, sdcn_v);
                     // PrintVector("After sdcn sdcn_v =", sdcn_v);
                     // xc1[rc3] = dot_product(sdcn_v, template_data[rc2][rc1]);
                     xc0[rc2][rc3] = xc0[rc2][rc3] + template_weights[rc2][rc1] * dot_product(sdcn_v, template_data[rc2][rc1]);

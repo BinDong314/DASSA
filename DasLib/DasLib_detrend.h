@@ -136,7 +136,7 @@ inline void detrend_range(const std::vector<T> &y, const size_t start, const siz
 }
 
 template <typename T>
-inline void detrend_range(const std::deque<T> &y, const size_t count, const std::vector<T> &ctap, const double xmean, const double Sxx, std::vector<T> &out_vector)
+inline void detrend_range_dqueue(const std::deque<T> &y, const size_t count, const std::vector<T> &ctap, const double xmean, const double Sxx, std::vector<T> &out_vector)
 {
 
     // size_t m = count;
