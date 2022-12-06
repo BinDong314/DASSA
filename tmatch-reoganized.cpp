@@ -680,7 +680,7 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
                         // std::copy(template_winlen[rc2].begin() + dx1, template_winlen[rc2].end() + dx1 + template_winlen[rc2], ch_window_buffer.begin());
                         for (int kkkk = 0; kkkk < template_winlen[rc2]; kkkk++)
                         {
-                            ch_window_buffer[kkkk] = amat1[rc1][dx1 + kkkk]
+                            ch_window_buffer[kkkk] = amat1[rc1][dx1 + kkkk];
                         }
                     }
                     else
