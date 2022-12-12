@@ -661,8 +661,9 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
                 size_t dx1;
                 // cross correlation per channel Channels rc1=1:nchan1
                 // std::vector<double> xc1(npts2_vector[rc2], 0);
-                double xmean, Sxx = 0;
-                xmean = (1 + template_winlen[rc2]) / 2;
+                double xmean, Sxx = 0, xsum;
+                xmean = (template_winlen[rc2] - 1) / 2;
+                xsum = (template_winlen[rc2] - 1) * template_winlen[rc2] / 2;
                 for (int iiii = 0; iiii < template_winlen[rc2]; iiii++)
                 {
                     Sxx += (iiii - xmean) * (iiii - xmean);
@@ -690,7 +691,7 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
                     // }
                     // sdcn(amat1[rc1], sdcn_v, dx1, template_winlen[rc2], ctap_template2);
                     // detrend_range(amat1[rc1], dx1, template_winlen[rc2], ctap_template2, xmean, Sxx, sdcn_v);
-                    detrend_range_one_pass_std(amat1[rc1], dx1, template_winlen[rc2], ctap_template2, xmean, Sxx, sdcn_v);
+                    detrend_range_one_pass_std(amat1[rc1], dx1, template_winlen[rc2], ctap_template2, xmean, xsum, Sxx, sdcn_v);
                     // detrend_range_dqueue(ch_window_buffer, template_winlen[rc2], ctap_template2, xmean, Sxx, sdcn_v);
                     //  PrintVector("After sdcn sdcn_v =", sdcn_v);
                     //  xc1[rc3] = dot_product(sdcn_v, template_data[rc2][rc1]);
