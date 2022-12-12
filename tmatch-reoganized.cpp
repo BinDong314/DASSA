@@ -640,9 +640,9 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
     if (!ft_rank)
         std::cout << "npts1 = " << npts1 << ", npts2_max = " << npts2_max << ", chs_per_file_udf =" << chs_per_file_udf << ", nchan1 = " << nchan1 << ", mpi_rank =" << ft_rank << ", ntemplates = " << ntemplates << ", nchan1 = " << nchan1 << ", npts2_vector[0] = " << npts2_vector[0] << ", npts1_new = " << npts1_new << "\n";
 
-    std::deque<double> ch_window_buffer(template_winlen[0], 0);
-    // #if defined(_OPENMP)
-    // #endif
+    // std::deque<double> ch_window_buffer(template_winlen[0], 0); firstprivate(ch_window_buffer)
+    //  #if defined(_OPENMP)
+    //  #endif
     ////#pragma omp parallel for
     for (int rc2 = 0; rc2 < ntemplates; rc2++)
     {
@@ -651,7 +651,7 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
         // xc_channel_time.resize(nchan1);
         // https://stackoverflow.com/questions/15349695/pre-allocated-private-stdvector-in-openmp-parallelized-for-loop-in-c
 #if defined(_OPENMP)
-#pragma omp parallel for schedule(static, 1) firstprivate(ch_window_buffer)
+#pragma omp parallel for schedule(static, 1)
 #endif
         for (int rc1 = 0; rc1 < nchan1; rc1++)
         {
@@ -672,28 +672,28 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
                 {
 
                     dx1 = rc3 + template_tstart[rc2][rc1];
-                    if (rc3 == 0)
-                    {
-                        ch_window_buffer.resize(template_winlen[rc2]);
-                        // amat1[rc1], dx1, template_winlen[rc2];
-                        // memcpy(&ch_window_buffer[0], &amat1[rc1][dx1], template_winlen[rc2] * sizeof(double));
-                        // std::copy(template_winlen[rc2].begin() + dx1, template_winlen[rc2].end() + dx1 + template_winlen[rc2], ch_window_buffer.begin());
-                        for (int kkkk = 0; kkkk < template_winlen[rc2]; kkkk++)
-                        {
-                            ch_window_buffer[kkkk] = amat1[rc1][dx1 + kkkk];
-                        }
-                    }
-                    else
-                    {
-                        ch_window_buffer.pop_front();
-                        ch_window_buffer.push_back(amat1[rc1][dx1 + template_winlen[rc2] - 1]);
-                    }
-
+                    // if (rc3 == 0)
+                    // {
+                    //     ch_window_buffer.resize(template_winlen[rc2]);
+                    //     // amat1[rc1], dx1, template_winlen[rc2];
+                    //     // memcpy(&ch_window_buffer[0], &amat1[rc1][dx1], template_winlen[rc2] * sizeof(double));
+                    //     // std::copy(template_winlen[rc2].begin() + dx1, template_winlen[rc2].end() + dx1 + template_winlen[rc2], ch_window_buffer.begin());
+                    //     for (int kkkk = 0; kkkk < template_winlen[rc2]; kkkk++)
+                    //     {
+                    //         ch_window_buffer[kkkk] = amat1[rc1][dx1 + kkkk];
+                    //     }
+                    // }
+                    // else
+                    // {
+                    //     ch_window_buffer.pop_front();
+                    //     ch_window_buffer.push_back(amat1[rc1][dx1 + template_winlen[rc2] - 1]);
+                    // }
                     // sdcn(amat1[rc1], sdcn_v, dx1, template_winlen[rc2], ctap_template2);
                     // detrend_range(amat1[rc1], dx1, template_winlen[rc2], ctap_template2, xmean, Sxx, sdcn_v);
-                    detrend_range_dqueue(ch_window_buffer, template_winlen[rc2], ctap_template2, xmean, Sxx, sdcn_v);
-                    // PrintVector("After sdcn sdcn_v =", sdcn_v);
-                    // xc1[rc3] = dot_product(sdcn_v, template_data[rc2][rc1]);
+                    detrend_range_one_pass_std(amat1[rc1], dx1, template_winlen[rc2], ctap_template2, xmean, Sxx, sdcn_v);
+                    // detrend_range_dqueue(ch_window_buffer, template_winlen[rc2], ctap_template2, xmean, Sxx, sdcn_v);
+                    //  PrintVector("After sdcn sdcn_v =", sdcn_v);
+                    //  xc1[rc3] = dot_product(sdcn_v, template_data[rc2][rc1]);
                     xc0[rc2][rc3] = xc0[rc2][rc3] + template_weights[rc2][rc1] * dot_product(sdcn_v, template_data[rc2][rc1]);
                 }
             }
