@@ -165,9 +165,9 @@ inline void detrend_range_one_pass_std(const std::vector<T> &y, const size_t sta
     ymean = 0;
     double sum_xy = 0;
     double ysum = 0;
-    std::cout << "detrend_range_one_pass_std, xmean = " << xmean << ", xsum =" << xsum << ", Sxx = " << Sxx << "\n";
-    std::cout << "detrend_range_one_pass_std, start = " << start << ", count =" << count << "\n";
-    std::cout << "y = ";
+    // std::cout << "detrend_range_one_pass_std, xmean = " << xmean << ", xsum =" << xsum << ", Sxx = " << Sxx << "\n";
+    // std::cout << "detrend_range_one_pass_std, start = " << start << ", count =" << count << "\n";
+    // std::cout << "y = ";
     for (i = 0; i < count; i++)
     {
         // out_vector[i] = i;
@@ -175,21 +175,21 @@ inline void detrend_range_one_pass_std(const std::vector<T> &y, const size_t sta
         // ymean += y[start + i];
         ysum += y[start + i];
         sum_xy = sum_xy + i * y[start + i];
-        if (i < 10)
-            std::cout << ", " << y[start + i];
+        // if (i < 10)
+        //     std::cout << ", " << y[start + i];
     }
-    std::cout << " \n ";
+    // std::cout << " \n ";
     ymean = ysum / count;
 
-    std::cout << "ymean = " << ymean << "\n";
-    // Sxy = 0;
-    //  for (i = 0; i < count; i++)
-    //  {
-    //      Sxy += (i - xmean) * (y[start + i] - ymean);
-    //  }
+    // std::cout << "ymean = " << ymean << "\n";
+    //  Sxy = 0;
+    //   for (i = 0; i < count; i++)
+    //   {
+    //       Sxy += (i - xmean) * (y[start + i] - ymean);
+    //   }
 
     Sxy = sum_xy - ymean * xsum - xmean * ysum + count * xmean * ymean;
-    std::cout << "Sxy = " << Sxy << "\n";
+    // std::cout << "Sxy = " << Sxy << "\n";
 
     /********************************
     Calculate Gradient and Y intercept
@@ -197,8 +197,8 @@ inline void detrend_range_one_pass_std(const std::vector<T> &y, const size_t sta
     grad = Sxy / Sxx;
     yint = -grad * xmean + ymean;
 
-    std::cout << "grad = " << grad << "\n";
-    std::cout << "yint = " << yint << "\n";
+    // std::cout << "grad = " << grad << "\n";
+    // std::cout << "yint = " << yint << "\n";
 
     /********************************
     Removing Linear Trend
@@ -212,20 +212,20 @@ inline void detrend_range_one_pass_std(const std::vector<T> &y, const size_t sta
     }
 
     double v_sum_sqrt = sqrt(v_sum);
-    std::cout << "v_sum = " << v_sum << "\n";
-    std::cout << "v_sum_sqrt = " << v_sum_sqrt << "\n";
-    std::cout << "out_vector = ";
+    // std::cout << "v_sum = " << v_sum << "\n";
+    // std::cout << "v_sum_sqrt = " << v_sum_sqrt << "\n";
+    // std::cout << "out_vector = ";
     for (i = 0; i < count; i++)
     {
         out_vector[i] = out_vector[i] / v_sum_sqrt;
-        if (i < 10)
-            std::cout << ", " << out_vector[i];
+        //   if (i < 10)
+        //       std::cout << ", " << out_vector[i];
     }
-    std::cout << " \n ";
+    // std::cout << " \n ";
 
-    exit(0);
-    // std::cout << "yint = " << yint << " , grad = " << grad << ", Sxy = " << Sxy << ", Sxx = " << Sxx << ", xmean = " << xmean << ", ymean = " << ymean << " \n";
-    // PrintVector("After detrend_range out_vector =", out_vector);
+    // exit(0);
+    //  std::cout << "yint = " << yint << " , grad = " << grad << ", Sxy = " << Sxy << ", Sxx = " << Sxx << ", xmean = " << xmean << ", ymean = " << ymean << " \n";
+    //  PrintVector("After detrend_range out_vector =", out_vector);
 }
 
 template <typename T>
