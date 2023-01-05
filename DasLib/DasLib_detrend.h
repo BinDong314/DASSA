@@ -165,6 +165,7 @@ inline void detrend_range_one_pass_std(const std::vector<T> &y, const size_t sta
     ymean = 0;
     double sum_xy = 0;
     double ysum = 0;
+    std::cout << "detrend_range_one_pass_std, xmean = " << xmean << ", xsum =" << xsum << ", Sxx = " << Sxx << "\n";
     std::cout << "detrend_range_one_pass_std, start = " << start << ", count =" << count << "\n";
     std::cout << "y = ";
     for (i = 0; i < count; i++)
@@ -179,14 +180,17 @@ inline void detrend_range_one_pass_std(const std::vector<T> &y, const size_t sta
     }
     std::cout << " \n ";
     ymean = ysum / count;
+
+    std::cout << "ymean = " << ymean << "\n";
     // Sxy = 0;
     //  for (i = 0; i < count; i++)
     //  {
     //      Sxy += (i - xmean) * (y[start + i] - ymean);
     //  }
 
-    std::cout << "Sxy = " << Sxy << "\n";
     Sxy = sum_xy - ymean * xsum - xmean * ysum + count * xmean * ymean;
+    std::cout << "Sxy = " << Sxy << "\n";
+
     /********************************
     Calculate Gradient and Y intercept
     *********************************/
@@ -207,8 +211,10 @@ inline void detrend_range_one_pass_std(const std::vector<T> &y, const size_t sta
         v_sum = out_vector[i] * out_vector[i];
     }
 
-    std::cout << "out_vector = ";
     double v_sum_sqrt = sqrt(v_sum);
+    std::cout << "v_sum = " << v_sum << "\n";
+    std::cout << "v_sum_sqrt = " << v_sum_sqrt << "\n";
+    std::cout << "out_vector = ";
     for (i = 0; i < count; i++)
     {
         out_vector[i] = out_vector[i] / v_sum_sqrt;
