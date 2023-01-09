@@ -673,7 +673,7 @@ namespace DasLib
         }
 
         sf = sf_bwbp(n, f1f, f2f); /* scaling factor for the c coefficients */
-        printf("scaling factor  = %f\n", sf);
+        // printf("scaling factor  = %f\n", sf);
         /* Output the c coefficients */
         // fprintf(fp, "%d\n", 2 * n + 1); // number of c coefficients
         A.resize(2 * n + 1);
