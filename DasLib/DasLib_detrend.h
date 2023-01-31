@@ -368,7 +368,7 @@ inline void detrend_range(const std::vector<T> &y, const size_t start, const siz
     {
         out_vector[i] = y[start + i] - (grad * i + yint);
         out_vector[i] = out_vector[i] * ctap[i];
-        v_sum = out_vector[i] * out_vector[i];
+        v_sum = v_sum + out_vector[i] * out_vector[i];
     }
 
     double v_sum_sqrt = sqrt(v_sum);
