@@ -305,3 +305,78 @@ inline void detrend_range_dqueue(const std::deque<T> &y, const size_t count, con
     // std::cout << "yint = " << yint << " , grad = " << grad << ", Sxy = " << Sxy << ", Sxx = " << Sxx << ", xmean = " << xmean << ", ymean = " << ymean << " \n";
     // PrintVector("After detrend_range out_vector =", out_vector);
 }
+
+template <typename T>
+inline void detrend_range(const std::vector<T> &y, const size_t start, const size_t count, const std::vector<T> &ctap, std::vector<T> &out_vector)
+{
+    // size_t m = count;
+    out_vector.resize(count);
+    T xmean, ymean;
+    size_t i;
+    T Sxy;
+    T Sxx;
+
+    T grad;
+    T yint;
+
+    // std::unique_ptr<T[]> x(new T[m]);
+
+    /********************************
+    Set the X axis Liner Values
+    *********************************/
+    // for (i = 0; i < m; i++)
+    //     out_vector[i] = i;
+
+    /********************************
+    Calculate the mean of x and y
+    *********************************/
+    xmean = 0;
+    ymean = 0;
+    for (i = 0; i < count; i++)
+    {
+        // out_vector[i] = i;
+        xmean += i;
+        ymean += y[start + i];
+    }
+    xmean /= count;
+    ymean /= count;
+
+    /********************************
+    Calculate Covariance
+    *********************************/
+
+    Sxy = 0;
+    Sxx = 0;
+    for (i = 0; i < count; i++)
+    {
+        Sxy += (i - xmean) * (y[start + i] - ymean);
+        Sxx += (i - xmean) * (i - xmean);
+    }
+    // for (i = 0; i < m; i++)
+
+    /********************************
+    Calculate Gradient and Y intercept
+    *********************************/
+    grad = Sxy / Sxx;
+    yint = -grad * xmean + ymean;
+
+    /********************************
+    Removing Linear Trend
+    *********************************/
+    double v_sum = 0;
+    for (i = 0; i < count; i++)
+    {
+        out_vector[i] = y[start + i] - (grad * i + yint);
+        out_vector[i] = out_vector[i] * ctap[i];
+        v_sum = out_vector[i] * out_vector[i];
+    }
+
+    double v_sum_sqrt = sqrt(v_sum);
+    for (i = 0; i < count; i++)
+    {
+        out_vector[i] = out_vector[i] / v_sum_sqrt;
+    }
+
+    // std::cout << "yint = " << yint << " , grad = " << grad << ", Sxy = " << Sxy << ", Sxx = " << Sxx << ", xmean = " << xmean << ", ymean = " << ymean << " \n";
+    // PrintVector("After detrend_range out_vector =", out_vector);
+}
