@@ -823,11 +823,12 @@ int main(int argc, char *argv[])
 
     // A->GetStencilTag();
 
+    std::vector<std::string> null_str;
+    if (!is_input_single_file){
     A->SkipFileTail();
     A->ExecuteUDFOnce();
-    std::vector<std::string> null_str;
     A->ControlEndpoint(DIR_SKIP_SIZE_CHECK, null_str);
-
+    }
     if (is_input_search_rgx && is_input_single_file == false)
     {
         std::vector<std::string> aug_input_search_rgx;
@@ -974,6 +975,7 @@ int main(int argc, char *argv[])
         }
     }
 
+if (!is_input_single_file){
     if (is_column_major)
     {
         if (is_channel_range)
@@ -1000,11 +1002,16 @@ int main(int argc, char *argv[])
         chs_per_file = chunk_size[0];
         // lts_per_file = chunk_size[1];
     }
-
+}else{
+overlap_size[1] = 0;
+overlap_size[0] = 0;
+}
     A->SetChunkSize(chunk_size);
     A->SetOverlapSize(overlap_size);
-    A->DisableOverlapLower(); // Only have one extra data in upper side
 
+    if (!is_input_single_file){
+    A->DisableOverlapLower(); // Only have one extra data in upper side
+    }
     if (!ft_rank)
     {
         PrintVector("chunk_size = ", chunk_size);

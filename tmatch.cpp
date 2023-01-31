@@ -857,12 +857,13 @@ int main(int argc, char *argv[])
         exit(-1);
     }
 
-    // A->GetStencilTag();
-
-    A->SkipFileTail();
-    A->ExecuteUDFOnce();
     std::vector<std::string> null_str;
-    A->ControlEndpoint(DIR_SKIP_SIZE_CHECK, null_str);
+    // A->GetStencilTag();
+   	A->SkipFileTail();
+    if (is_input_single_file){
+    	A->ExecuteUDFOnce();
+    	A->ControlEndpoint(DIR_SKIP_SIZE_CHECK, null_str);
+    }
 
     if (is_input_search_rgx && is_input_single_file == false)
     {
