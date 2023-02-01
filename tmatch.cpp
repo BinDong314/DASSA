@@ -674,7 +674,7 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
                 printf("Corr: Inside the OpenMP parallel region thread 0, we have %d threads, at channels %d of template %d, at MPI rank %d .\n", omp_get_num_threads(), rc3, rc2, ft_rank);
             }
 #endif
-            std::vector<double> sdcn_v(template_winlen[0], 0);
+            std::vector<double> sdcn_v(template_winlen[rc2], 0);
             size_t dx1;
             std::vector<double> xc1(chs_per_file_udf, 0); // cross correlation per channel
             // xc1.resize(chs_per_file_udf);

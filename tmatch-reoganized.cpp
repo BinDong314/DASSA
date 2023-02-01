@@ -657,7 +657,7 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
         {
             if (template_weights[rc2][rc1] > 0)
             {
-                std::vector<double> sdcn_v(template_winlen[0], 0);
+                std::vector<double> sdcn_v(template_winlen[rc2], 0);
                 size_t dx1;
                 // cross correlation per channel Channels rc1=1:nchan1
                 // std::vector<double> xc1(npts2_vector[rc2], 0);
