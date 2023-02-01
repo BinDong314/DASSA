@@ -673,28 +673,11 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
                 {
 
                     dx1 = rc3 + template_tstart[rc2][rc1];
-                    // if (rc3 == 0)
-                    // {
-                    //     ch_window_buffer.resize(template_winlen[rc2]);
-                    //     // amat1[rc1], dx1, template_winlen[rc2];
-                    //     // memcpy(&ch_window_buffer[0], &amat1[rc1][dx1], template_winlen[rc2] * sizeof(double));
-                    //     // std::copy(template_winlen[rc2].begin() + dx1, template_winlen[rc2].end() + dx1 + template_winlen[rc2], ch_window_buffer.begin());
-                    //     for (int kkkk = 0; kkkk < template_winlen[rc2]; kkkk++)
-                    //     {
-                    //         ch_window_buffer[kkkk] = amat1[rc1][dx1 + kkkk];
-                    //     }
-                    // }
-                    // else
-                    // {
-                    //     ch_window_buffer.pop_front();
-                    //     ch_window_buffer.push_back(amat1[rc1][dx1 + template_winlen[rc2] - 1]);
-                    // }
-                    // sdcn(amat1[rc1], sdcn_v, dx1, template_winlen[rc2], ctap_template2);
-                    // detrend_range(amat1[rc1], dx1, template_winlen[rc2], ctap_template2, xmean, Sxx, sdcn_v);
-                    detrend_range_one_pass_std(amat1[rc1], dx1, template_winlen[rc2], ctap_template2, xmean, xsum, Sxx, sdcn_v);
-                    // detrend_range_dqueue(ch_window_buffer, template_winlen[rc2], ctap_template2, xmean, Sxx, sdcn_v);
-                    //  PrintVector("After sdcn sdcn_v =", sdcn_v);
-                    //  xc1[rc3] = dot_product(sdcn_v, template_data[rc2][rc1]);
+                    // Replace below line with the following to find difference of two version
+                    // detrend_range_one_pass_std(amat1[rc1], dx1, template_winlen[rc2], ctap_template2, xmean, xsum, Sxx, sdcn_v);
+
+                    sdcn(amat1[rc1], sdcn_v, dx1, template_winlen[rc2], ctap_template2);
+
                     xc0[rc2][rc3] = xc0[rc2][rc3] + template_weights[rc2][rc1] * dot_product(sdcn_v, template_data[rc2][rc1]);
                 }
             }
@@ -824,10 +807,11 @@ int main(int argc, char *argv[])
     // A->GetStencilTag();
 
     std::vector<std::string> null_str;
-    if (!is_input_single_file){
-    A->SkipFileTail();
-    A->ExecuteUDFOnce();
-    A->ControlEndpoint(DIR_SKIP_SIZE_CHECK, null_str);
+    if (!is_input_single_file)
+    {
+        A->SkipFileTail();
+        A->ExecuteUDFOnce();
+        A->ControlEndpoint(DIR_SKIP_SIZE_CHECK, null_str);
     }
     if (is_input_search_rgx && is_input_single_file == false)
     {
@@ -975,42 +959,46 @@ int main(int argc, char *argv[])
         }
     }
 
-if (!is_input_single_file){
-    if (is_column_major)
+    if (!is_input_single_file)
     {
-        if (is_channel_range)
+        if (is_column_major)
         {
-            chunk_size[1] = channel_range_end - channel_range_start + 1;
-            // A->SetView(channel_range_start, chunk_size[1], 1);
+            if (is_channel_range)
+            {
+                chunk_size[1] = channel_range_end - channel_range_start + 1;
+                // A->SetView(channel_range_start, chunk_size[1], 1);
+            }
+            overlap_size[1] = 0;
+            overlap_size[0] = chunk_size[0];
+            chunk_size[0] = chunk_size[0] * n_files_to_concatenate;
+            chs_per_file = chunk_size[1];
+            // lts_per_file = chunk_size[0];
         }
-        overlap_size[1] = 0;
-        overlap_size[0] = chunk_size[0];
-        chunk_size[0] = chunk_size[0] * n_files_to_concatenate;
-        chs_per_file = chunk_size[1];
-        // lts_per_file = chunk_size[0];
+        else
+        {
+            if (is_channel_range)
+            {
+                chunk_size[0] = channel_range_end - channel_range_start + 1;
+                // A->SetView(channel_range_start, chunk_size[0], 0);
+            }
+            overlap_size[1] = chunk_size[0];
+            overlap_size[0] = 0;
+            chunk_size[1] = chunk_size[1] * n_files_to_concatenate;
+            chs_per_file = chunk_size[0];
+            // lts_per_file = chunk_size[1];
+        }
     }
     else
     {
-        if (is_channel_range)
-        {
-            chunk_size[0] = channel_range_end - channel_range_start + 1;
-            // A->SetView(channel_range_start, chunk_size[0], 0);
-        }
-        overlap_size[1] = chunk_size[0];
+        overlap_size[1] = 0;
         overlap_size[0] = 0;
-        chunk_size[1] = chunk_size[1] * n_files_to_concatenate;
-        chs_per_file = chunk_size[0];
-        // lts_per_file = chunk_size[1];
     }
-}else{
-overlap_size[1] = 0;
-overlap_size[0] = 0;
-}
     A->SetChunkSize(chunk_size);
     A->SetOverlapSize(overlap_size);
 
-    if (!is_input_single_file){
-    A->DisableOverlapLower(); // Only have one extra data in upper side
+    if (!is_input_single_file)
+    {
+        A->DisableOverlapLower(); // Only have one extra data in upper side
     }
     if (!ft_rank)
     {

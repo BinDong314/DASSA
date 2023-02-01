@@ -859,7 +859,8 @@ int main(int argc, char *argv[])
 
     std::vector<std::string> null_str;
     // A->GetStencilTag();
-   if (is_input_single_file == false){
+   
+    if (is_input_single_file == false){
    	A->SkipFileTail();
     	A->ExecuteUDFOnce();
     	A->ControlEndpoint(DIR_SKIP_SIZE_CHECK, null_str);
