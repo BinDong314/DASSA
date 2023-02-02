@@ -577,27 +577,30 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
     int npts1_new = round(((nof1 - 1) * npts0) / decifac) + round(taperwidth / dt1) + MaxVector(template_winlen) + MaxVectorVector(template_tstart) + 1;
     if (npts1_new < npts1)
         npts1 = npts1_new;
-    // npts1 = min([npts1 npts1_new]) ;
+// npts1 = min([npts1 npts1_new]) ;
 
-    // if (!ft_rank)
-    // {
-    //     std::cout << "round(((nof1 - 1) * npts0) / decifac) = " << round(((nof1 - 1) * npts0) / decifac)
-    //               << ", round(taperwidth / dt1) = " << round(taperwidth / dt1)
-    //               << ", MaxVector(template_winlen) = " << MaxVector(template_winlen)
-    //               << ", MaxVectorVector(template_tstart) = " << MaxVectorVector(template_tstart) << "\n";
-    //     PrintVV("template_tstart = ", template_tstart);
-    // }
+// if (!ft_rank)
+// {
+//     std::cout << "round(((nof1 - 1) * npts0) / decifac) = " << round(((nof1 - 1) * npts0) / decifac)
+//               << ", round(taperwidth / dt1) = " << round(taperwidth / dt1)
+//               << ", MaxVector(template_winlen) = " << MaxVector(template_winlen)
+//               << ", MaxVectorVector(template_tstart) = " << MaxVectorVector(template_tstart) << "\n";
+//     PrintVV("template_tstart = ", template_tstart);
+// }
 
-    // PrintVV("ts2d  of das data ", ts2d);
+// PrintVV("ts2d  of das data ", ts2d);
 
-    // Resample in time-domain
+// Resample in time-domain
+#if defined(_OPENMP)
+#pragma omp parallel for firstprivate(ts_temp2)
+#endif
     for (int ii = 0; ii < chs_per_file_udf; ii++)
     {
         // if (ii % 1000 == 0)
         //     std::cout << "ts2d[" << ii << " ], chs_per_file_udf = " << chs_per_file_udf << "\n";
         ts_temp2 = ddff(ts2d[ii], ctap0, 10, BUTTER_A, BUTTER_B, cheby1_b, cheby1_a);
         // ts_temp2.pop_back();
-        ts_temp2.resize(npts1);
+        ts_temp2.resize(npts1); // get rid of the last one
         amat1[ii] = ts_temp2;
     }
 
