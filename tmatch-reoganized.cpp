@@ -473,7 +473,9 @@ void init_xcorr()
 
     // std::cout << " template_data.size =" << template_data.size() << " , template_data[0].size = " << template_data[0].size() << " , template_data[0][0].size = " << template_data[0][0].size();
 
-    // PrintVV("template_data[0] = ", template_data[0]);
+    PrintVV("template_data[0] = ", template_data[0]);
+
+    PrintVV("template_data[1] = ", template_data[1]);
 }
 
 template <class TT>
@@ -602,7 +604,7 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
     }
 
     // std::cout << " amat1.size =" << amat1.size() << " , amat1[0].size = " << amat1[0].size() << " \n";
-    // PrintVV("amat1  ", amat1);
+    PrintVV("amat1  ", amat1);
 
     // PrintVV("template_data[0] = ", template_data[0]);
 
@@ -671,7 +673,6 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
 
                 for (int rc3 = 0; rc3 < npts2_vector[rc2]; rc3++)
                 {
-
                     dx1 = rc3 + template_tstart[rc2][rc1];
                     // Replace below line with the following to find difference of two version
                     // detrend_range_one_pass_std(amat1[rc1], dx1, template_winlen[rc2], ctap_template2, xmean, xsum, Sxx, sdcn_v);

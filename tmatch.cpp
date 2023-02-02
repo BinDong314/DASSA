@@ -473,6 +473,10 @@ void init_xcorr()
     // std::cout << " template_data.size =" << template_data.size() << " , template_data[0].size = " << template_data[0].size() << " , template_data[0][0].size = " << template_data[0][0].size();
 
     // PrintVV("template_data[0] = ", template_data[0]);
+
+    PrintVV("template_data[0] = ", template_data[0]);
+
+    PrintVV("template_data[1] = ", template_data[1]);
 }
 
 template <class TT>
@@ -601,7 +605,7 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
     }
 
     // std::cout << " amat1.size =" << amat1.size() << " , amat1[0].size = " << amat1[0].size() << " \n";
-    // PrintVV("amat1  ", amat1);
+    PrintVV("amat1  ", amat1);
 
     // PrintVV("template_data[0] = ", template_data[0]);
 
@@ -859,11 +863,12 @@ int main(int argc, char *argv[])
 
     std::vector<std::string> null_str;
     // A->GetStencilTag();
-   
-    if (is_input_single_file == false){
-   	A->SkipFileTail();
-    	A->ExecuteUDFOnce();
-    	A->ControlEndpoint(DIR_SKIP_SIZE_CHECK, null_str);
+
+    if (is_input_single_file == false)
+    {
+        A->SkipFileTail();
+        A->ExecuteUDFOnce();
+        A->ControlEndpoint(DIR_SKIP_SIZE_CHECK, null_str);
     }
 
     if (is_input_search_rgx && is_input_single_file == false)
