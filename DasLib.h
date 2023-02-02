@@ -883,18 +883,22 @@ namespace DasLib
         size_t rows = data1d.size() / cols; // the number of rows
         size_t new_cols = (cols - start) / stride + 1;
         result.resize(new_cols);
-        size_t result_index = 0;
+        // size_t result_index = 0;
 
         for (int i = 0; i < new_cols; i++)
             result[i].resize(rows);
 
+#if defined(_OPENMP)
+#pragma omp parallel for
+#endif
         for (std::size_t j = 0; j < rows; ++j)
         {
-            result_index = 0;
+            // result_index = 0;
             for (std::size_t i = start - 1; i < cols; i = i + stride)
             {
-                result[result_index][j] = data1d[j * cols + i];
-                result_index++;
+                // result_index = i/stride;
+                result[i / stride][j] = data1d[j * cols + i];
+                // result_index++;
             }
         }
         return result;
