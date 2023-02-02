@@ -473,9 +473,7 @@ void init_xcorr()
 
     // std::cout << " template_data.size =" << template_data.size() << " , template_data[0].size = " << template_data[0].size() << " , template_data[0][0].size = " << template_data[0][0].size();
 
-    PrintVV("template_data[0] = ", template_data[0]);
-
-    PrintVV("template_data[1] = ", template_data[1]);
+    // PrintVV("template_data[0] = ", template_data[0]);
 }
 
 template <class TT>
@@ -604,7 +602,7 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
     }
 
     // std::cout << " amat1.size =" << amat1.size() << " , amat1[0].size = " << amat1[0].size() << " \n";
-    PrintVV("amat1  ", amat1);
+    // PrintVV("amat1  ", amat1);
 
     // PrintVV("template_data[0] = ", template_data[0]);
 
@@ -652,15 +650,14 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
         // std::vector<std::vector<double>> xc_channel_time;
         // xc_channel_time.resize(nchan1);
         // https://stackoverflow.com/questions/15349695/pre-allocated-private-stdvector-in-openmp-parallelized-for-loop-in-c
-#if defined(_OPENMP)
-#pragma omp parallel for schedule(static, 1)
-#endif
+        // #if defined(_OPENMP)
+        // #pragma omp parallel for schedule(static, 1)
+        // #endif
         for (int rc1 = 0; rc1 < nchan1; rc1++)
         {
             if (template_weights[rc2][rc1] > 0)
             {
-                std::vector<double> sdcn_v(template_winlen[rc2], 0);
-                size_t dx1;
+
                 // cross correlation per channel Channels rc1=1:nchan1
                 // std::vector<double> xc1(npts2_vector[rc2], 0);
                 double xmean, Sxx = 0, xsum;
@@ -670,7 +667,15 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
                 {
                     Sxx += (iiii - xmean) * (iiii - xmean);
                 }
-
+                // #if defined(_OPENMP)
+                // #pragma omp parallel {
+                // #endif
+                std::vector<double> sdcn_v(template_winlen[rc2], 0);
+                size_t dx1;
+                // https://stackoverflow.com/questions/15349695/pre-allocated-private-stdvector-in-openmp-parallelized-for-loop-in-c
+#if defined(_OPENMP)
+#pragma omp parallel for firstprivate(sdcn_v, dx1)
+#endif
                 for (int rc3 = 0; rc3 < npts2_vector[rc2]; rc3++)
                 {
                     dx1 = rc3 + template_tstart[rc2][rc1];
@@ -681,6 +686,9 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
 
                     xc0[rc2][rc3] = xc0[rc2][rc3] + template_weights[rc2][rc1] * dot_product(sdcn_v, template_data[rc2][rc1]);
                 }
+                // #if defined(_OPENMP)
+                //             }
+                // #endif
             }
         }
         // Stack of all channels at time rc3 [template index][time] for template rc2

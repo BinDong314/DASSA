@@ -474,9 +474,7 @@ void init_xcorr()
 
     // PrintVV("template_data[0] = ", template_data[0]);
 
-    PrintVV("template_data[0] = ", template_data[0]);
-
-    PrintVV("template_data[1] = ", template_data[1]);
+    // PrintVV("template_data[0] = ", template_data[0]);
 }
 
 template <class TT>
@@ -605,7 +603,7 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
     }
 
     // std::cout << " amat1.size =" << amat1.size() << " , amat1[0].size = " << amat1[0].size() << " \n";
-    PrintVV("amat1  ", amat1);
+    // PrintVV("amat1  ", amat1);
 
     // PrintVV("template_data[0] = ", template_data[0]);
 
