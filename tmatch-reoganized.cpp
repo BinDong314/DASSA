@@ -680,9 +680,8 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
                 {
                     dx1 = rc3 + template_tstart[rc2][rc1];
                     // Replace below line with the following to find difference of two version
-                    // detrend_range_one_pass_std(amat1[rc1], dx1, template_winlen[rc2], ctap_template2, xmean, xsum, Sxx, sdcn_v);
-
-                    sdcn(amat1[rc1], sdcn_v, dx1, template_winlen[rc2], ctap_template2);
+                    detrend_range_one_pass_std(amat1[rc1], dx1, template_winlen[rc2], ctap_template2, xmean, xsum, Sxx, sdcn_v);
+                    // sdcn(amat1[rc1], sdcn_v, dx1, template_winlen[rc2], ctap_template2);
 
                     xc0[rc2][rc3] = xc0[rc2][rc3] + template_weights[rc2][rc1] * dot_product(sdcn_v, template_data[rc2][rc1]);
                 }
