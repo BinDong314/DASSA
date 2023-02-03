@@ -66,6 +66,36 @@ inline void fftv_forward(const std::vector<double> &fft_in_v, std::vector<std::c
     RUN_FFTV(nfft, fft_in, fft_out, FFTW_FORWARD);
 }
 
+inline void fftv_forward_omp(const std::vector<double> &fft_in_v, std::vector<std::complex<double>> &fft_out)
+{
+    size_t nfft = fft_in_v.size();
+
+    std::vector<std::complex<double>> fft_in;
+    fft_in.resize(nfft, std::complex<double>(0, 0));
+    fft_out.resize(nfft, std::complex<double>(0, 0));
+
+    for (size_t i = 0; i < fft_in_v.size(); i++)
+    {
+        fft_in[i].real(fft_in_v[i]);
+    }
+
+#if defined(_OPENMP)
+#pragma omp critical
+#endif
+    {
+        fftw_plan fft_p = fftw_plan_dft_1d(nfft, reinterpret_cast<fftw_complex *>(&fft_in[0]), reinterpret_cast<fftw_complex *>(&fft_out[0]), FFTW_FORWARD, FFTW_ESTIMATE);
+    }
+
+    fftw_execute(fft_p);
+
+#if defined(_OPENMP)
+#pragma omp critical
+#endif
+    {
+        fftw_destroy_plan(fft_p);
+    }
+}
+
 /**
  * @brief it has backward on vector fft_in
  *
@@ -99,6 +129,41 @@ inline void fftv_backward_real_max(std::vector<std::complex<double>> &fft_in, do
     fft_out.resize(nfft, std::complex<double>(0, 0));
 
     RUN_FFTV(nfft, fft_in, fft_out, FFTW_BACKWARD);
+
+    fft_out_real_max = fft_out[0].real() / nfft;
+
+    for (size_t i = 1; i < nfft; i++)
+    {
+        if (fft_out_real_max < (fft_out[i].real() / nfft))
+            fft_out_real_max = fft_out[i].real() / nfft;
+    }
+}
+
+inline void fftv_backward_real_max_omp(std::vector<std::complex<double>> &fft_in, double fft_out_real_max)
+{
+    size_t nfft;
+    nfft = fft_in.size();
+
+    std::vector<std::complex<double>> fft_out;
+    fft_out.resize(nfft, std::complex<double>(0, 0));
+
+    // RUN_FFTV(nfft, fft_in, fft_out, FFTW_BACKWARD);
+
+#if defined(_OPENMP)
+#pragma omp critical
+#endif
+    {
+        fftw_plan fft_p = fftw_plan_dft_1d(nfft, reinterpret_cast<fftw_complex *>(&fft_in[0]), reinterpret_cast<fftw_complex *>(&fft_out[0]), FFTW_BACKWARD, FFTW_ESTIMATE);
+    }
+
+    fftw_execute(fft_p);
+
+#if defined(_OPENMP)
+#pragma omp critical
+#endif
+    {
+        fftw_destroy_plan(fft_p);
+    }
 
     fft_out_real_max = fft_out[0].real() / nfft;
 

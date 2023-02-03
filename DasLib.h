@@ -104,10 +104,10 @@ namespace DasLib
 
         // taking fft
         std::vector<std::complex<double>> XX_fft;
-        fftv_forward(XX, XX_fft);
+        fftv_forward_omp(XX, XX_fft);
 
         std::vector<std::complex<double>> YY_fft;
-        fftv_forward(YY, YY_fft);
+        fftv_forward_omp(YY, YY_fft);
 
         int nfft = floor(xclen / 2) + 1;
 
@@ -122,7 +122,7 @@ namespace DasLib
         }
 
         double ifft_out_real_max;
-        fftv_backward_real_max(XXYY_fft_corr, ifft_out_real_max);
+        fftv_backward_real_max_omp(XXYY_fft_corr, ifft_out_real_max);
         return ifft_out_real_max;
     }
 
