@@ -99,8 +99,8 @@ namespace DasLib
         const std::vector<T> XX(X.begin(), X.end());
         const std::vector<T> YY(Y.rbegin(), Y.rend());
 
-        XX.resize(xclen, 0);
-        YY.resize(xclen, 0);
+        XX.resize(xclen, 0.0);
+        YY.resize(xclen, 0.0);
 
         // taking fft
         std::vector<std::complex<double>> XX_fft;
