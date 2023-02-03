@@ -114,7 +114,7 @@ inline void fftv_backward_real_max(std::vector<std::complex<double>> &fft_in, do
     size_t nfft;
     nfft = fft_in.size();
 
-    std::vector<std::complex<double>> &fft_out;
+    std::vector<std::complex<double>> fft_out;
     fft_out.resize(nfft, std::complex<double>(0, 0));
 
     RUN_FFTV(nfft, fft_in, fft_out, FFTW_BACKWARD);
