@@ -148,7 +148,11 @@ int omp_num_threads_p = 32;
 
 void all_gather_vector(const std::vector<double> &v_to_send, std::vector<double> &v_to_receive);
 
-bool is_xcross = false;
+// bool is_correlation_method = false;
+int correlation_method = 0; // correlation_method = 0 (dot-product), 1 (xcorr-max), 2 (fft-max)
+#define CORR_DOT_PRODUCT 0
+#define CORR_XCORR_MAX 1
+#define CORR_FFT_MAX 2
 
 void init_xcorr()
 {
@@ -685,8 +689,26 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
                     // Replace below line with the following to find difference of two version
                     detrend_range_one_pass_std(amat1[rc1], dx1, template_winlen[rc2], ctap_template2, xmean, xsum, Sxx, sdcn_v);
                     // sdcn(amat1[rc1], sdcn_v, dx1, template_winlen[rc2], ctap_template2);
+                    // double temp_xcorr;
+                    switch (correlation_method)
+                    {
+                    case CORR_DOT_PRODUCT:
+                        xc0[rc2][rc3] = xc0[rc2][rc3] + template_weights[rc2][rc1] * dot_product(sdcn_v, template_data[rc2][rc1]);
+                        break;
+                    case CORR_XCORR_MAX:
+                        xc0[rc2][rc3] = xc0[rc2][rc3] + template_weights[rc2][rc1] * xcross_max(sdcn_v, template_data[rc2][rc1]);
+                        break;
+                    case CORR_FFT_MAX:
+                        xc0[rc2][rc3] = xc0[rc2][rc3] + template_weights[rc2][rc1] * xcross_fft(sdcn_v, template_data[rc2][rc1]);
+                        break;
+                    default:
+                        std::cout << "Unsupported Correlation Method code " << correlation_method << "\n";
+                        std::cout << "Please set correlation_method = 0 (dot-product), 1 (xcorr-max), 2 (fft-max) " << correlation_method << "\n";
 
-                    xc0[rc2][rc3] = xc0[rc2][rc3] + template_weights[rc2][rc1] * dot_product(sdcn_v, template_data[rc2][rc1]);
+                        exit(-1);
+                        break;
+                    }
+                    // xc0[rc2][rc3] = xc0[rc2][rc3] + template_weights[rc2][rc1] * temp_xcorr;
                 }
                 // #if defined(_OPENMP)
                 //             }
@@ -1181,6 +1203,12 @@ int read_config_file(std::string file_name, int mpi_rank)
         is_column_major_from_config = true;
     }
 
+    correlation_method = reader.GetInteger("parameter", "correlation_method", "0");
+    if (correlation_method < 0 || correlation_method > 2)
+    {
+        AU_EXIT("Don't understand the correlation_method's value " + correlation_method);
+    }
+
     std::string is_template_file_range_str = reader.Get("parameter", "is_template_file_range", "false");
     if (is_template_file_range_str == "false" || is_template_file_range_str == "0")
     {
@@ -1338,6 +1366,20 @@ int read_config_file(std::string file_name, int mpi_rank)
 
         std::cout << termcolor::magenta << "\n        decifac = " << termcolor::green << decifac;
         std::cout << termcolor::magenta << "\n        OpenMP_num_threads = " << termcolor::green << omp_num_threads_p;
+        switch (correlation_method)
+        {
+        case CORR_DOT_PRODUCT:
+            std::cout << termcolor::magenta << "\n        correlation_method = " << termcolor::green << CORR_DOT_PRODUCT << " dot_product";
+            break;
+        case CORR_XCORR_MAX:
+            std::cout << termcolor::magenta << "\n        correlation_method = " << termcolor::green << CORR_XCORR_MAX << " xcorr_max";
+            break;
+        case CORR_FFT_MAX:
+            std::cout << termcolor::magenta << "\n        correlation_method = " << termcolor::green << CORR_FFT_MAX << " fft_max";
+            break;
+        default:
+            break;
+        }
 
         std::cout << termcolor::blue << "\n\n Output parameters: ";
 

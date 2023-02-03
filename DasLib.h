@@ -89,6 +89,43 @@ namespace DasLib
         return max_temp;
     }
 
+    template <class T>
+    inline double xcross_fft(const std::vector<T> &X, const std::vector<T> &Y)
+    {
+        assert(X.size() == Y.size());
+        int winlen = X.size();
+        int xclen = 2 * winlen - 1;
+
+        const std::vector<T> XX(X.begin(), X.end());
+        const std::vector<T> YY(Y.rbegin(), Y.rend());
+
+        XX.resize(xclen, 0);
+        YY.resize(xclen, 0);
+
+        // taking fft
+        std::vector<std::complex<double>> &XX_fft;
+        fftv_forward(XX, XX_fft);
+
+        std::vector<std::complex<double>> &YY_fft;
+        fftv_forward(YY, YY_fft);
+
+        int nfft = floor(xclen / 2) + 1;
+
+        std::vector<std::complex<double>> XXYY_fft_corr;
+        size_t nfft_doubled = 2 * nfft - 1;
+        XXYY_fft_corr.resize(nfft_doubled);
+        for (int i = 0; i < nfft; i++)
+        {
+            XXYY_fft_corr[i] = XX_fft[i] * YY_fft[i];
+            if (i != 0)
+                XXYY_fft_corr[nfft_doubled - i] = std::conj(XXYY_fft_corr[i]);
+        }
+
+        double ifft_out_real_max;
+        fftv_backward_real_max(XXYY_fft_corr, ifft_out_real_max);
+        return ifft_out_real_max;
+    }
+
     // Function for calculating median
     template <class T>
     inline T MaxVector(std::vector<T> &v)

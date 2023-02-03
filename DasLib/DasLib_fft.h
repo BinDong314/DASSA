@@ -24,8 +24,8 @@
 /**
  * @brief it performs the fft on the input vector fft_vector and it also extend the input size to be minimum of power of 2
  *        https://stackoverflow.com/questions/4214400/problem-casting-stl-complexdouble-to-fftw-complex
- * @param fft_vector 
- * @param fft_out 
+ * @param fft_vector
+ * @param fft_out
  */
 inline void fftv_forward_p2(const std::vector<double> &fft_in_v, std::vector<std::complex<double>> &fft_out)
 {
@@ -45,8 +45,30 @@ inline void fftv_forward_p2(const std::vector<double> &fft_in_v, std::vector<std
 }
 
 /**
- * @brief it has backward on vector fft_in 
- * 
+ * @brief it performs the fft on the input vector fft_vector and it also extend the input size to be minimum of power of 2
+ *        https://stackoverflow.com/questions/4214400/problem-casting-stl-complexdouble-to-fftw-complex
+ * @param fft_vector
+ * @param fft_out
+ */
+inline void fftv_forward(const std::vector<double> &fft_in_v, std::vector<std::complex<double>> &fft_out)
+{
+    size_t nfft = fft_in_v.size();
+
+    std::vector<std::complex<double>> fft_in;
+    fft_in.resize(nfft, std::complex<double>(0, 0));
+    fft_out.resize(nfft, std::complex<double>(0, 0));
+
+    for (size_t i = 0; i < fft_in_v.size(); i++)
+    {
+        fft_in[i].real(fft_in_v[i]);
+    }
+
+    RUN_FFTV(nfft, fft_in, fft_out, FFTW_FORWARD);
+}
+
+/**
+ * @brief it has backward on vector fft_in
+ *
  * @param fft_in : input vector with the std::complex<double>
  * @param fft_out : output vector with the type std::complex<double>
  */
@@ -59,6 +81,44 @@ inline void fftv_backward(std::vector<std::complex<double>> &fft_in, std::vector
     for (size_t i = 0; i < nfft; i++)
     {
         fft_out[i].real(fft_out[i].real() / nfft);
+    }
+}
+
+/**
+ * @brief it has backward on vector fft_in
+ *
+ * @param fft_in : input vector with the std::complex<double>
+ * @param fft_out : output vector with the type std::complex<double>
+ */
+inline void fftv_backward_real(std::vector<std::complex<double>> &fft_in, std::vector<double> &fft_out_real)
+{
+    size_t nfft;
+    nfft = fft_in.size();
+    fft_out_real.resize(nfft, 0.0);
+    RUN_FFTV(nfft, fft_in, fft_out, FFTW_BACKWARD);
+    for (size_t i = 0; i < nfft; i++)
+    {
+        // fft_out[i].real(fft_out[i].real() / nfft);
+        fft_out_real[i] = fft_out[i].real() / nfft;
+    }
+}
+
+/**
+ * @brief it has backward on vector fft_in
+ *
+ * @param fft_in : input vector with the std::complex<double>
+ * @param fft_out : output vector with the type std::complex<double>
+ */
+inline void fftv_backward_real_max(std::vector<std::complex<double>> &fft_in, double fft_out_real_max)
+{
+    size_t nfft;
+    nfft = fft_in.size();
+    fft_out_real_max = fft_out[0].real() / nfft;
+    RUN_FFTV(nfft, fft_in, fft_out, FFTW_BACKWARD);
+    for (size_t i = 1; i < nfft; i++)
+    {
+        if (fft_out_real_max < (fft_out[i].real() / nfft))
+            fft_out_real_max = fft_out[i].real() / nfft;
     }
 }
 
