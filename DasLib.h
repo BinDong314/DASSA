@@ -96,11 +96,11 @@ namespace DasLib
         int winlen = X.size();
         int xclen = 2 * winlen - 1;
 
-        const std::vector<T> XX(X.begin(), X.end());
-        const std::vector<T> YY(Y.rbegin(), Y.rend());
+        std::vector<T> XX(X.begin(), X.end());
+        std::vector<T> YY(Y.rbegin(), Y.rend());
 
-        XX.resize(xclen);
-        YY.resize(xclen);
+        XX.resize(xclen, 0);
+        YY.resize(xclen, 0);
 
         // taking fft
         std::vector<std::complex<double>> XX_fft;
