@@ -792,6 +792,11 @@ int main(int argc, char *argv[])
         std::cout << "Set [omp_set_num_threads] to " << omp_num_threads_p << "\n";
 #endif
 
+    if (correlation_method == 2)
+    {
+        fftw_make_planner_thread_safe();
+    }
+
     gettimeofday(&begin_time, 0);
 
     // set up the chunk size and the overlap size
