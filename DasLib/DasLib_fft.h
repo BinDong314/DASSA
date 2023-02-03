@@ -82,9 +82,7 @@ inline void fftv_forward_omp(const std::vector<double> &fft_in_v, std::vector<st
 #if defined(_OPENMP)
 #pragma omp critical
 #endif
-    {
-        fftw_plan fft_p = fftw_plan_dft_1d(nfft, reinterpret_cast<fftw_complex *>(&fft_in[0]), reinterpret_cast<fftw_complex *>(&fft_out[0]), FFTW_FORWARD, FFTW_ESTIMATE);
-    }
+    fftw_plan fft_p = fftw_plan_dft_1d(nfft, reinterpret_cast<fftw_complex *>(&fft_in[0]), reinterpret_cast<fftw_complex *>(&fft_out[0]), FFTW_FORWARD, FFTW_ESTIMATE);
 
     fftw_execute(fft_p);
 
@@ -152,9 +150,7 @@ inline void fftv_backward_real_max_omp(std::vector<std::complex<double>> &fft_in
 #if defined(_OPENMP)
 #pragma omp critical
 #endif
-    {
-        fftw_plan fft_p = fftw_plan_dft_1d(nfft, reinterpret_cast<fftw_complex *>(&fft_in[0]), reinterpret_cast<fftw_complex *>(&fft_out[0]), FFTW_BACKWARD, FFTW_ESTIMATE);
-    }
+    fftw_plan fft_p = fftw_plan_dft_1d(nfft, reinterpret_cast<fftw_complex *>(&fft_in[0]), reinterpret_cast<fftw_complex *>(&fft_out[0]), FFTW_BACKWARD, FFTW_ESTIMATE);
 
     fftw_execute(fft_p);
 
