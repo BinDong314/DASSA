@@ -1203,7 +1203,7 @@ int read_config_file(std::string file_name, int mpi_rank)
         is_column_major_from_config = true;
     }
 
-    correlation_method = reader.GetInteger("parameter", "correlation_method", "0");
+    correlation_method = reader.GetInteger("parameter", "correlation_method", 0);
     if (correlation_method < 0 || correlation_method > 2)
     {
         AU_EXIT("Don't understand the correlation_method's value " + correlation_method);

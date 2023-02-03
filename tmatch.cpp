@@ -1254,7 +1254,7 @@ int read_config_file(std::string file_name, int mpi_rank)
         AU_EXIT("Don't understand the is_template_file_range's value " + is_template_file_range);
     }
 
-    correlation_method = reader.GetInteger("parameter", "correlation_method", "0");
+    correlation_method = reader.GetInteger("parameter", "correlation_method", 0);
     if (correlation_method < 0 || correlation_method > 2)
     {
         AU_EXIT("Don't understand the correlation_method's value " + correlation_method + ", please use 0 (dot-product), 1 (xcorr-max), 2 (fft-max)");

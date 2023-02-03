@@ -95,11 +95,11 @@ inline void fftv_backward_real(std::vector<std::complex<double>> &fft_in, std::v
     size_t nfft;
     nfft = fft_in.size();
     fft_out_real.resize(nfft, 0.0);
-    RUN_FFTV(nfft, fft_in, fft_out, FFTW_BACKWARD);
+    RUN_FFTV(nfft, fft_in, fft_out_real, FFTW_BACKWARD);
     for (size_t i = 0; i < nfft; i++)
     {
         // fft_out[i].real(fft_out[i].real() / nfft);
-        fft_out_real[i] = fft_out[i].real() / nfft;
+        fft_out_real[i] = fft_out_real[i].real() / nfft;
     }
 }
 
@@ -113,8 +113,14 @@ inline void fftv_backward_real_max(std::vector<std::complex<double>> &fft_in, do
 {
     size_t nfft;
     nfft = fft_in.size();
-    fft_out_real_max = fft_out[0].real() / nfft;
+
+    std::vector<std::complex<double>> &fft_out;
+    fft_out.resize(nfft, std::complex<double>(0, 0));
+
     RUN_FFTV(nfft, fft_in, fft_out, FFTW_BACKWARD);
+
+    fft_out_real_max = fft_out[0].real() / nfft;
+
     for (size_t i = 1; i < nfft; i++)
     {
         if (fft_out_real_max < (fft_out[i].real() / nfft))

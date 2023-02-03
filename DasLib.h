@@ -103,10 +103,10 @@ namespace DasLib
         YY.resize(xclen, 0);
 
         // taking fft
-        std::vector<std::complex<double>> &XX_fft;
+        std::vector<std::complex<double>> XX_fft;
         fftv_forward(XX, XX_fft);
 
-        std::vector<std::complex<double>> &YY_fft;
+        std::vector<std::complex<double>> YY_fft;
         fftv_forward(YY, YY_fft);
 
         int nfft = floor(xclen / 2) + 1;
