@@ -123,6 +123,7 @@ namespace DasLib
 
         double ifft_out_real_max;
         fftv_backward_real_max_omp(XXYY_fft_corr, ifft_out_real_max);
+
         return ifft_out_real_max;
     }
 
