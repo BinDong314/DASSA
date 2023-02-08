@@ -49,7 +49,7 @@ std::string das_file_type = "EP_HDF5";
 std::string template_dir = "/Users/dbin/work/dassa/template-match/template_dir/";
 
 bool is_das_input_search_rgx = false;
-std::string input_search_rgx = "^(.*)[1234]\\.tdms$";
+std::string das_input_search_rgx = "^(.*)[1234]\\.tdms$";
 
 bool is_template_input_search_rgx = false;
 std::string template_input_search_rgx = "(ci37327652|ci37329164)";
@@ -1185,7 +1185,7 @@ int read_config_file(std::string file_name, int mpi_rank)
 
     if (is_das_input_search_rgx)
     {
-        input_search_rgx = reader.Get("parameter", "das_input_search_rgx", "^(.*)[1234]\\.tdms$");
+        das_input_search_rgx = reader.Get("parameter", "das_input_search_rgx", "^(.*)[1234]\\.tdms$");
     }
 
     temp_str = reader.Get("parameter", "is_template_input_search_rgx", "false");
