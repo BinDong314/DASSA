@@ -52,7 +52,7 @@ bool is_das_input_search_rgx = false;
 std::string input_search_rgx = "^(.*)[1234]\\.tdms$";
 
 bool is_template_input_search_rgx = false;
-std::string template_search_rgx = "(ci37327652|ci37329164).h5$";
+std::string template_input_search_rgx = "(ci37327652|ci37329164)";
 
 int n_files_to_concatenate = 20;
 
@@ -1193,7 +1193,7 @@ int read_config_file(std::string file_name, int mpi_rank)
 
     if (is_template_input_search_rgx)
     {
-        input_search_rgx = reader.Get("parameter", "template_input_search_rgx", "^(.*)[1234]\\.tdms$");
+        template_input_search_rgx = reader.Get("parameter", "template_input_search_rgx", "(ci37327652|ci37329164)");
     }
 
     std::string is_file_range_str = reader.Get("parameter", "is_das_file_range", "false");
