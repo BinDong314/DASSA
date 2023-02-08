@@ -48,8 +48,11 @@ std::string das_file_type = "EP_HDF5";
 
 std::string template_dir = "/Users/dbin/work/dassa/template-match/template_dir/";
 
-bool is_input_search_rgx = false;
+bool is_das_input_search_rgx = false;
 std::string input_search_rgx = "^(.*)[1234]\\.tdms$";
+
+bool is_template_input_search_rgx = false;
+std::string template_search_rgx = "(ci37327652|ci37329164).h5$";
 
 int n_files_to_concatenate = 20;
 
@@ -226,7 +229,14 @@ void init_xcorr()
     control_para_ve.push_back(" ");
     T_tsstart->ControlEndpoint(DIR_SUB_CMD_ARG, control_para_ve);
 
-    aug_input_search_rgx.push_back("(.*)tstart(.*)txt$");
+    if (!is_template_input_search_rgx)
+    {
+        aug_input_search_rgx.push_back("(.*)tstart(.*)txt$");
+    }
+    else
+    {
+        aug_input_search_rgx.push_back("(.*)tstart(.*)" + template_input_search_rgx + "(.*)txt$");
+    }
     T_tsstart->EndpointControl(DIR_INPUT_SEARCH_RGX, aug_input_search_rgx);
 
     T_tsstart->ControlEndpoint(DIR_GET_FILE_SIZE, file_size_str);
@@ -251,7 +261,14 @@ void init_xcorr()
         T_winlen->ControlEndpoint(DIR_FILE_SORT_INDEXES, index_param);
     }
 
-    aug_input_search_rgx_winlen.push_back("(.*)winlen(.*)txt$"); // tstart_ci39534271.txt
+    if (!is_template_input_search_rgx)
+    {
+        aug_input_search_rgx_winlen.push_back("(.*)winlen(.*)txt$"); // tstart_ci39534271.txt
+    }
+    else
+    {
+        aug_input_search_rgx_winlen.push_back("(.*)winlen(.*)" + template_input_search_rgx + "(.*)txt$"); // tstart_ci39534271.txt
+    }
     T_winlen->EndpointControl(DIR_INPUT_SEARCH_RGX, aug_input_search_rgx_winlen);
 
     T_winlen->ControlEndpoint(DIR_GET_FILE_SIZE, file_size_str_winlen);
@@ -278,7 +295,14 @@ void init_xcorr()
         T_h5->ControlEndpoint(DIR_FILE_SORT_INDEXES, index_param);
     }
 
-    aug_input_search_rgx_h5.push_back("(.*)h5$"); // tstart_ci39534271.txt
+    if (!is_template_input_search_rgx)
+    {
+        aug_input_search_rgx_h5.push_back("(.*)h5$"); // tstart_ci39534271.txt
+    }
+    else
+    {
+        aug_input_search_rgx_h5.push_back("(.*)" + template_input_search_rgx + "(.*)h5$"); // tstart_ci39534271.txt
+    }
     T_h5->EndpointControl(DIR_INPUT_SEARCH_RGX, aug_input_search_rgx_h5);
 
     T_h5->ControlEndpoint(DIR_GET_FILE_SIZE, file_size_str_h5);
@@ -858,10 +882,10 @@ int main(int argc, char *argv[])
         A->ExecuteUDFOnce();
         A->ControlEndpoint(DIR_SKIP_SIZE_CHECK, null_str);
     }
-    if (is_input_search_rgx && is_input_single_file == false)
+    if (is_das_input_search_rgx && is_input_single_file == false)
     {
         std::vector<std::string> aug_input_search_rgx;
-        aug_input_search_rgx.push_back(input_search_rgx);
+        aug_input_search_rgx.push_back(das_input_search_rgx);
         A->ControlEndpoint(DIR_INPUT_SEARCH_RGX, aug_input_search_rgx);
     }
 
@@ -1156,13 +1180,20 @@ int read_config_file(std::string file_name, int mpi_rank)
     std::string temp_str = reader.Get("parameter", "is_input_single_file", "false");
     is_input_single_file = (temp_str == "false") ? false : true;
 
-    temp_str = reader.Get("parameter", "is_input_search_rgx", "false");
+    temp_str = reader.Get("parameter", "is_das_input_search_rgx", "false");
+    is_das_input_search_rgx = (temp_str == "false") ? false : true;
 
-    is_input_search_rgx = (temp_str == "false") ? false : true;
-
-    if (is_input_search_rgx)
+    if (is_das_input_search_rgx)
     {
-        input_search_rgx = reader.Get("parameter", "input_search_rgx", "^(.*)[1234]\\.tdms$");
+        input_search_rgx = reader.Get("parameter", "das_input_search_rgx", "^(.*)[1234]\\.tdms$");
+    }
+
+    temp_str = reader.Get("parameter", "is_template_input_search_rgx", "false");
+    is_template_input_search_rgx = (temp_str == "false") ? false : true;
+
+    if (is_template_input_search_rgx)
+    {
+        input_search_rgx = reader.Get("parameter", "template_input_search_rgx", "^(.*)[1234]\\.tdms$");
     }
 
     std::string is_file_range_str = reader.Get("parameter", "is_das_file_range", "false");
@@ -1364,9 +1395,9 @@ int read_config_file(std::string file_name, int mpi_rank)
             std::cout << termcolor::magenta << "\n        is_channel_stride = " << termcolor::green << "false";
         }
 
-        if (is_input_search_rgx)
+        if (is_das_input_search_rgx)
         {
-            std::cout << termcolor::magenta << "\n        input_search_rgx = " << termcolor::green << input_search_rgx;
+            std::cout << termcolor::magenta << "\n        das_input_search_rgx = " << termcolor::green << das_input_search_rgx;
         }
         std::cout << termcolor::magenta << "\n        n_files_to_concatenate = " << termcolor::green << n_files_to_concatenate;
 
