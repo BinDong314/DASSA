@@ -3,7 +3,7 @@
 
  *If you have questions about your rights to use or distribute this software, please contact Berkeley Lab's Innovation & Partnerships Office at  IPO@lbl.gov.
 
-* NOTICE. This Software was developed under funding from the U.S. Department of Energy and the U.S. Government consequently retains certain rights. As such, the U.S. Government has been granted for itself and others acting on its behalf a paid-up, nonexclusive, irrevocable, worldwide license in the Software to reproduce, distribute copies to the public, prepare derivative works, and perform publicly and display publicly, and to permit other to do so. 
+* NOTICE. This Software was developed under funding from the U.S. Department of Energy and the U.S. Government consequently retains certain rights. As such, the U.S. Government has been granted for itself and others acting on its behalf a paid-up, nonexclusive, irrevocable, worldwide license in the Software to reproduce, distribute copies to the public, prepare derivative works, and perform publicly and display publicly, and to permit other to do so.
  */
 /**
  *
@@ -27,8 +27,8 @@ using namespace FT;
 
 /**
  * @brief some help function at the end
- * 
- * @param cmd 
+ *
+ * @param cmd
  */
 void printf_help(char *cmd);
 int stack_config_reader(std::string file_name, int mpi_rank);
@@ -41,14 +41,14 @@ int chs_per_file = 201;
 
 std::string config_file = "./stack.config";
 
-//Output file name
+// Output file name
 std::string xcorr_input_dir = "/Users/dbin/work/arrayudf-git-svn-test-on-bitbucket/examples/das/stacking_files/xcorr_examples_h5";
 //"/clusterfs/bear/BinDong_DAS_Data/xcorr_examples_h5/";
 std::string xcorr_input_dataset_name = "/xcoor";
 
 std::string stack_output_dir = "./";
 
-//Output file name
+// Output file name
 std::string stack_output_file_data_in_sum_name = "xcorr_examples_h5_stack_data_in_sum.h5";
 std::string stack_output_file_final_pwstack = "xcorr_examples_h5_stack_final_pwstack.h5";
 std::string stack_output_file_phaseWeight = "xcorr_examples_h5_stack_phaseWeight.h5";
@@ -63,7 +63,7 @@ double CausalityFlagging_tmin = 0.05;
 double CausalityFlagging_tmax = 3.0;
 double CausalityFlagging_fmax = 10;
 double CausalityFlagging_ButterLow_order = 3;
-double CausalityFlagging_ButterLow_fcf = 0.16; //filter cutoff frequency
+double CausalityFlagging_ButterLow_fcf = 0.16; // filter cutoff frequency
 
 bool is_flipud_flag = true;
 
@@ -88,11 +88,11 @@ int file_range_end_index = 1;
 bool is_ml_weight = false;
 bool is_ml_weight_ordered = true;
 std::string ml_weight_file = "ml_wight.txt";
-//int n_weighted_to_stack = -1; // -1 mean to stack all
+// int n_weighted_to_stack = -1; // -1 mean to stack all
 std::vector<double> ml_weight;
 double ml_weight_sum;
-std::vector<size_t> sorted_indexes; //sorted index
-std::string sorted_indexes_str;     //string of sort_indexes after cut to n_weighted_to_stack
+std::vector<size_t> sorted_indexes; // sorted index
+std::string sorted_indexes_str;     // string of sort_indexes after cut to n_weighted_to_stack
 
 bool is_delete_median = false;
 
@@ -143,7 +143,7 @@ stack_udf(const Stencil<double> &iStencil)
 
     std::vector<std::vector<double>> ts2d = DasLib::Vector1D2D<double, double>(lts_per_file_udf, ts);
 
-    //PrintVV("ts2d init", ts2d);
+    // PrintVV("ts2d init", ts2d);
 
     if (is_delete_median)
     {
@@ -152,20 +152,20 @@ stack_udf(const Stencil<double> &iStencil)
             std::cout << "Enable DeleteMedian ! \n";
     }
 
-    //PrintVV("ts2d after DeleteMedian ", ts2d);
+    // PrintVV("ts2d after DeleteMedian ", ts2d);
 
     DetMean_tim = DetMean_tim + (AU_WTIME - temp_time);
     temp_time = AU_WTIME;
 
-    //std::cout << "t_start = " << t_start << ", t_end = " <<  t_end<< ",sub_start_t =  " << sub_start_t
-    //Remove the media
+    // std::cout << "t_start = " << t_start << ", t_end = " <<  t_end<< ",sub_start_t =  " << sub_start_t
+    // Remove the media
     for (int i = 0; i < chs_per_file; i++)
     {
-        //Subset
+        // Subset
         ts2d[i] = DasLib::TimeSubset(ts2d[i], t_start, t_end, sub_start_t, sub_end_t, sample_rate);
     }
 
-    //PrintVV("ts2d after TimeSubset ", ts2d);
+    // PrintVV("ts2d after TimeSubset ", ts2d);
 
     if (is_flipud_flag)
     {
@@ -180,21 +180,21 @@ stack_udf(const Stencil<double> &iStencil)
         }
     }
 
-    //PrintVV("ts2d after flipud ", ts2d);
+    // PrintVV("ts2d after flipud ", ts2d);
 
     size_t chunk_chunk_id = iStencil.GetChunkID();
 
-    //cout << "Current Chunk ID: =" << chunk_chunk_id << ", ml weight: " << ml_weight[chunk_chunk_id] << "\n";
+    // cout << "Current Chunk ID: =" << chunk_chunk_id << ", ml weight: " << ml_weight[chunk_chunk_id] << "\n";
 
     size_t LTS_new = ts2d[0].size();
     std::vector<std::vector<double>> semblance_denom;
     std::vector<std::vector<std::complex<double>>> coherency;
     semblance_denom.resize(chs_per_file);
-    //coherency.resize(chs_per_file);
+    // coherency.resize(chs_per_file);
     for (int i = 0; i < chs_per_file; i++)
     {
         semblance_denom[i].resize(LTS_new);
-        //coherency[i].resize(LTS_new);
+        // coherency[i].resize(LTS_new);
         for (int j = 0; j < LTS_new; j++)
         {
             if (is_ml_weight)
@@ -204,11 +204,11 @@ stack_udf(const Stencil<double> &iStencil)
 
             semblance_denom[i][j] = ts2d[i][j] * ts2d[i][j];
         }
-        //coherency[i] = DasLib::instanPhaseEstimator(ts2d[i]);
+        // coherency[i] = DasLib::instanPhaseEstimator(ts2d[i]);
     }
     coherency = DasLib::instanPhaseEstimatorVector(ts2d);
 
-    //PrintVV("ts2d after add ml weight ", ts2d);
+    // PrintVV("ts2d after add ml weight ", ts2d);
 
     CPU_Time = CPU_Time + (AU_WTIME - temp_time_large);
     temp_time_large = AU_WTIME;
@@ -226,7 +226,7 @@ stack_udf(const Stencil<double> &iStencil)
         H_end[1] = LTS_new - 1;
     }
 
-    //PrintVector("H_end = ", H_end);
+    // PrintVector("H_end = ", H_end);
 
     std::vector<double> semblance_denom_sum_v;
     semblance_denom_sum->ReadArray(H_start, H_end, semblance_denom_sum_v);
@@ -237,7 +237,7 @@ stack_udf(const Stencil<double> &iStencil)
     std::vector<double> data_in_sum_v;
     data_in_sum->ReadArray(H_start, H_end, data_in_sum_v);
 
-    //PrintVector("coherency_sum_v (before) " + std::to_string(ft_rank), data_in_sum_v);
+    // PrintVector("coherency_sum_v (before) " + std::to_string(ft_rank), data_in_sum_v);
     int offset;
     for (int i = 0; i < chs_per_file; i++)
     {
@@ -261,7 +261,7 @@ stack_udf(const Stencil<double> &iStencil)
     coherency_sum->WriteArray(H_start, H_end, coherency_sum_v);
     data_in_sum->WriteArray(H_start, H_end, data_in_sum_v);
 
-    //std::cout << "finish one file, temp_index " << std::endl;
+    // std::cout << "finish one file, temp_index " << std::endl;
     return 0;
 }
 
@@ -290,7 +290,7 @@ int main(int argc, char *argv[])
             break;
         }
 
-    //Init the MPICH, etc.
+    // Init the MPICH, etc.
     FT_Init(argc, argv);
 
     if (has_config_file_flag)
@@ -304,7 +304,7 @@ int main(int argc, char *argv[])
         std::vector<size_t> sorted_indexes_cut;
         ml_weight_sum = 0;
 
-        //if (n_weighted_to_stack > 0 && n_weighted_to_stack <= ml_weight_temp.size())
+        // if (n_weighted_to_stack > 0 && n_weighted_to_stack <= ml_weight_temp.size())
         if (is_file_range && file_range_start_index >= 0 && file_range_end_index <= ml_weight_temp.size())
         {
             for (int i = file_range_start_index; i <= file_range_end_index; i++)
@@ -411,11 +411,11 @@ int main(int argc, char *argv[])
         std::cout << "disable collective IO"
                   << "\n";
 
-    //semblanceWeight->Nonvolatile("EP_HDF5:./xcorr_examples_h5_stack_semblanceWeight.h5:/data");
-    //phaseWeight->Nonvolatile("EP_HDF5:./xcorr_examples_h5_stack_phaseWeight.h5:/data");
-    //Input data,
+    // semblanceWeight->Nonvolatile("EP_HDF5:./xcorr_examples_h5_stack_semblanceWeight.h5:/data");
+    // phaseWeight->Nonvolatile("EP_HDF5:./xcorr_examples_h5_stack_phaseWeight.h5:/data");
+    // Input data,
 
-    //std::vector<int> skip_size = {chs_per_file, lts_per_file};
+    // std::vector<int> skip_size = {chs_per_file, lts_per_file};
     A->EnableApplyStride(chunk_size);
     if (is_ml_weight || is_file_range)
     {
@@ -424,29 +424,29 @@ int main(int argc, char *argv[])
 
         A->ControlEndpoint(DIR_FILE_SORT_INDEXES, index_param);
     }
-    //std::cout << "Pre clone \n";
-    //Clone to create local copy
-    //std::complex<double> complex_zero(0, 0);
-    //coherency_sum->Fill(complex_zero);
-    //std::cout << "Fill \n";
+    // std::cout << "Pre clone \n";
+    // Clone to create local copy
+    // std::complex<double> complex_zero(0, 0);
+    // coherency_sum->Fill(complex_zero);
+    // std::cout << "Fill \n";
 
     semblance_denom_sum->Clone();
-    //std::cout << "Clone semblance_denom_sum  \n";
+    // std::cout << "Clone semblance_denom_sum  \n";
     coherency_sum->Clone();
-    //std::cout << "Clone coherency_sum  \n";
+    // std::cout << "Clone coherency_sum  \n";
     data_in_sum->Clone();
-    //std::cout << "Pre apply \n";
+    // std::cout << "Pre apply \n";
 
     if (!ft_rank)
         std::cout << "Run apply"
                   << "\n";
-    //Run
+    // Run
     A->Apply(stack_udf);
 
-    //std::vector<unsigned long long> H_start_test{0, 0}, H_end_test{static_cast<unsigned long long>(chs_per_file) - 1, static_cast<unsigned long long>(size_after_subset) - 1};
-    //std::vector<double> data_in_sum_v_test;
-    //data_in_sum->ReadArray(H_start_test, H_end_test, data_in_sum_v_test);
-    //PrintVector("data_in_sum_v_test", data_in_sum_v_test);
+    // std::vector<unsigned long long> H_start_test{0, 0}, H_end_test{static_cast<unsigned long long>(chs_per_file) - 1, static_cast<unsigned long long>(size_after_subset) - 1};
+    // std::vector<double> data_in_sum_v_test;
+    // data_in_sum->ReadArray(H_start_test, H_end_test, data_in_sum_v_test);
+    // PrintVector("data_in_sum_v_test", data_in_sum_v_test);
 
     semblance_denom_sum->Merge(AU_SUM);
     coherency_sum->Merge(AU_SUM);
@@ -456,10 +456,10 @@ int main(int argc, char *argv[])
     AU_Reduce(&nStack, &TotalStack, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
     if (!ft_rank)
         std::cout << "Total nStack = " << TotalStack << "\n";
-    //semblance_denom_sum->Nonvolatile("EP_HDF5:/Users/dbin/work/arrayudf-git-svn-test-on-bitbucket/examples/das/stacking_files/xcorr_examples_h5_stack_semblance_denom_sum.h5:/semblance_denom_sum");
-    //coherency_sum->Nonvolatile("EP_HDF5:/Users/dbin/work/arrayudf-git-svn-test-on-bitbucket/examples/das/stacking_files/xcorr_examples_h5_stack_coherency_sum.h5:/coherency_sum");
+    // semblance_denom_sum->Nonvolatile("EP_HDF5:/Users/dbin/work/arrayudf-git-svn-test-on-bitbucket/examples/das/stacking_files/xcorr_examples_h5_stack_semblance_denom_sum.h5:/semblance_denom_sum");
+    // coherency_sum->Nonvolatile("EP_HDF5:/Users/dbin/work/arrayudf-git-svn-test-on-bitbucket/examples/das/stacking_files/xcorr_examples_h5_stack_coherency_sum.h5:/coherency_sum");
 
-    //Clear
+    // Clear
     delete A;
 
     if (!ft_rank)
@@ -476,14 +476,14 @@ int main(int argc, char *argv[])
         std::vector<double> phaseWeight_v(coherency_sum_v.size());
         std::vector<double> semblanceWeight_v(coherency_sum_v.size());
 
-        //PrintVector("data_in_sum_v", data_in_sum_v);
+        // PrintVector("data_in_sum_v", data_in_sum_v);
 
-        //PrintVector("coherency_sum_v", coherency_sum_v);
+        // PrintVector("coherency_sum_v", coherency_sum_v);
 
-        //PrintVector("semblance_denom_sum_v", semblance_denom_sum_v);
+        // PrintVector("semblance_denom_sum_v", semblance_denom_sum_v);
 
-        //std::cout << "Write ... EP_HDF5:" + stack_output_dir + "/" + stack_output_file_semblance_denom_sum + ":" + stack_output_file_dataset_name << "\n"
-        //          << std::flush;
+        // std::cout << "Write ... EP_HDF5:" + stack_output_dir + "/" + stack_output_file_semblance_denom_sum + ":" + stack_output_file_dataset_name << "\n"
+        //           << std::flush;
         semblance_denom_sum->Nonvolatile("EP_HDF5:" + stack_output_dir + "/" + stack_output_file_semblance_denom_sum + ":" + stack_output_file_dataset_name);
 
         for (int i = 0; i < chs_per_file * size_after_subset; i++)
@@ -492,8 +492,8 @@ int main(int argc, char *argv[])
             phaseWeight_v[i] = std::pow(std::abs(coherency_sum_v[i] / TotalStack), pow_u);
         }
 
-        //PrintVector("semblanceWeight_v", semblanceWeight_v);
-        //PrintVector("phaseWeight_v", phaseWeight_v);
+        // PrintVector("semblanceWeight_v", semblanceWeight_v);
+        // PrintVector("phaseWeight_v", phaseWeight_v);
         std::vector<double> final_pwstack_v;
         final_pwstack_v.resize(data_in_sum_v.size());
         for (int i = 0; i < data_in_sum_v.size(); i++)
@@ -566,7 +566,7 @@ void read_ml_weight(const std::string ml_weight_file_p, std::vector<double> &ml_
         if (line.length() > 1)
         {
             istringstream iss(line);
-            iss >> filename_str; //drop the file name
+            iss >> filename_str; // drop the file name
             iss >> val;
             ml_weight_p.push_back(val);
         }
@@ -577,7 +577,7 @@ void read_ml_weight(const std::string ml_weight_file_p, std::vector<double> &ml_
     }
     else
     {
-        //fill 0, ... ml_weight_p.size()
+        // fill 0, ... ml_weight_p.size()
         sort_indexes_p.resize(ml_weight_p.size());
         std::iota(sort_indexes_p.begin(), sort_indexes_p.end(), 0);
     }
@@ -606,9 +606,9 @@ int stack_config_reader(std::string file_name, int mpi_rank)
     std::string xcorr_input_dir_temp = reader.Get("parameter", "xcorr_input_dir", "/clusterfs/bear/BinDong_DAS_Data/xcorr_examples_h5/");
 
     xcorr_input_dir = realpathEx(xcorr_input_dir_temp);
-    //std::string xcorr_input_dir_temp = real_path;
-    //free(real_path);
-    //xcorr_input_dir = xcorr_input_dir_temp;
+    // std::string xcorr_input_dir_temp = real_path;
+    // free(real_path);
+    // xcorr_input_dir = xcorr_input_dir_temp;
 
     xcorr_input_dataset_name = reader.Get("parameter", "xcorr_input_dataset_name", "/xcorr");
 
@@ -649,9 +649,9 @@ int stack_config_reader(std::string file_name, int mpi_rank)
     if (is_ml_weight)
     {
         ml_weight_file = reader.Get("parameter", "ml_weight_file", "false");
-        //n_weighted_to_stack = reader.GetInteger("parameter", "n_weighted_to_stack", -1);
+        // n_weighted_to_stack = reader.GetInteger("parameter", "n_weighted_to_stack", -1);
         std::string is_ml_weight_ordered_str = reader.Get("parameter", "is_ml_weight_ordered", "true");
-        //std::cout << "is_ml_weight_ordered_str =" << is_ml_weight_ordered_str << "\n";
+        // std::cout << "is_ml_weight_ordered_str =" << is_ml_weight_ordered_str << "\n";
         if (is_ml_weight_ordered_str == "false" || is_ml_weight_ordered_str == "0")
         {
             is_ml_weight_ordered = false;
@@ -696,8 +696,8 @@ int stack_config_reader(std::string file_name, int mpi_rank)
         AU_EXIT("Don't read the is_delete_median's value " + is_flipud_flag_str);
     }
 
-    //chs_per_file = reader.GetInteger("parameter", "chs_per_file", 201);
-    //lts_per_file = reader.GetInteger("parameter", "lts_per_file", 14999);
+    // chs_per_file = reader.GetInteger("parameter", "chs_per_file", 201);
+    // lts_per_file = reader.GetInteger("parameter", "lts_per_file", 14999);
 
     std::string is_time_from_config_str = reader.Get("parameter", "is_time_from_config", "false");
     if (is_time_from_config_str == "true" || is_time_from_config_str == "1")
@@ -746,12 +746,12 @@ int stack_config_reader(std::string file_name, int mpi_rank)
         if (is_ml_weight)
         {
             std::cout << termcolor::magenta << "\n        ml_weight_file = " << termcolor::green << ml_weight_file;
-            //std::cout << termcolor::magenta << "\n        n_weighted_to_stack = " << termcolor::green << n_weighted_to_stack;
+            // std::cout << termcolor::magenta << "\n        n_weighted_to_stack = " << termcolor::green << n_weighted_to_stack;
             std::cout << termcolor::magenta << "\n        is_ml_weight_ordered = " << termcolor::green << is_ml_weight_ordered;
         }
         std::cout << termcolor::blue << "\n\n Runtime parameters: ";
-        //std::cout << termcolor::magenta << "\n\n        lts_per_file = " << termcolor::green << lts_per_file;
-        //std::cout << termcolor::magenta << "\n\n        chs_per_file = " << termcolor::green << chs_per_file;
+        // std::cout << termcolor::magenta << "\n\n        lts_per_file = " << termcolor::green << lts_per_file;
+        // std::cout << termcolor::magenta << "\n\n        chs_per_file = " << termcolor::green << chs_per_file;
         if (is_time_from_config)
         {
             std::cout << termcolor::magenta << "\n        t_start = " << termcolor::green << t_start;

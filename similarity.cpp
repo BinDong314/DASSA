@@ -1,6 +1,6 @@
 // overload_array.cpp
 // overloading the c++ array subscript operator []
-//http://neondataskills.org/HDF5/TimeSeries-Data-In-HDF5-Using-R/
+// http://neondataskills.org/HDF5/TimeSeries-Data-In-HDF5-Using-R/
 
 #include <iostream>
 #include <stdarg.h>
@@ -43,12 +43,12 @@ using namespace std;
     sq_X2 = sqrt(sq_X2);                                                                    \
   }
 
-//#define CELL_OFFSET    500   //size of a window = 2*CELL_OFFSET+1
-//#define CELL_TOTAL     2*CELL_OFFSET+1
-//#define CHANNEL_OFFSET 10     //which channel to correlate
-//#define WINDOW_OFFSET  50    //how many windows to look forward and backward
-//float current_window[CELL_TOTAL];
-//float neighbor_window1[CELL_TOTAL+2*WINDOW_OFFSET], neighbor_window2[CELL_TOTAL+2*WINDOW_OFFSET];
+// #define CELL_OFFSET    500   //size of a window = 2*CELL_OFFSET+1
+// #define CELL_TOTAL     2*CELL_OFFSET+1
+// #define CHANNEL_OFFSET 10     //which channel to correlate
+// #define WINDOW_OFFSET  50    //how many windows to look forward and backward
+// float current_window[CELL_TOTAL];
+// float neighbor_window1[CELL_TOTAL+2*WINDOW_OFFSET], neighbor_window2[CELL_TOTAL+2*WINDOW_OFFSET];
 
 int CELL_OFFSET = 20, CELL_TOTAL = 2 * CELL_OFFSET + 1, CHANNEL_OFFSET = 2, WINDOW_OFFSET = 10;
 float *current_window = NULL, *neighbor_window1 = NULL, *neighbor_window2 = NULL;
@@ -70,8 +70,8 @@ inline Stencil<float> CorrelationUDF(const Stencil<short> &c)
 
   for (int j = -CELL_OFFSET - WINDOW_OFFSET; j <= CELL_OFFSET + WINDOW_OFFSET; j++)
   {
-    //neighbor_window1[j + CELL_OFFSET + WINDOW_OFFSET] = c(j, CHANNEL_OFFSET);
-    //neighbor_window2[j + CELL_OFFSET + WINDOW_OFFSET] = c(j, -CHANNEL_OFFSET);
+    // neighbor_window1[j + CELL_OFFSET + WINDOW_OFFSET] = c(j, CHANNEL_OFFSET);
+    // neighbor_window2[j + CELL_OFFSET + WINDOW_OFFSET] = c(j, -CHANNEL_OFFSET);
     neighbor_window1[j + CELL_OFFSET + WINDOW_OFFSET] = c(CHANNEL_OFFSET, j);
     neighbor_window2[j + CELL_OFFSET + WINDOW_OFFSET] = c(-CHANNEL_OFFSET, j);
   }
@@ -89,8 +89,12 @@ inline Stencil<float> CorrelationUDF(const Stencil<short> &c)
     if (temp_correlation2 > max_correlation2)
       max_correlation2 = temp_correlation2;
   }
-  std::cout << "Finish correlation ... !\n";
-  Stencil<float> oStencil = (max_correlation1 + max_correlation2) / 2;
+
+  float temp = (max_correlation1 + max_correlation2) / 2;
+  Stencil<float> oStencil;
+  oStencil = temp;
+
+  std::cout << "Finish correlation ... !" << (max_correlation1 + max_correlation2) / 2 << ", IsEmpty = " << oStencil.IsEmpty() << "\n";
   return oStencil;
 }
 
@@ -156,12 +160,12 @@ int main(int argc, char *argv[])
       break;
     }
 
-  //chunk_size.resize(array_ranks);
-  //ghost_size.resize(array_ranks);
-  //strip_size.resize(array_ranks);
-  if (chunk_flag)
-    convert_str_vector(array_ranks, ghost_size_str, &(ghost_size[0]));
+  // chunk_size.resize(array_ranks);
+  // ghost_size.resize(array_ranks);
+  // strip_size.resize(array_ranks);
   if (ghost_flag)
+    convert_str_vector(array_ranks, ghost_size_str, &(ghost_size[0]));
+  if (chunk_flag)
     convert_str_vector(array_ranks, chunk_size_str, &(chunk_size[0]));
   if (strip_flag)
     convert_str_vector(array_ranks, strip_size_str, &(strip_size[0]));
@@ -171,20 +175,21 @@ int main(int argc, char *argv[])
   neighbor_window2 = (float *)malloc(sizeof(float) * (CELL_TOTAL + 2 * WINDOW_OFFSET));
 
   //( 30000, 11648 )  11648/91= 128 chunks
-  //std::vector<int> chunk_size;  chunk_size.resize(array_ranks);
-  //std::vector<int> overlap_size;
-  //std::vector<int> striping_size;
-  //chunk_size[0]   = 180001; chunk_size[1]    = 20;
-  //overlap_size[0] = 0;     overlap_size[1]   = 11 ;
-  //striping_size[0] =10;    striping_size[1]  = 1;
+  // std::vector<int> chunk_size;  chunk_size.resize(array_ranks);
+  // std::vector<int> overlap_size;
+  // std::vector<int> striping_size;
+  // chunk_size[0]   = 180001; chunk_size[1]    = 20;
+  // overlap_size[0] = 0;     overlap_size[1]   = 11 ;
+  // striping_size[0] =10;    striping_size[1]  = 1;
 
-  FT_Init(argc, argv);
+  // FT_Init(argc, argv);
+  AU_Init(argc, argv);
 
   FT::Array<short> *IFILE = new FT::Array<short>("EP_HDF5:" + i_file + ":" + dataset, chunk_size, ghost_size);
   FT::Array<float> *OFILE = new FT::Array<float>("EP_HDF5:" + o_file + ":" + dataset);
 
   IFILE->SetStride(strip_size);
-  //rank, dims, chunk_size, overlap_siz
+  // rank, dims, chunk_size, overlap_siz
   IFILE->Transform(CorrelationUDF, OFILE);
   IFILE->ReportTime();
 
@@ -217,7 +222,7 @@ void convert_str_vector(int n, char *str, int *vector)
     i = 0;
     while (pch != NULL)
     {
-      //printf("%s \n", pch);
+      // printf("%s \n", pch);
       vector[i] = atoi(pch);
       pch = strtok(NULL, ",");
       i++;

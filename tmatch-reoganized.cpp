@@ -87,6 +87,8 @@ std::string dir_output_match_rgx = "^(.*)\\.h5$";
 
 std::string dir_output_replace_rgx = "$1-xcorr.h5";
 
+std::string template_list_output_file = "template_final_list.txt";
+
 bool is_space_decimate = false;
 int space_decimate_chs = 32;
 
@@ -336,6 +338,8 @@ void init_xcorr()
     {
         ntemplates_to_go = ntemplates;
     }
+
+    T_h5->ControlEndpoint(DIR_SAVE_FINAL_FILE_LIST, template_list_output_file);
 
     if (!ft_rank)
         std::cout << "Rank " << ft_rank << "ntemplates = " << ntemplates << ", ntemplates_to_go = " << ntemplates_to_go << std::endl;
@@ -1286,6 +1290,8 @@ int read_config_file(std::string file_name, int mpi_rank)
 
     output_type = reader.Get("parameter", "output_type", "EP_HDF5");
 
+    template_list_output_file = reader.Get("parameter", "template_list_output_file", "template_final_list.txt");
+
     output_file_dir = reader.Get("parameter", "output_file_dir", "./tdms-dir-dec/test.h5");
 
     output_dataset = reader.Get("parameter", "output_dataset", "/data");
@@ -1426,6 +1432,7 @@ int read_config_file(std::string file_name, int mpi_rank)
 
         std::cout << termcolor::blue << "\n\n Output parameters: ";
 
+        std::cout << termcolor::magenta << "\n    template_list_output_file = " << termcolor::green << template_list_output_file;
         std::cout << termcolor::magenta << "\n        is_output_single_file = " << termcolor::green << is_output_single_file;
         std::cout << termcolor::magenta << "\n        output_type = " << termcolor::green << output_type;
         std::cout << termcolor::magenta << "\n        output_file_dir = " << termcolor::green << output_file_dir;
