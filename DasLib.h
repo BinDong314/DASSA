@@ -29,6 +29,22 @@ using namespace std;
 #pragma once
 namespace DasLib
 {
+    template <typename T>
+    inline T max_neighbors(const std::vector<T> &vec, int i, int numNeighbors)
+    {
+        int n = vec.size();
+        int start = std::max(0, i - numNeighbors);
+        int end = std::min(n - 1, i + numNeighbors);
+        T maxNeigh = std::numeric_limits<T>::min();
+        for (int j = start; j <= end; j++)
+        {
+            if (j != i)
+            {
+                maxNeigh = std::max(maxNeigh, vec[j]);
+            }
+        }
+        return maxNeigh;
+    }
 
     // Computes the cross correlation coefficients for series_x and series_y
     template <class T>

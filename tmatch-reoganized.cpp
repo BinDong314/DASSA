@@ -138,6 +138,8 @@ std::vector<double> ctap0, ctap_template1, ctap_template2;
 int ntemplates;
 std::vector<std::vector<std::vector<double>>> template_data; //[template index][channel][points]
 std::vector<double> template_winlen;
+std::vector<double> template_smoothhw;
+
 std::vector<std::vector<double>> template_tstart;  //[template index][channel]
 std::vector<std::vector<double>> template_weights; //[template index][channel]
 
@@ -158,6 +160,9 @@ int correlation_method = 0; // correlation_method = 0 (dot-product), 1 (xcorr-ma
 #define CORR_DOT_PRODUCT 0
 #define CORR_XCORR_MAX 1
 #define CORR_FFT_MAX 2
+#define CORR_DOT_PRODUCT_NEIGHBORS 3
+
+int n_neighbors;
 
 void init_xcorr()
 {
@@ -280,6 +285,38 @@ void init_xcorr()
     T_winlen->SetOverlapSize(overlap_size_winlen);
     T_winlen->SetChunkSchedulingMethod(CHUNK_SCHEDULING_CR);
 
+    // smoothhw_ci39534271.txt
+    AU::Array<double> *T_smoothhw;
+    T_smoothhw = new AU::Array<double>("EP_DIR:EP_CSV:" + template_dir);
+
+    T_smoothhw->ControlEndpoint(DIR_SKIP_SIZE_CHECK, null_str);
+
+    std::vector<double> T_smoothhw_data;
+    std::vector<int> chunk_size_smoothhw, overlap_size_smoothhw = {0, 0};
+    std::vector<std::string> aug_input_search_rgx_smoothhw, file_size_str_smoothhw;
+
+    if (is_template_file_range)
+    {
+        T_smoothhw->ControlEndpoint(DIR_FILE_SORT_INDEXES, index_param);
+    }
+
+    if (!is_template_input_search_rgx)
+    {
+        aug_input_search_rgx_smoothhw.push_back("(.*)smoothhw(.*)txt$"); // tstart_ci39534271.txt
+    }
+    else
+    {
+        aug_input_search_rgx_smoothhw.push_back("(.*)smoothhw(.*)" + template_input_search_rgx + "(.*)txt$"); // tstart_ci39534271.txt
+    }
+    T_smoothhw->EndpointControl(DIR_INPUT_SEARCH_RGX, aug_input_search_rgx_smoothhw);
+
+    T_smoothhw->ControlEndpoint(DIR_GET_FILE_SIZE, file_size_str_smoothhw);
+    String2Vector(file_size_str_smoothhw[0], chunk_size_smoothhw);
+    PrintVector("chunk_size_smoothhw = ", chunk_size_smoothhw);
+    T_smoothhw->SetChunkSize(chunk_size_smoothhw);
+    T_smoothhw->SetOverlapSize(overlap_size_smoothhw);
+    T_smoothhw->SetChunkSchedulingMethod(CHUNK_SCHEDULING_CR);
+
     // ci39534271.h5
     // winlen_ci39534271.txt
     AU::Array<short> *T_h5;
@@ -350,6 +387,7 @@ void init_xcorr()
     template_weights.resize(ntemplates_to_go);
 
     template_winlen.clear();
+    template_smoothhw.clear();
     std::vector<std::vector<double>> T_ts2d; //[Channels][Points]
     double T_weight_sum = 0;
     size_t T_tstart_weight_size;
@@ -360,6 +398,17 @@ void init_xcorr()
         // PrintVector("T_winlen_data = ", T_winlen_data);
         template_winlen.push_back(std::round(T_winlen_data[0] / dt1));
         // PrintScalar("template_winlen[0] = ", template_winlen[0]);
+
+        // Read smoothhw
+        T_smoothhw->ReadNextChunk(T_smoothhw_data);
+        if ((std::round(T_smoothhw_data[0] / dt1) + 1) % 2 == 0)
+        {
+            template_smoothhw.push_back(std::round(std::round(T_smoothhw_data[0] / dt1) + 2);
+        }
+        else
+        {
+            template_smoothhw.push_back(std::round(std::round(T_smoothhw_data[0] / dt1) + 1);
+        }
 
         // Read tstart_weight data and split it into tstart and weight
         T_tsstart->ReadNextChunk(T_tstart_weight);
@@ -606,7 +655,9 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
 
     amat1.resize(chs_per_file_udf);
 
-    int npts1_new = round(((nof1 - 1) * npts0) / decifac) + round(taperwidth / dt1) + MaxVector(template_winlen) + MaxVectorVector(template_tstart) + 1;
+    //(2*max(template_smoothingwindows)+1)
+    // int npts1_new = round(((nof1 - 1) * npts0) / decifac) + round(taperwidth / dt1) + MaxVector(template_winlen) + MaxVectorVector(template_tstart) + 1;
+    int npts1_new = round(((nof1 - 1) * npts0) / decifac) + round(taperwidth / dt1) + MaxVector(template_winlen) + MaxVectorVector(template_tstart) + 2 * MaxVector(template_smoothhw) + 1;
     if (npts1_new < npts1)
         npts1 = npts1_new;
 // npts1 = min([npts1 npts1_new]) ;
@@ -672,6 +723,12 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
         xc0[rc2].resize(npts2_max, 0);
     }
 
+    std::vector<double> max_neighbors;
+    if (correlation_method == CORR_DOT_PRODUCT_NEIGHBORS)
+    {
+        max_neighbors.resize(npts2_max, 0);
+    }
+
     if (!ft_rank)
         std::cout << "npts1 = " << npts1 << ", npts2_max = " << npts2_max << ", chs_per_file_udf =" << chs_per_file_udf << ", nchan1 = " << nchan1 << ", mpi_rank =" << ft_rank << ", ntemplates = " << ntemplates << ", nchan1 = " << nchan1 << ", npts2_vector[0] = " << npts2_vector[0] << ", npts1_new = " << npts1_new << "\n";
 
@@ -681,6 +738,7 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
     ////#pragma omp parallel for
     for (int rc2 = 0; rc2 < ntemplates; rc2++)
     {
+        n_neighbors = template_smoothhw[rc2];
         double micro_init_xcorr_t_start = AU_WTIME;
         // std::vector<std::vector<double>> xc_channel_time;
         // xc_channel_time.resize(nchan1);
@@ -723,6 +781,9 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
                     case CORR_DOT_PRODUCT:
                         xc0[rc2][rc3] = xc0[rc2][rc3] + template_weights[rc2][rc1] * dot_product(sdcn_v, template_data[rc2][rc1]);
                         break;
+                    case CORR_DOT_PRODUCT_NEIGHBORS:
+                        xc0[rc2][rc3] = dot_product(sdcn_v, template_data[rc2][rc1]);
+                        break;
                     case CORR_XCORR_MAX:
                         xc0[rc2][rc3] = xc0[rc2][rc3] + template_weights[rc2][rc1] * xcross_max(sdcn_v, template_data[rc2][rc1]);
                         break;
@@ -744,16 +805,22 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
                         break;
                     }
                     // xc0[rc2][rc3] = xc0[rc2][rc3] + template_weights[rc2][rc1] * temp_xcorr;
+                } // end of time shift rc3
+
+                if (correlation_method == CORR_DOT_PRODUCT_NEIGHBORS)
+                {
+                    for (int rc3 = 0; rc3 < npts2_vector[rc2]; rc3++)
+                    {
+                        max_neighbors[rc3] = template_weights[rc2][rc1] * max_neighbors(xc0[rc2], rc3, n_neighbors);
+                    }
+                    for (int rc3 = 0; rc3 < npts2_vector[rc2]; rc3++)
+                    {
+                        xc0[rc2][rc3] = max_neighbors[rc3];
+                    }
                 }
-                // #if defined(_OPENMP)
-                //             }
-                // #endif
-            }
-        }
-        // Stack of all channels at time rc3 [template index][time] for template rc2
-        // sum_weight_by_time(xc_channel_time, template_weights[rc2], xc0[rc2]);
-        // xc_channel_time[rc1] = xc1;
-    }
+            } // end of  if (template_weights[rc2][rc1] > 0)
+        }     // end of channel rc1
+    }         // end of template index rc2
 
     if (!ft_rank)
         std::cout << "sdcn (for loop of all templates ) (s) = " << AU_WTIME - init_xcorr_t_start << std::endl;
@@ -1419,6 +1486,9 @@ int read_config_file(std::string file_name, int mpi_rank)
         {
         case CORR_DOT_PRODUCT:
             std::cout << termcolor::magenta << "\n        correlation_method = " << termcolor::green << CORR_DOT_PRODUCT << " dot_product";
+            break;
+        case CORR_DOT_PRODUCT_NEIGHBORS:
+            std::cout << termcolor::magenta << "\n        correlation_method = " << termcolor::green << CORR_DOT_PRODUCT_NEIGHBORS << " dot_product_neighbors";
             break;
         case CORR_XCORR_MAX:
             std::cout << termcolor::magenta << "\n        correlation_method = " << termcolor::green << CORR_XCORR_MAX << " xcorr_max";
