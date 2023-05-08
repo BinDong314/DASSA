@@ -30,7 +30,7 @@ using namespace std;
 namespace DasLib
 {
     template <typename T>
-    inline T max_neighbors(const std::vector<T> &vec, int i, int numNeighbors)
+    inline T find_max_neighbors(const std::vector<T> &vec, int i, int numNeighbors)
     {
         int n = vec.size();
         int start = std::max(0, i - numNeighbors);

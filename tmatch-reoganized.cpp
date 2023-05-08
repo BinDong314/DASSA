@@ -270,7 +270,7 @@ void init_xcorr()
     }
     else
     {
-        T_tstart->ControlEndpoint(DIR_SET_INPUT_FILE_LIST, tstart_input_template_files_new);
+        T_tsstart->ControlEndpoint(DIR_SET_INPUT_FILE_LIST, tstart_input_template_files_new);
     }
 
     T_tsstart->ControlEndpoint(DIR_GET_FILE_SIZE, file_size_str);
@@ -449,13 +449,14 @@ void init_xcorr()
 
         // Read smoothhw
         T_smoothhw->ReadNextChunk(T_smoothhw_data);
-        if ((std::round(T_smoothhw_data[0] / dt1) + 1) % 2 == 0)
+        int T_smoothhw_data_round = std::round(T_smoothhw_data[0] / dt1);
+        if ((T_smoothhw_data_round + 1) % 2 == 0)
         {
-            template_smoothhw.push_back(std::round(std::round(T_smoothhw_data[0] / dt1) + 2);
+            template_smoothhw.push_back(T_smoothhw_data_round + 2);
         }
         else
         {
-            template_smoothhw.push_back(std::round(std::round(T_smoothhw_data[0] / dt1) + 1);
+            template_smoothhw.push_back(T_smoothhw_data_round + 1);
         }
 
         // Read tstart_weight data and split it into tstart and weight
@@ -859,7 +860,7 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
                 {
                     for (int rc3 = 0; rc3 < npts2_vector[rc2]; rc3++)
                     {
-                        max_neighbors[rc3] = template_weights[rc2][rc1] * max_neighbors(xc0[rc2], rc3, n_neighbors);
+                        max_neighbors[rc3] = template_weights[rc2][rc1] * find_max_neighbors(xc0[rc2], rc3, n_neighbors);
                     }
                     for (int rc3 = 0; rc3 < npts2_vector[rc2]; rc3++)
                     {
