@@ -21,6 +21,7 @@
 #include <math.h>
 #include <sys/time.h>
 #include <deque>
+#include <fstream>
 
 #if defined(_OPENMP)
 #include <omp.h>
@@ -86,6 +87,10 @@ bool is_dir_output_match_replace_rgx = false;
 std::string dir_output_match_rgx = "^(.*)\\.h5$";
 
 std::string dir_output_replace_rgx = "$1-xcorr.h5";
+
+bool is_input_template_file_list = false;
+std::string input_template_file_list = "template_input_list.txt";
+std::vector<std::string> input_template_files;
 
 std::string template_list_output_file = "template_final_list.txt";
 
@@ -230,21 +235,43 @@ void init_xcorr()
         T_tsstart->ControlEndpoint(DIR_FILE_SORT_INDEXES, index_param);
     }
 
+    std::vector<std::string> tstart_input_template_files_new, winlen_input_template_files_new,
+        h5_input_template_files_new, smoothhw_input_template_files_new;
+    if (is_input_template_file_list)
+    {
+        size_t n_input_template_files = input_template_files.size();
+
+        for (int i = 0; i < n_input_template_files; i++)
+        {
+            tstart_input_template_files_new[i] = "tstart_" + input_template_files[i] + ".txt";     // tstart_ci37308124.txt
+            winlen_input_template_files_new[i] = "winlen_" + input_template_files[i] + ".txt";     // winlen_ci37308124.txt
+            h5_input_template_files_new[i] = input_template_files[i] + ".h5";                      // ci37308124.h5
+            smoothhw_input_template_files_new[i] = "smoothhw_" + input_template_files[i] + ".txt"; // smoothhw_ci37329164.txt
+        }
+    }
+
     T_tsstart->ControlEndpoint(DIR_SKIP_SIZE_CHECK, null_str);
 
     control_para_ve.push_back(std::to_string(CSV_SET_DELIMITER));
     control_para_ve.push_back(" ");
     T_tsstart->ControlEndpoint(DIR_SUB_CMD_ARG, control_para_ve);
 
-    if (!is_template_input_search_rgx)
+    if (!is_input_template_file_list)
     {
-        aug_input_search_rgx.push_back("(.*)tstart(.*)txt$");
+        if (!is_template_input_search_rgx)
+        {
+            aug_input_search_rgx.push_back("(.*)tstart(.*)txt$");
+        }
+        else
+        {
+            aug_input_search_rgx.push_back("(.*)tstart(.*)" + template_input_search_rgx + "(.*)txt$");
+        }
+        T_tsstart->EndpointControl(DIR_INPUT_SEARCH_RGX, aug_input_search_rgx);
     }
     else
     {
-        aug_input_search_rgx.push_back("(.*)tstart(.*)" + template_input_search_rgx + "(.*)txt$");
+        T_tstart->ControlEndpoint(DIR_SET_INPUT_FILE_LIST, tstart_input_template_files_new);
     }
-    T_tsstart->EndpointControl(DIR_INPUT_SEARCH_RGX, aug_input_search_rgx);
 
     T_tsstart->ControlEndpoint(DIR_GET_FILE_SIZE, file_size_str);
     String2Vector(file_size_str[0], chunk_size_tsstart);
@@ -268,15 +295,22 @@ void init_xcorr()
         T_winlen->ControlEndpoint(DIR_FILE_SORT_INDEXES, index_param);
     }
 
-    if (!is_template_input_search_rgx)
+    if (!is_input_template_file_list)
     {
-        aug_input_search_rgx_winlen.push_back("(.*)winlen(.*)txt$"); // tstart_ci39534271.txt
+        if (!is_template_input_search_rgx)
+        {
+            aug_input_search_rgx_winlen.push_back("(.*)winlen(.*)txt$"); // tstart_ci39534271.txt
+        }
+        else
+        {
+            aug_input_search_rgx_winlen.push_back("(.*)winlen(.*)" + template_input_search_rgx + "(.*)txt$"); // tstart_ci39534271.txt
+        }
+        T_winlen->EndpointControl(DIR_INPUT_SEARCH_RGX, aug_input_search_rgx_winlen);
     }
     else
     {
-        aug_input_search_rgx_winlen.push_back("(.*)winlen(.*)" + template_input_search_rgx + "(.*)txt$"); // tstart_ci39534271.txt
+        T_winlen->ControlEndpoint(DIR_SET_INPUT_FILE_LIST, winlen_input_template_files_new);
     }
-    T_winlen->EndpointControl(DIR_INPUT_SEARCH_RGX, aug_input_search_rgx_winlen);
 
     T_winlen->ControlEndpoint(DIR_GET_FILE_SIZE, file_size_str_winlen);
     String2Vector(file_size_str_winlen[0], chunk_size_winlen);
@@ -300,15 +334,22 @@ void init_xcorr()
         T_smoothhw->ControlEndpoint(DIR_FILE_SORT_INDEXES, index_param);
     }
 
-    if (!is_template_input_search_rgx)
+    if (!is_input_template_file_list)
     {
-        aug_input_search_rgx_smoothhw.push_back("(.*)smoothhw(.*)txt$"); // tstart_ci39534271.txt
+        if (!is_template_input_search_rgx)
+        {
+            aug_input_search_rgx_smoothhw.push_back("(.*)smoothhw(.*)txt$"); // tstart_ci39534271.txt
+        }
+        else
+        {
+            aug_input_search_rgx_smoothhw.push_back("(.*)smoothhw(.*)" + template_input_search_rgx + "(.*)txt$"); // tstart_ci39534271.txt
+        }
+        T_smoothhw->EndpointControl(DIR_INPUT_SEARCH_RGX, aug_input_search_rgx_smoothhw);
     }
     else
     {
-        aug_input_search_rgx_smoothhw.push_back("(.*)smoothhw(.*)" + template_input_search_rgx + "(.*)txt$"); // tstart_ci39534271.txt
+        T_smoothhw->ControlEndpoint(DIR_SET_INPUT_FILE_LIST, smoothhw_input_template_files_new);
     }
-    T_smoothhw->EndpointControl(DIR_INPUT_SEARCH_RGX, aug_input_search_rgx_smoothhw);
 
     T_smoothhw->ControlEndpoint(DIR_GET_FILE_SIZE, file_size_str_smoothhw);
     String2Vector(file_size_str_smoothhw[0], chunk_size_smoothhw);
@@ -334,15 +375,22 @@ void init_xcorr()
         T_h5->ControlEndpoint(DIR_FILE_SORT_INDEXES, index_param);
     }
 
-    if (!is_template_input_search_rgx)
+    if (!is_input_template_file_list)
     {
-        aug_input_search_rgx_h5.push_back("(.*)h5$"); // tstart_ci39534271.txt
+        if (!is_template_input_search_rgx)
+        {
+            aug_input_search_rgx_h5.push_back("(.*)h5$"); // tstart_ci39534271.txt
+        }
+        else
+        {
+            aug_input_search_rgx_h5.push_back("(.*)" + template_input_search_rgx + "(.*)h5$"); // tstart_ci39534271.txt
+        }
+        T_h5->EndpointControl(DIR_INPUT_SEARCH_RGX, aug_input_search_rgx_h5);
     }
     else
     {
-        aug_input_search_rgx_h5.push_back("(.*)" + template_input_search_rgx + "(.*)h5$"); // tstart_ci39534271.txt
+        T_h5->ControlEndpoint(DIR_SET_INPUT_FILE_LIST, h5_input_template_files_new);
     }
-    T_h5->EndpointControl(DIR_INPUT_SEARCH_RGX, aug_input_search_rgx_h5);
 
     T_h5->ControlEndpoint(DIR_GET_FILE_SIZE, file_size_str_h5);
     String2Vector(file_size_str_h5[0], chunk_size_h5);
@@ -1211,6 +1259,28 @@ void printf_help(char *cmd)
     fprintf(stdout, msg, cmd, cmd);
 }
 
+std::vector<std::string> read_template_file_list(const std::string &filename)
+{
+    std::ifstream file(filename);
+    std::vector<std::string> lines;
+    std::string line;
+
+    if (file.is_open())
+    {
+        while (std::getline(file, line))
+        {
+            lines.push_back(line);
+        }
+        file.close();
+    }
+    else
+    {
+        std::cerr << "Failed to open file: " << filename << std::endl;
+    }
+
+    return lines;
+}
+
 int read_config_file(std::string file_name, int mpi_rank)
 {
     INIReader reader(file_name);
@@ -1359,6 +1429,26 @@ int read_config_file(std::string file_name, int mpi_rank)
 
     template_list_output_file = reader.Get("parameter", "template_list_output_file", "template_final_list.txt");
 
+    std::string is_input_template_file_list_str = reader.Get("parameter", "is_input_template_file_list", "false");
+    if (is_input_template_file_list_str == "false" || is_input_template_file_list_str == "0")
+    {
+        is_input_template_file_list = false;
+    }
+    else if (is_input_template_file_list_str == "true" || is_input_template_file_list_str == "1")
+    {
+        is_input_template_file_list = true;
+    }
+    else
+    {
+        AU_EXIT("Don't read the is_input_template_file_list's value " + is_input_template_file_list);
+    }
+
+    if (is_input_template_file_list)
+    {
+        input_template_file_list = reader.Get("parameter", "input_template_file_list", "input_template_file_list.txt");
+        input_template_files = read_template_file_list(input_template_file_list);
+    }
+
     output_file_dir = reader.Get("parameter", "output_file_dir", "./tdms-dir-dec/test.h5");
 
     output_dataset = reader.Get("parameter", "output_dataset", "/data");
@@ -1502,6 +1592,25 @@ int read_config_file(std::string file_name, int mpi_rank)
 
         std::cout << termcolor::blue << "\n\n Output parameters: ";
 
+        if (is_input_template_file_list)
+        {
+            std::cout << termcolor::magenta << "\n     input_template_file_list = " << termcolor::green << input_template_file_list;
+            int input_template_files_size = input_template_files.size();
+            if (input_template_files_size > 2)
+            {
+                std::cout << termcolor::magenta << "\n                                " << termcolor::green << input_template_files[0];
+                std::cout << termcolor::magenta << "\n                                " << termcolor::green << input_template_files[input_template_files_size - 1];
+            }
+            else if (input_template_files_size == 1)
+            {
+                std::cout << termcolor::magenta << "\n                                " << termcolor::green << input_template_files[0];
+            }
+            else
+            {
+                std::cout << "input_template_file_list is empty !\n";
+                exit(-1);
+            }
+        }
         std::cout << termcolor::magenta << "\n    template_list_output_file = " << termcolor::green << template_list_output_file;
         std::cout << termcolor::magenta << "\n        is_output_single_file = " << termcolor::green << is_output_single_file;
         std::cout << termcolor::magenta << "\n        output_type = " << termcolor::green << output_type;
