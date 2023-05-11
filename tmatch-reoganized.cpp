@@ -837,9 +837,10 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
                 // #endif
                 std::vector<double> sdcn_v(template_winlen[rc2], 0);
                 size_t dx1;
+                correlation_per_chal.resize(npts2_max, 0);
                 // https://stackoverflow.com/questions/15349695/pre-allocated-private-stdvector-in-openmp-parallelized-for-loop-in-c
 #if defined(_OPENMP)
-#pragma omp parallel for firstprivate(sdcn_v, dx1, correlation_per_chal)
+#pragma omp parallel for firstprivate(sdcn_v, dx1)
 #endif
                 for (int rc3 = 0; rc3 < npts2_vector[rc2]; rc3++)
                 {
