@@ -865,6 +865,7 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
                         xc0[rc2][rc3] = xc0[rc2][rc3] + template_weights[rc2][rc1] * dot_product(sdcn_v, template_data[rc2][rc1]);
                         break;
                     case CORR_DOT_PRODUCT_NO_DETREND:
+                        // xc0[rc2][rc3] = xc0[rc2][rc3] + template_weights[rc2][rc1] * dot_product(sdcn_v, template_data[rc2][rc1]) / sqrt(sum_sq);
                         xc0[rc2][rc3] = xc0[rc2][rc3] + template_weights[rc2][rc1] * dot_product(sdcn_v, template_data[rc2][rc1]) / sqrt(sum_sq);
                         break;
                     case CORR_DOT_PRODUCT_NEIGHBORS:
