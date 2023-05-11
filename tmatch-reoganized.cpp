@@ -92,6 +92,7 @@ bool is_input_template_file_list = false;
 std::string input_template_file_list = "template_input_list.txt";
 std::vector<std::string> input_template_files;
 
+bool is_template_list_output_file = false;
 std::string template_list_output_file = "template_final_list.txt";
 
 bool is_space_decimate = false;
@@ -424,7 +425,8 @@ void init_xcorr()
         ntemplates_to_go = ntemplates;
     }
 
-    T_h5->ControlEndpoint(DIR_SAVE_FINAL_FILE_LIST, template_list_output_file);
+    if (is_template_list_output_file)
+        T_h5->ControlEndpoint(DIR_SAVE_FINAL_FILE_LIST, template_list_output_file);
 
     if (!ft_rank)
         std::cout << "Rank " << ft_rank << "ntemplates = " << ntemplates << ", ntemplates_to_go = " << ntemplates_to_go << std::endl;
@@ -1428,7 +1430,22 @@ int read_config_file(std::string file_name, int mpi_rank)
 
     output_type = reader.Get("parameter", "output_type", "EP_HDF5");
 
-    template_list_output_file = reader.Get("parameter", "template_list_output_file", "template_final_list.txt");
+    std::string is_template_list_output_file_str = reader.Get("parameter", "is_template_list_output_file", "false");
+    if (is_template_list_output_file_str == "false" || is_template_list_output_file_str == "0")
+    {
+        is_template_list_output_file = false;
+    }
+    else if (is_template_list_output_file_str == "true" || is_template_list_output_file_str == "1")
+    {
+        is_template_list_output_file = true;
+    }
+    else
+    {
+        AU_EXIT("Don't read the is_template_list_output_file's value " + is_template_list_output_file);
+    }
+
+    if (is_template_list_output_file)
+        template_list_output_file = reader.Get("parameter", "template_list_output_file", "template_final_list.txt");
 
     std::string is_input_template_file_list_str = reader.Get("parameter", "is_input_template_file_list", "false");
     if (is_input_template_file_list_str == "false" || is_input_template_file_list_str == "0")
@@ -1612,7 +1629,8 @@ int read_config_file(std::string file_name, int mpi_rank)
                 exit(-1);
             }
         }
-        std::cout << termcolor::magenta << "\n    template_list_output_file = " << termcolor::green << template_list_output_file;
+        if (is_template_list_output_file)
+            std::cout << termcolor::magenta << "\n    template_list_output_file = " << termcolor::green << template_list_output_file;
         std::cout << termcolor::magenta << "\n        is_output_single_file = " << termcolor::green << is_output_single_file;
         std::cout << termcolor::magenta << "\n        output_type = " << termcolor::green << output_type;
         std::cout << termcolor::magenta << "\n        output_file_dir = " << termcolor::green << output_file_dir;
