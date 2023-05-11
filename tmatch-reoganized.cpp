@@ -144,7 +144,7 @@ std::vector<double> ctap0, ctap_template1, ctap_template2;
 int ntemplates;
 std::vector<std::vector<std::vector<double>>> template_data; //[template index][channel][points]
 std::vector<double> template_winlen;
-bool is_smoothhw = true;
+bool is_smoothhw = false;
 std::vector<double> template_smoothhw;
 
 std::vector<std::vector<double>> template_tstart;  //[template index][channel]
