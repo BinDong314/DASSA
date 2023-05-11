@@ -144,6 +144,7 @@ std::vector<double> ctap0, ctap_template1, ctap_template2;
 int ntemplates;
 std::vector<std::vector<std::vector<double>>> template_data; //[template index][channel][points]
 std::vector<double> template_winlen;
+bool is_smoothhw = true;
 std::vector<double> template_smoothhw;
 
 std::vector<std::vector<double>> template_tstart;  //[template index][channel]
@@ -241,13 +242,18 @@ void init_xcorr()
     if (is_input_template_file_list)
     {
         size_t n_input_template_files = input_template_files.size();
-
+        tstart_input_template_files_new.resize(n_input_template_files);
+        winlen_input_template_files_new.resize(n_input_template_files);
+        h5_input_template_files_new.resize(n_input_template_files);
+        if (is_smoothhw)
+            smoothhw_input_template_files_new.resize(n_input_template_files);
         for (int i = 0; i < n_input_template_files; i++)
         {
-            tstart_input_template_files_new[i] = "tstart_" + input_template_files[i] + ".txt";     // tstart_ci37308124.txt
-            winlen_input_template_files_new[i] = "winlen_" + input_template_files[i] + ".txt";     // winlen_ci37308124.txt
-            h5_input_template_files_new[i] = input_template_files[i] + ".h5";                      // ci37308124.h5
-            smoothhw_input_template_files_new[i] = "smoothhw_" + input_template_files[i] + ".txt"; // smoothhw_ci37329164.txt
+            tstart_input_template_files_new[i] = "tstart_" + input_template_files[i] + ".txt"; // tstart_ci37308124.txt
+            winlen_input_template_files_new[i] = "winlen_" + input_template_files[i] + ".txt"; // winlen_ci37308124.txt
+            h5_input_template_files_new[i] = input_template_files[i] + ".h5";                  // ci37308124.h5
+            if (is_smoothhw)
+                smoothhw_input_template_files_new[i] = "smoothhw_" + input_template_files[i] + ".txt"; // smoothhw_ci37329164.txt
         }
     }
 
@@ -322,43 +328,44 @@ void init_xcorr()
 
     // smoothhw_ci39534271.txt
     AU::Array<double> *T_smoothhw;
-    T_smoothhw = new AU::Array<double>("EP_DIR:EP_CSV:" + template_dir);
-
-    T_smoothhw->ControlEndpoint(DIR_SKIP_SIZE_CHECK, null_str);
-
     std::vector<double> T_smoothhw_data;
     std::vector<int> chunk_size_smoothhw, overlap_size_smoothhw = {0, 0};
     std::vector<std::string> aug_input_search_rgx_smoothhw, file_size_str_smoothhw;
 
-    if (is_template_file_range)
+    if (is_smoothhw)
     {
-        T_smoothhw->ControlEndpoint(DIR_FILE_SORT_INDEXES, index_param);
-    }
+        T_smoothhw = new AU::Array<double>("EP_DIR:EP_CSV:" + template_dir);
+        T_smoothhw->ControlEndpoint(DIR_SKIP_SIZE_CHECK, null_str);
 
-    if (!is_input_template_file_list)
-    {
-        if (!is_template_input_search_rgx)
+        if (is_template_file_range)
         {
-            aug_input_search_rgx_smoothhw.push_back("(.*)smoothhw(.*)txt$"); // tstart_ci39534271.txt
+            T_smoothhw->ControlEndpoint(DIR_FILE_SORT_INDEXES, index_param);
+        }
+
+        if (!is_input_template_file_list)
+        {
+            if (!is_template_input_search_rgx)
+            {
+                aug_input_search_rgx_smoothhw.push_back("(.*)smoothhw(.*)txt$"); // tstart_ci39534271.txt
+            }
+            else
+            {
+                aug_input_search_rgx_smoothhw.push_back("(.*)smoothhw(.*)" + template_input_search_rgx + "(.*)txt$"); // tstart_ci39534271.txt
+            }
+            T_smoothhw->EndpointControl(DIR_INPUT_SEARCH_RGX, aug_input_search_rgx_smoothhw);
         }
         else
         {
-            aug_input_search_rgx_smoothhw.push_back("(.*)smoothhw(.*)" + template_input_search_rgx + "(.*)txt$"); // tstart_ci39534271.txt
+            T_smoothhw->ControlEndpoint(DIR_SET_INPUT_FILE_LIST, smoothhw_input_template_files_new);
         }
-        T_smoothhw->EndpointControl(DIR_INPUT_SEARCH_RGX, aug_input_search_rgx_smoothhw);
-    }
-    else
-    {
-        T_smoothhw->ControlEndpoint(DIR_SET_INPUT_FILE_LIST, smoothhw_input_template_files_new);
-    }
 
-    T_smoothhw->ControlEndpoint(DIR_GET_FILE_SIZE, file_size_str_smoothhw);
-    String2Vector(file_size_str_smoothhw[0], chunk_size_smoothhw);
-    PrintVector("chunk_size_smoothhw = ", chunk_size_smoothhw);
-    T_smoothhw->SetChunkSize(chunk_size_smoothhw);
-    T_smoothhw->SetOverlapSize(overlap_size_smoothhw);
-    T_smoothhw->SetChunkSchedulingMethod(CHUNK_SCHEDULING_CR);
-
+        T_smoothhw->ControlEndpoint(DIR_GET_FILE_SIZE, file_size_str_smoothhw);
+        String2Vector(file_size_str_smoothhw[0], chunk_size_smoothhw);
+        PrintVector("chunk_size_smoothhw = ", chunk_size_smoothhw);
+        T_smoothhw->SetChunkSize(chunk_size_smoothhw);
+        T_smoothhw->SetOverlapSize(overlap_size_smoothhw);
+        T_smoothhw->SetChunkSchedulingMethod(CHUNK_SCHEDULING_CR);
+    }
     // ci39534271.h5
     // winlen_ci39534271.txt
     AU::Array<short> *T_h5;
@@ -449,16 +456,19 @@ void init_xcorr()
         template_winlen.push_back(std::round(T_winlen_data[0] / dt1));
         // PrintScalar("template_winlen[0] = ", template_winlen[0]);
 
-        // Read smoothhw
-        T_smoothhw->ReadNextChunk(T_smoothhw_data);
-        int T_smoothhw_data_round = std::round(T_smoothhw_data[0] / dt1);
-        if ((T_smoothhw_data_round + 1) % 2 == 0)
+        if (is_smoothhw)
         {
-            template_smoothhw.push_back(T_smoothhw_data_round + 2);
-        }
-        else
-        {
-            template_smoothhw.push_back(T_smoothhw_data_round + 1);
+            // Read smoothhw
+            T_smoothhw->ReadNextChunk(T_smoothhw_data);
+            int T_smoothhw_data_round = std::round(T_smoothhw_data[0] / dt1);
+            if ((T_smoothhw_data_round + 1) % 2 == 0)
+            {
+                template_smoothhw.push_back(T_smoothhw_data_round + 2);
+            }
+            else
+            {
+                template_smoothhw.push_back(T_smoothhw_data_round + 1);
+            }
         }
 
         // Read tstart_weight data and split it into tstart and weight
@@ -706,9 +716,16 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
 
     amat1.resize(chs_per_file_udf);
 
-    //(2*max(template_smoothingwindows)+1)
-    // int npts1_new = round(((nof1 - 1) * npts0) / decifac) + round(taperwidth / dt1) + MaxVector(template_winlen) + MaxVectorVector(template_tstart) + 1;
-    int npts1_new = round(((nof1 - 1) * npts0) / decifac) + round(taperwidth / dt1) + MaxVector(template_winlen) + MaxVectorVector(template_tstart) + 2 * MaxVector(template_smoothhw) + 1;
+    int npts1_new;
+    if (is_smoothhw)
+    {
+        //(2*max(template_smoothingwindows)+1)
+        npts1_new = round(((nof1 - 1) * npts0) / decifac) + round(taperwidth / dt1) + MaxVector(template_winlen) + MaxVectorVector(template_tstart) + 2 * MaxVector(template_smoothhw) + 1;
+    }
+    else
+    {
+        npts1_new = round(((nof1 - 1) * npts0) / decifac) + round(taperwidth / dt1) + MaxVector(template_winlen) + MaxVectorVector(template_tstart) + 1;
+    }
     if (npts1_new < npts1)
         npts1 = npts1_new;
 // npts1 = min([npts1 npts1_new]) ;
@@ -789,7 +806,10 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
     ////#pragma omp parallel for
     for (int rc2 = 0; rc2 < ntemplates; rc2++)
     {
-        n_neighbors = template_smoothhw[rc2];
+        if (is_smoothhw)
+        {
+            n_neighbors = template_smoothhw[rc2];
+        }
         double micro_init_xcorr_t_start = AU_WTIME;
         // std::vector<std::vector<double>> xc_channel_time;
         // xc_channel_time.resize(nchan1);
@@ -1394,6 +1414,11 @@ int read_config_file(std::string file_name, int mpi_rank)
     if (correlation_method < 0 || correlation_method > 2)
     {
         AU_EXIT("Don't understand the correlation_method's value " + correlation_method);
+    }
+
+    if (correlation_method == CORR_DOT_PRODUCT_NEIGHBORS)
+    {
+        is_smoothhw = true;
     }
 
     std::string is_template_file_range_str = reader.Get("parameter", "is_template_file_range", "false");
