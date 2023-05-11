@@ -857,10 +857,10 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
                         // copy_and_normal(amat1[rc1], dx1, template_winlen[rc2], ctap_template2, xmean, xsum, Sxx, sdcn_v);
                         sdcn_v.resize(template_winlen[rc2]);
                         sum_sq = 0;
-                        for (int i = 0; i < template_winlen[rc2]; i++)
+                        for (int ind = 0; ind < template_windnlen[rc2]; ind++)
                         {
-                            sdcn_v[i] = amat1[rc1][dx1 + i];
-                            sum_sq = sum_sq + sdcn_v[i] * sdcn_v[i];
+                            sdcn_v[ind] = amat1[rc1][dx1 + ind];
+                            sum_sq = sum_sq + sdcn_v[ind] * sdcn_v[ind];
                         }
                     }
                     // sdcn(amat1[rc1], sdcn_v, dx1, template_winlen[rc2], ctap_template2);
@@ -1647,7 +1647,7 @@ int read_config_file(std::string file_name, int mpi_rank)
             std::cout << termcolor::magenta << "\n        correlation_method = " << termcolor::green << CORR_DOT_PRODUCT_NEIGHBORS << " dot_product_neighbors";
             break;
         case CORR_DOT_PRODUCT_NO_DETREND:
-            std::cout << termcolor::magenta << "\n        correlation_method = " << termcolor::green << CORR_DOT_PRODUCT_NO_DETREND << " dot_product_neighbors";
+            std::cout << termcolor::magenta << "\n        correlation_method = " << termcolor::green << CORR_DOT_PRODUCT_NO_DETREND << " dot_product_no_detrend";
             break;
         case CORR_XCORR_MAX:
             std::cout << termcolor::magenta << "\n        correlation_method = " << termcolor::green << CORR_XCORR_MAX << " xcorr_max";
