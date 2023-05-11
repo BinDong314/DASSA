@@ -860,7 +860,7 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
                         sdcn_v.resize(template_winlen[rc2]);
                         for (size_t i = 0; i < template_winlen[rc2]; i++)
                         {
-                            sdcn_v[i] = y[dx1 + i];
+                            sdcn_v[i] = amat1[rc1][dx1 + i];
                             sum_sq = sum_sq + sdcn_v[i] * sdcn_v[i];
                         }
                         // sum_sq = subset_sqsum(amat1[rc1], dx1, template_winlen[rc2], sdcn_v);
