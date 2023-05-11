@@ -38,10 +38,7 @@ namespace DasLib
         T maxNeigh = std::numeric_limits<T>::min();
         for (int j = start; j <= end; j++)
         {
-            if (j != i)
-            {
-                maxNeigh = std::max(maxNeigh, vec[j]);
-            }
+            maxNeigh = std::max(maxNeigh, vec[j]);
         }
         return maxNeigh;
     }
