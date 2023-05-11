@@ -840,12 +840,13 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
                 size_t dx1;
                 // correlation_per_chal.resize(npts2_max, 0);
                 //  https://stackoverflow.com/questions/15349695/pre-allocated-private-stdvector-in-openmp-parallelized-for-loop-in-c
-                double sum_sq = 0;
+
 #if defined(_OPENMP)
-#pragma omp parallel for firstprivate(sdcn_v, dx1, sum_sq)
+#pragma omp parallel for firstprivate(sdcn_v, dx1)
 #endif
                 for (int rc3 = 0; rc3 < npts2_vector[rc2]; rc3++)
                 {
+                    double sum_sq = 0;
                     dx1 = rc3 + template_tstart[rc2][rc1];
                     // Replace below line with the following to find difference of two version
                     if (correlation_method != CORR_DOT_PRODUCT_NO_DETREND)
