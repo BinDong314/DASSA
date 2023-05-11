@@ -838,15 +838,16 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
                 // #endif
                 std::vector<double> sdcn_v(template_winlen[rc2], 0);
                 size_t dx1;
+                double sum_sq = 0;
+
                 // correlation_per_chal.resize(npts2_max, 0);
                 //  https://stackoverflow.com/questions/15349695/pre-allocated-private-stdvector-in-openmp-parallelized-for-loop-in-c
 
 #if defined(_OPENMP)
-#pragma omp parallel for firstprivate(sdcn_v, dx1)
+#pragma omp parallel for firstprivate(sdcn_v, dx1, sum_sq)
 #endif
                 for (int rc3 = 0; rc3 < npts2_vector[rc2]; rc3++)
                 {
-                    double sum_sq = 0;
                     dx1 = rc3 + template_tstart[rc2][rc1];
                     // Replace below line with the following to find difference of two version
                     if (correlation_method != CORR_DOT_PRODUCT_NO_DETREND)
@@ -855,7 +856,14 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
                     }
                     else
                     {
-                        sum_sq = subset_sqsum(amat1[rc1], dx1, template_winlen[rc2], sdcn_v);
+                        sum_sq = 0;
+                        sdcn_v.resize(template_winlen[rc2]);
+                        for (size_t i = 0; i < template_winlen[rc2]; i++)
+                        {
+                            sdcn_v[i] = y[dx1 + i];
+                            sum_sq = sum_sq + sdcn_v[i] * sdcn_v[i];
+                        }
+                        // sum_sq = subset_sqsum(amat1[rc1], dx1, template_winlen[rc2], sdcn_v);
                     }
                     // sdcn(amat1[rc1], sdcn_v, dx1, template_winlen[rc2], ctap_template2);
                     // double temp_xcorr;
@@ -865,8 +873,8 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
                         xc0[rc2][rc3] = xc0[rc2][rc3] + template_weights[rc2][rc1] * dot_product(sdcn_v, template_data[rc2][rc1]);
                         break;
                     case CORR_DOT_PRODUCT_NO_DETREND:
-                        // xc0[rc2][rc3] = xc0[rc2][rc3] + template_weights[rc2][rc1] * dot_product(sdcn_v, template_data[rc2][rc1]) / sqrt(sum_sq);
                         xc0[rc2][rc3] = xc0[rc2][rc3] + template_weights[rc2][rc1] * dot_product(sdcn_v, template_data[rc2][rc1]) / sqrt(sum_sq);
+                        // xc0[rc2][rc3] = xc0[rc2][rc3] + template_weights[rc2][rc1] * dot_product(sdcn_v, template_data[rc2][rc1]) / sqrt(sum_sq);
                         break;
                     case CORR_DOT_PRODUCT_NEIGHBORS:
                         // xc0[rc2][rc3] = dot_product(sdcn_v, template_data[rc2][rc1]);
