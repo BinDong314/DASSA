@@ -791,10 +791,11 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
         xc0[rc2].resize(npts2_max, 0);
     }
 
-    std::vector<double> max_neighbors;
+    std::vector<double> max_neighbors, correlation_per_chal;
     if (correlation_method == CORR_DOT_PRODUCT_NEIGHBORS)
     {
         max_neighbors.resize(npts2_max, 0);
+        correlation_per_chal.resize(npts2_max, 0);
     }
 
     if (!ft_rank)
@@ -838,7 +839,7 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
                 size_t dx1;
                 // https://stackoverflow.com/questions/15349695/pre-allocated-private-stdvector-in-openmp-parallelized-for-loop-in-c
 #if defined(_OPENMP)
-#pragma omp parallel for firstprivate(sdcn_v, dx1)
+#pragma omp parallel for firstprivate(sdcn_v, dx1, correlation_per_chal)
 #endif
                 for (int rc3 = 0; rc3 < npts2_vector[rc2]; rc3++)
                 {
@@ -853,7 +854,8 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
                         xc0[rc2][rc3] = xc0[rc2][rc3] + template_weights[rc2][rc1] * dot_product(sdcn_v, template_data[rc2][rc1]);
                         break;
                     case CORR_DOT_PRODUCT_NEIGHBORS:
-                        xc0[rc2][rc3] = dot_product(sdcn_v, template_data[rc2][rc1]);
+                        // xc0[rc2][rc3] = dot_product(sdcn_v, template_data[rc2][rc1]);
+                        correlation_per_chal[rc3] = dot_product(sdcn_v, template_data[rc2][rc1]);
                         break;
                     case CORR_XCORR_MAX:
                         xc0[rc2][rc3] = xc0[rc2][rc3] + template_weights[rc2][rc1] * xcross_max(sdcn_v, template_data[rc2][rc1]);
@@ -876,17 +878,19 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
                         break;
                     }
                     // xc0[rc2][rc3] = xc0[rc2][rc3] + template_weights[rc2][rc1] * temp_xcorr;
-                } // end of time shift rc3
+                } // end of time shift rc3 for the fixxed channel rc1 and template rc2
+                  // end of _OPENMP
 
                 if (correlation_method == CORR_DOT_PRODUCT_NEIGHBORS)
                 {
+                    // correlation_per_chal
                     for (int rc3 = 0; rc3 < npts2_vector[rc2]; rc3++)
                     {
-                        max_neighbors[rc3] = template_weights[rc2][rc1] * find_max_neighbors(xc0[rc2], rc3, n_neighbors);
+                        max_neighbors[rc3] = template_weights[rc2][rc1] * find_max_neighbors(correlation_per_chal, rc3, n_neighbors);
                     }
                     for (int rc3 = 0; rc3 < npts2_vector[rc2]; rc3++)
                     {
-                        xc0[rc2][rc3] = max_neighbors[rc3];
+                        xc0[rc2][rc3] = xc0[rc2][rc3] + max_neighbors[rc3];
                     }
                 }
             } // end of  if (template_weights[rc2][rc1] > 0)
