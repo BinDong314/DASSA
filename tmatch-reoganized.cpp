@@ -1411,7 +1411,7 @@ int read_config_file(std::string file_name, int mpi_rank)
     }
 
     correlation_method = reader.GetInteger("parameter", "correlation_method", 0);
-    if (correlation_method < 0 || correlation_method > 2)
+    if (correlation_method < 0 || correlation_method > 3)
     {
         AU_EXIT("Don't understand the correlation_method's value " + correlation_method);
     }
