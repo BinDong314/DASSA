@@ -136,6 +136,22 @@ inline void detrend_range(const std::vector<T> &y, const size_t start, const siz
 }
 
 template <typename T>
+inline double subset_sqsum(const std::vector<T> &y, const size_t start, const size_t count, std::vector<T> &out_vector)
+{
+
+    out_vector.resize(count);
+    double sqsum = 0;
+
+    size_t i;
+    for (i = 0; i < count; i++)
+    {
+        out_vector[i] = y[start + i];
+        sqsum = sqsum + out_vector[i] * out_vector[i];
+    }
+    return sqsum;
+}
+
+template <typename T>
 inline void detrend_range_one_pass_std(const std::vector<T> &y, const size_t start, const size_t count, const std::vector<T> &ctap, const double xmean, const double xsum, const double Sxx, std::vector<T> &out_vector)
 {
 

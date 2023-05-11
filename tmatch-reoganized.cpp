@@ -855,14 +855,7 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
                     }
                     else
                     {
-                        // copy_and_normal(amat1[rc1], dx1, template_winlen[rc2], ctap_template2, xmean, xsum, Sxx, sdcn_v);
-                        sdcn_v.resize(template_winlen[rc2]);
-                        sum_sq = 0;
-                        for (int ind = 0; ind < template_winlen[rc2]; ind++)
-                        {
-                            sdcn_v[ind] = amat1[rc1][dx1 + ind];
-                            sum_sq = sum_sq + sdcn_v[ind] * sdcn_v[ind];
-                        }
+                        sum_sq = subset_sqsum(amat1[rc1], dx1, template_winlen[rc2], sdcn_v);
                     }
                     // sdcn(amat1[rc1], sdcn_v, dx1, template_winlen[rc2], ctap_template2);
                     // double temp_xcorr;
