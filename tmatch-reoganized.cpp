@@ -168,6 +168,7 @@ int correlation_method = 0; // correlation_method = 0 (dot-product), 1 (xcorr-ma
 #define CORR_XCORR_MAX 1
 #define CORR_FFT_MAX 2
 #define CORR_DOT_PRODUCT_NEIGHBORS 3
+#define CORR_DOT_PRODUCT_NO_DETREND 4
 
 int n_neighbors;
 
@@ -839,14 +840,29 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
                 size_t dx1;
                 // correlation_per_chal.resize(npts2_max, 0);
                 //  https://stackoverflow.com/questions/15349695/pre-allocated-private-stdvector-in-openmp-parallelized-for-loop-in-c
+                double sum_sq = 0;
 #if defined(_OPENMP)
-#pragma omp parallel for firstprivate(sdcn_v, dx1)
+#pragma omp parallel for firstprivate(sdcn_v, dx1, sum_sq)
 #endif
                 for (int rc3 = 0; rc3 < npts2_vector[rc2]; rc3++)
                 {
                     dx1 = rc3 + template_tstart[rc2][rc1];
                     // Replace below line with the following to find difference of two version
-                    detrend_range_one_pass_std(amat1[rc1], dx1, template_winlen[rc2], ctap_template2, xmean, xsum, Sxx, sdcn_v);
+                    if (correlation_method != CORR_DOT_PRODUCT_NO_DETREND)
+                    {
+                        detrend_range_one_pass_std(amat1[rc1], dx1, template_winlen[rc2], ctap_template2, xmean, xsum, Sxx, sdcn_v);
+                    }
+                    else
+                    {
+                        // copy_and_normal(amat1[rc1], dx1, template_winlen[rc2], ctap_template2, xmean, xsum, Sxx, sdcn_v);
+                        sdcn_v.resize(template_winlen[rc2]);
+                        sum_sq = 0;
+                        for (int i = 0; i < template_winlen[rc2]; i++)
+                        {
+                            sdcn_v[i] = amat1[rc1][dx1 + i];
+                            sum_sq = sum_sq + sdcn_v[i] * sdcn_v[i];
+                        }
+                    }
                     // sdcn(amat1[rc1], sdcn_v, dx1, template_winlen[rc2], ctap_template2);
                     // double temp_xcorr;
                     switch (correlation_method)
@@ -854,6 +870,8 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
                     case CORR_DOT_PRODUCT:
                         xc0[rc2][rc3] = xc0[rc2][rc3] + template_weights[rc2][rc1] * dot_product(sdcn_v, template_data[rc2][rc1]);
                         break;
+                    case CORR_DOT_PRODUCT_NO_DETREND:
+                        xc0[rc2][rc3] = xc0[rc2][rc3] + template_weights[rc2][rc1] * dot_product(sdcn_v, template_data[rc2][rc1]) / sqrt(sum_sq);
                     case CORR_DOT_PRODUCT_NEIGHBORS:
                         // xc0[rc2][rc3] = dot_product(sdcn_v, template_data[rc2][rc1]);
                         correlation_per_chal[rc3] = dot_product(sdcn_v, template_data[rc2][rc1]);
@@ -1416,7 +1434,7 @@ int read_config_file(std::string file_name, int mpi_rank)
     }
 
     correlation_method = reader.GetInteger("parameter", "correlation_method", 0);
-    if (correlation_method < 0 || correlation_method > 3)
+    if (correlation_method < 0 || correlation_method > 4)
     {
         AU_EXIT("Don't understand the correlation_method's value " + correlation_method);
     }
@@ -1627,6 +1645,9 @@ int read_config_file(std::string file_name, int mpi_rank)
             break;
         case CORR_DOT_PRODUCT_NEIGHBORS:
             std::cout << termcolor::magenta << "\n        correlation_method = " << termcolor::green << CORR_DOT_PRODUCT_NEIGHBORS << " dot_product_neighbors";
+            break;
+        case CORR_DOT_PRODUCT_NO_DETREND:
+            std::cout << termcolor::magenta << "\n        correlation_method = " << termcolor::green << CORR_DOT_PRODUCT_NO_DETREND << " dot_product_neighbors";
             break;
         case CORR_XCORR_MAX:
             std::cout << termcolor::magenta << "\n        correlation_method = " << termcolor::green << CORR_XCORR_MAX << " xcorr_max";
