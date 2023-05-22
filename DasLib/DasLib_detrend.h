@@ -152,6 +152,26 @@ inline double subset_sqsum(const std::vector<T> &y, const size_t start, const si
 }
 
 template <typename T>
+inline void sum_sq(const std::vector<T> &x, std::vector<T> &sumsq, int &window_length)
+{
+    size_t n = x.size();
+    sumsq.resize(n, 0);
+    T temp_sum = 0;
+
+    for (size_t i = 0; i < window_length; i++)
+    {
+        temp_sum = temp_sum + x[i] * x[i];
+    }
+    sumsq[0] = temp_sum;
+    for (size_t i = 1; i < (n - window_length + 1); i++)
+    {
+        temp_sum = temp_sum - x[i - 1] * x[i - 1];
+        temp_sum = temp_sum + x[i + window_length - 1] * x[i + window_length - 1];
+        sumsq[i] = temp_sum;
+    }
+}
+
+template <typename T>
 inline void detrend_range_one_pass_std(const std::vector<T> &y, const size_t start, const size_t count, const std::vector<T> &ctap, const double xmean, const double xsum, const double Sxx, std::vector<T> &out_vector)
 {
 
