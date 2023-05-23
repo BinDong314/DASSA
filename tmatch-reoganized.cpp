@@ -853,7 +853,7 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
                 std::vector<double> amat1_rc1_sum_sq;
                 if (correlation_method == CORR_DOT_PRODUCT_NO_DETREND)
                 {
-                    sum_sq(amat1[rc1], amat1_rc1_sum_sq, (int)template_winlen[rc2]);
+                    sum_sqrt(amat1[rc1], amat1_rc1_sum_sq, (int)template_winlen[rc2]);
                 }
 #endif
 
@@ -877,27 +877,32 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
                         sdcn_v.resize(template_winlen[rc2]);
                         for (size_t i = 0; i < template_winlen[rc2]; i++)
                         {
+#ifndef TEST_SUM_SQ_INSIDE
+                            sdcn_v[i] = amat1[rc1][dx1 + i] / amat1_rc1_sum_sq[dx1];
+#else
                             sdcn_v[i] = amat1[rc1][dx1 + i];
-#ifdef TEST_SUM_SQ_INSIDE
                             sum_sq = sum_sq + sdcn_v[i] * sdcn_v[i];
 #endif
                         }
+
+#ifdef TEST_SUM_SQ_INSIDE
+                        sum_sq = sqrt(sum_sq);
+                        for (size_t i = 0; i < template_winlen[rc2]; i++)
+                        {
+                            sdcn_v[i] = sdcn_v[i] / sum_sq;
+                        }
+#endif
                     }
                     // sdcn(amat1[rc1], sdcn_v, dx1, template_winlen[rc2], ctap_template2);
                     // double temp_xcorr;
                     switch (correlation_method)
                     {
+                    case CORR_DOT_PRODUCT_NO_DETREND:
                     case CORR_DOT_PRODUCT:
                         xc0[rc2][rc3] = xc0[rc2][rc3] + template_weights[rc2][rc1] * dot_product(sdcn_v, template_data[rc2][rc1]);
                         break;
-                    case CORR_DOT_PRODUCT_NO_DETREND:
-#ifndef TEST_SUM_SQ_INSIDE
-                        xc0[rc2][rc3] = xc0[rc2][rc3] + template_weights[rc2][rc1] * dot_product(sdcn_v, template_data[rc2][rc1]) / amat1_rc1_sum_sq[dx1];
-#else
-                        xc0[rc2][rc3] = xc0[rc2][rc3] + template_weights[rc2][rc1] * dot_product(sdcn_v, template_data[rc2][rc1]) / sum_sq;
-#endif
-                        // xc0[rc2][rc3] = xc0[rc2][rc3] + template_weights[rc2][rc1] * dot_product(sdcn_v, template_data[rc2][rc1]) / sqrt(sum_sq);
-                        break;
+                        // xc0[rc2][rc3] = xc0[rc2][rc3] + template_weights[rc2][rc1] * dot_product(sdcn_v, template_data[rc2][rc1]);
+                        // break;
                     case CORR_DOT_PRODUCT_NEIGHBORS:
                         // xc0[rc2][rc3] = dot_product(sdcn_v, template_data[rc2][rc1]);
                         correlation_per_chal[rc3] = dot_product(sdcn_v, template_data[rc2][rc1]);

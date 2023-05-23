@@ -152,7 +152,7 @@ inline double subset_sqsum(const std::vector<T> &y, const size_t start, const si
 }
 
 template <typename T>
-inline void sum_sq(const std::vector<T> &x, std::vector<T> &sumsq, const int window_length)
+inline void sum_sqrt(const std::vector<T> &x, std::vector<T> &sumsq, const int window_length)
 {
     size_t n = x.size();
     sumsq.resize(n, 0);
@@ -162,12 +162,12 @@ inline void sum_sq(const std::vector<T> &x, std::vector<T> &sumsq, const int win
     {
         temp_sum = temp_sum + x[i] * x[i];
     }
-    sumsq[0] = temp_sum;
+    sumsq[0] = sqrt(temp_sum);
     for (size_t i = 1; i < (n - window_length + 1); i++)
     {
         temp_sum = temp_sum - x[i - 1] * x[i - 1];
         temp_sum = temp_sum + x[i + window_length - 1] * x[i + window_length - 1];
-        sumsq[i] = temp_sum;
+        sumsq[i] = sqrt(temp_sum);
     }
 }
 
