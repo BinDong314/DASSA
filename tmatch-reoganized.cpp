@@ -626,7 +626,7 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
 
 #define TEST_SUM_SQ_INSIDE 1
 
-#ifdef
+#ifdef TEST_SUM_SQ_INSIDE
     if (!ft_rank)
         std::cout << " TEST_SUM_SQ_INSIDE \n";
 #endif
