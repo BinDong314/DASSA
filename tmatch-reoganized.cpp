@@ -624,7 +624,7 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
 {
     double init_xcorr_t_start = AU_WTIME;
 
-#define TEST_SUM_SQ_INSIDE 1
+    // #define TEST_SUM_SQ_INSIDE 1
 
 #ifdef TEST_SUM_SQ_INSIDE
     if (!ft_rank)
