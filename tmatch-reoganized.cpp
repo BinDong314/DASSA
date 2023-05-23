@@ -843,14 +843,22 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
                 // correlation_per_chal.resize(npts2_max, 0);
                 //  https://stackoverflow.com/questions/15349695/pre-allocated-private-stdvector-in-openmp-parallelized-for-loop-in-c
 
+                double sum_sq = 0;
+#define TEST_SUM_SQ_INSIDE 1
+#ifndef TEST_SUM_SQ_INSIDE
                 std::vector<double> amat1_rc1_sum_sq;
                 if (correlation_method == CORR_DOT_PRODUCT_NO_DETREND)
                 {
                     sum_sq(amat1[rc1], amat1_rc1_sum_sq, (int)template_winlen[rc2]);
                 }
+#else
+                if (!ft_rank)
+                    std::cout << " TEST_SUM_SQ_INSIDE \n";
+
+#endif
 
 #if defined(_OPENMP)
-#pragma omp parallel for firstprivate(sdcn_v, dx1)
+#pragma omp parallel for firstprivate(sdcn_v, dx1, sum_sq)
 #endif
                 for (int rc3 = 0; rc3 < npts2_vector[rc2]; rc3++)
                 {
@@ -862,10 +870,16 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
                     }
                     else
                     {
+#ifdef TEST_SUM_SQ_INSIDE
+                        sum_sq = 0;
+#endif
                         sdcn_v.resize(template_winlen[rc2]);
                         for (size_t i = 0; i < template_winlen[rc2]; i++)
                         {
                             sdcn_v[i] = amat1[rc1][dx1 + i];
+#ifdef TEST_SUM_SQ_INSIDE
+                            sum_sq = sdcn_v[i] * sdcn_v[i];
+#endif
                         }
                     }
                     // sdcn(amat1[rc1], sdcn_v, dx1, template_winlen[rc2], ctap_template2);
@@ -876,7 +890,11 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
                         xc0[rc2][rc3] = xc0[rc2][rc3] + template_weights[rc2][rc1] * dot_product(sdcn_v, template_data[rc2][rc1]);
                         break;
                     case CORR_DOT_PRODUCT_NO_DETREND:
+#ifndef TEST_SUM_SQ_INSIDE
                         xc0[rc2][rc3] = xc0[rc2][rc3] + template_weights[rc2][rc1] * dot_product(sdcn_v, template_data[rc2][rc1]) / amat1_rc1_sum_sq[dx1];
+#else
+                        xc0[rc2][rc3] = xc0[rc2][rc3] + template_weights[rc2][rc1] * dot_product(sdcn_v, template_data[rc2][rc1]) / sum_sq;
+#endif
                         // xc0[rc2][rc3] = xc0[rc2][rc3] + template_weights[rc2][rc1] * dot_product(sdcn_v, template_data[rc2][rc1]) / sqrt(sum_sq);
                         break;
                     case CORR_DOT_PRODUCT_NEIGHBORS:
