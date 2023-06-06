@@ -1575,13 +1575,14 @@ int read_config_file(std::string file_name, int mpi_rank)
 
     // fbands
 
-    temp_str = reader.Get("parameter", "is_output_single_file", "false");
-    if (temp_str == "true")
-    {
-        fbands.resize(1);
-        fbands[0] = reader.GetReal("parameter", "fbands_low", 0.5);
-        fbands[1] = reader.GetReal("parameter", "fbands_high", 16);
-    }
+    // temp_str = reader.Get("parameter", "is_output_single_file", "false");
+    // if (temp_str == "true")
+    //{
+    // }
+
+    fbands.resize(1);
+    fbands[0] = reader.GetReal("parameter", "fbands_low", 0.5);
+    fbands[1] = reader.GetReal("parameter", "fbands_high", 16);
 
     if (!mpi_rank)
     {
@@ -1690,8 +1691,6 @@ int read_config_file(std::string file_name, int mpi_rank)
             break;
         }
 
-        std::cout << termcolor::blue << "\n\n Output parameters: ";
-
         if (is_input_template_file_list)
         {
             std::cout << termcolor::magenta << "\n     input_template_file_list = " << termcolor::green << input_template_file_list;
@@ -1711,6 +1710,9 @@ int read_config_file(std::string file_name, int mpi_rank)
                 exit(-1);
             }
         }
+
+        std::cout << termcolor::blue << "\n\n Output parameters: ";
+
         if (is_template_list_output_file)
             std::cout << termcolor::magenta << "\n    template_list_output_file = " << termcolor::green << template_list_output_file;
         std::cout << termcolor::magenta << "\n        is_output_single_file = " << termcolor::green << is_output_single_file;
