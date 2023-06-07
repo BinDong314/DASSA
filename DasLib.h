@@ -751,8 +751,16 @@ namespace DasLib
         }
         // fprintf(fp, "%1.15lf\n", dcof[i]);
 
-        free(dcof);
-        free(ccof);
+        if (dcof != NULL)
+        {
+            free(dcof);
+            dcof = NULL;
+        }
+        if (ccof != NULL)
+        {
+            free(ccof);
+            ccof = NULL;
+        }
     }
 
     // double rms(double x[], int n)
