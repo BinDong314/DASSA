@@ -517,12 +517,12 @@ void init_xcorr()
 #endif
         for (int i = 0; i < T_ts2d.size(); i++)
         {
-#if defined(_OPENMP)
-            if ((!ft_rank && !omp_get_thread_num() && (!i)))
-            {
-                printf("Init Inside the OpenMP parallel region thread 0, we have %d threads, at template %d of MPI rank %d .\n", omp_get_num_threads(), i, ft_rank);
-            }
-#endif
+            // #if defined(_OPENMP)
+            //             if ((!ft_rank && !omp_get_thread_num() && (!i)))
+            //             {
+            //                 printf("Init Inside the OpenMP parallel region thread 0, we have %d threads, at template %d of MPI rank %d .\n", omp_get_num_threads(), i, ft_rank);
+            //             }
+            // #endif
             //  detrend(T_ts2d[i].data(), T_pts); // Detread
             // for (int j = 0; j < ctap_template1.size(); j++)
             //{
