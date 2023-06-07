@@ -557,9 +557,9 @@ void init_xcorr()
             T_ts2d[i] = atemp2;
             // std::cout << " end for  channel #" << i << "\n";
         } // end for all channels of each template
-        if (!ft_rank)
-            std::cout << " end for all channels of each template \n";
-        // PrintVV("T_ts2d cha x points = ", T_ts2d);
+        // if (!ft_rank)
+        //     std::cout << " end for all channels of each template \n";
+        // // PrintVV("T_ts2d cha x points = ", T_ts2d);
         template_data[rc2] = T_ts2d;
 
         double template_tstart_min = *(std::min_element(template_tstart[rc2].begin(), template_tstart[rc2].end()));
