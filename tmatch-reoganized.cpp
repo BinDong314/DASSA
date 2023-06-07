@@ -190,12 +190,12 @@ void init_xcorr()
     }
     ButterPass(butter_order, fbands, BUTTER_A, BUTTER_B);
 
-    if (!ft_rank)
-    {
-        PrintVector("fbands = ", fbands);
-        PrintVector("BUTTER_A = ", BUTTER_A);
-        PrintVector("BUTTER_B = ", BUTTER_B);
-    }
+    // if (!ft_rank)
+    // {
+    //     PrintVector("fbands = ", fbands);
+    //     PrintVector("BUTTER_A = ", BUTTER_A);
+    //     PrintVector("BUTTER_B = ", BUTTER_B);
+    // }
 
     tsegment = 1200;                            // UI
     nseg = round(86400 / tsegment);             // IF EACH SEGMENT IS 1200 S, WE WILL PROCESS 72 SEGMENTS IN A DAY
@@ -624,7 +624,7 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
 {
     double init_xcorr_t_start = AU_WTIME;
 
-//#define TEST_SUM_SQ_INSIDE 1
+// #define TEST_SUM_SQ_INSIDE 1
 #ifdef TEST_SUM_SQ_INSIDE
     if (!ft_rank)
         std::cout << " TEST_SUM_SQ_INSIDE \n";
