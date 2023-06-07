@@ -190,12 +190,12 @@ void init_xcorr()
     }
     ButterPass(butter_order, fbands, BUTTER_A, BUTTER_B);
 
-    // if (!ft_rank)
-    // {
-    //     PrintVector("fbands = ", fbands);
-    //     PrintVector("BUTTER_A = ", BUTTER_A);
-    //     PrintVector("BUTTER_B = ", BUTTER_B);
-    // }
+    if (!ft_rank)
+    {
+        PrintVector("fbands = ", fbands);
+        PrintVector("BUTTER_A = ", BUTTER_A);
+        PrintVector("BUTTER_B = ", BUTTER_B);
+    }
 
     tsegment = 1200;                            // UI
     nseg = round(86400 / tsegment);             // IF EACH SEGMENT IS 1200 S, WE WILL PROCESS 72 SEGMENTS IN A DAY
