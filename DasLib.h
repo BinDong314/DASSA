@@ -761,6 +761,8 @@ namespace DasLib
             free(ccof);
             ccof = NULL;
         }
+
+        return 0;
     }
 
     // double rms(double x[], int n)
