@@ -20,6 +20,8 @@
 #include <stdlib.h>
 #include <math.h>
 #include <sys/time.h>
+#include <deque>
+#include <fstream>
 
 #if defined(_OPENMP)
 #include <omp.h>
@@ -47,8 +49,11 @@ std::string das_file_type = "EP_HDF5";
 
 std::string template_dir = "/Users/dbin/work/dassa/template-match/template_dir/";
 
-bool is_input_search_rgx = false;
-std::string input_search_rgx = "^(.*)[1234]\\.tdms$";
+bool is_das_input_search_rgx = false;
+std::string das_input_search_rgx = "^(.*)[1234]\\.tdms$";
+
+bool is_template_input_search_rgx = false;
+std::string template_input_search_rgx = "(ci37327652|ci37329164)";
 
 int n_files_to_concatenate = 20;
 
@@ -82,6 +87,13 @@ bool is_dir_output_match_replace_rgx = false;
 std::string dir_output_match_rgx = "^(.*)\\.h5$";
 
 std::string dir_output_replace_rgx = "$1-xcorr.h5";
+
+bool is_input_template_file_list = false;
+std::string input_template_file_list = "template_input_list.txt";
+std::vector<std::string> input_template_files;
+
+bool is_template_list_output_file = false;
+std::string template_list_output_file = "template_final_list.txt";
 
 bool is_space_decimate = false;
 int space_decimate_chs = 32;
@@ -132,6 +144,9 @@ std::vector<double> ctap0, ctap_template1, ctap_template2;
 int ntemplates;
 std::vector<std::vector<std::vector<double>>> template_data; //[template index][channel][points]
 std::vector<double> template_winlen;
+bool is_smoothhw = false;
+std::vector<double> template_smoothhw;
+
 std::vector<std::vector<double>> template_tstart;  //[template index][channel]
 std::vector<std::vector<double>> template_weights; //[template index][channel]
 
@@ -147,12 +162,15 @@ int omp_num_threads_p = 32;
 
 void all_gather_vector(const std::vector<double> &v_to_send, std::vector<double> &v_to_receive);
 
-// ool is_xcross = false;
-
+// bool is_correlation_method = false;
 int correlation_method = 0; // correlation_method = 0 (dot-product), 1 (xcorr-max), 2 (fft-max)
 #define CORR_DOT_PRODUCT 0
 #define CORR_XCORR_MAX 1
 #define CORR_FFT_MAX 2
+#define CORR_DOT_PRODUCT_NEIGHBORS 3
+#define CORR_DOT_PRODUCT_NO_DETREND 4
+
+int n_neighbors;
 
 void init_xcorr()
 {
@@ -220,14 +238,48 @@ void init_xcorr()
         T_tsstart->ControlEndpoint(DIR_FILE_SORT_INDEXES, index_param);
     }
 
+    std::vector<std::string> tstart_input_template_files_new, winlen_input_template_files_new,
+        h5_input_template_files_new, smoothhw_input_template_files_new;
+    if (is_input_template_file_list)
+    {
+        size_t n_input_template_files = input_template_files.size();
+        tstart_input_template_files_new.resize(n_input_template_files);
+        winlen_input_template_files_new.resize(n_input_template_files);
+        h5_input_template_files_new.resize(n_input_template_files);
+        if (is_smoothhw)
+            smoothhw_input_template_files_new.resize(n_input_template_files);
+        for (int i = 0; i < n_input_template_files; i++)
+        {
+            tstart_input_template_files_new[i] = "tstart_" + input_template_files[i] + ".txt"; // tstart_ci37308124.txt
+            winlen_input_template_files_new[i] = "winlen_" + input_template_files[i] + ".txt"; // winlen_ci37308124.txt
+            h5_input_template_files_new[i] = input_template_files[i] + ".h5";                  // ci37308124.h5
+            if (is_smoothhw)
+                smoothhw_input_template_files_new[i] = "smoothhw_" + input_template_files[i] + ".txt"; // smoothhw_ci37329164.txt
+        }
+    }
+
     T_tsstart->ControlEndpoint(DIR_SKIP_SIZE_CHECK, null_str);
 
     control_para_ve.push_back(std::to_string(CSV_SET_DELIMITER));
     control_para_ve.push_back(" ");
     T_tsstart->ControlEndpoint(DIR_SUB_CMD_ARG, control_para_ve);
 
-    aug_input_search_rgx.push_back("(.*)tstart(.*)txt$");
-    T_tsstart->EndpointControl(DIR_INPUT_SEARCH_RGX, aug_input_search_rgx);
+    if (!is_input_template_file_list)
+    {
+        if (!is_template_input_search_rgx)
+        {
+            aug_input_search_rgx.push_back("(.*)tstart(.*)txt$");
+        }
+        else
+        {
+            aug_input_search_rgx.push_back("(.*)tstart(.*)" + template_input_search_rgx + "(.*)txt$");
+        }
+        T_tsstart->EndpointControl(DIR_INPUT_SEARCH_RGX, aug_input_search_rgx);
+    }
+    else
+    {
+        T_tsstart->ControlEndpoint(DIR_SET_INPUT_FILE_LIST, tstart_input_template_files_new);
+    }
 
     T_tsstart->ControlEndpoint(DIR_GET_FILE_SIZE, file_size_str);
     String2Vector(file_size_str[0], chunk_size_tsstart);
@@ -251,8 +303,22 @@ void init_xcorr()
         T_winlen->ControlEndpoint(DIR_FILE_SORT_INDEXES, index_param);
     }
 
-    aug_input_search_rgx_winlen.push_back("(.*)winlen(.*)txt$"); // tstart_ci39534271.txt
-    T_winlen->EndpointControl(DIR_INPUT_SEARCH_RGX, aug_input_search_rgx_winlen);
+    if (!is_input_template_file_list)
+    {
+        if (!is_template_input_search_rgx)
+        {
+            aug_input_search_rgx_winlen.push_back("(.*)winlen(.*)txt$"); // tstart_ci39534271.txt
+        }
+        else
+        {
+            aug_input_search_rgx_winlen.push_back("(.*)winlen(.*)" + template_input_search_rgx + "(.*)txt$"); // tstart_ci39534271.txt
+        }
+        T_winlen->EndpointControl(DIR_INPUT_SEARCH_RGX, aug_input_search_rgx_winlen);
+    }
+    else
+    {
+        T_winlen->ControlEndpoint(DIR_SET_INPUT_FILE_LIST, winlen_input_template_files_new);
+    }
 
     T_winlen->ControlEndpoint(DIR_GET_FILE_SIZE, file_size_str_winlen);
     String2Vector(file_size_str_winlen[0], chunk_size_winlen);
@@ -261,6 +327,46 @@ void init_xcorr()
     T_winlen->SetOverlapSize(overlap_size_winlen);
     T_winlen->SetChunkSchedulingMethod(CHUNK_SCHEDULING_CR);
 
+    // smoothhw_ci39534271.txt
+    AU::Array<double> *T_smoothhw;
+    std::vector<double> T_smoothhw_data;
+    std::vector<int> chunk_size_smoothhw, overlap_size_smoothhw = {0, 0};
+    std::vector<std::string> aug_input_search_rgx_smoothhw, file_size_str_smoothhw;
+
+    if (is_smoothhw)
+    {
+        T_smoothhw = new AU::Array<double>("EP_DIR:EP_CSV:" + template_dir);
+        T_smoothhw->ControlEndpoint(DIR_SKIP_SIZE_CHECK, null_str);
+
+        if (is_template_file_range)
+        {
+            T_smoothhw->ControlEndpoint(DIR_FILE_SORT_INDEXES, index_param);
+        }
+
+        if (!is_input_template_file_list)
+        {
+            if (!is_template_input_search_rgx)
+            {
+                aug_input_search_rgx_smoothhw.push_back("(.*)smoothhw(.*)txt$"); // tstart_ci39534271.txt
+            }
+            else
+            {
+                aug_input_search_rgx_smoothhw.push_back("(.*)smoothhw(.*)" + template_input_search_rgx + "(.*)txt$"); // tstart_ci39534271.txt
+            }
+            T_smoothhw->EndpointControl(DIR_INPUT_SEARCH_RGX, aug_input_search_rgx_smoothhw);
+        }
+        else
+        {
+            T_smoothhw->ControlEndpoint(DIR_SET_INPUT_FILE_LIST, smoothhw_input_template_files_new);
+        }
+
+        T_smoothhw->ControlEndpoint(DIR_GET_FILE_SIZE, file_size_str_smoothhw);
+        String2Vector(file_size_str_smoothhw[0], chunk_size_smoothhw);
+        PrintVector("chunk_size_smoothhw = ", chunk_size_smoothhw);
+        T_smoothhw->SetChunkSize(chunk_size_smoothhw);
+        T_smoothhw->SetOverlapSize(overlap_size_smoothhw);
+        T_smoothhw->SetChunkSchedulingMethod(CHUNK_SCHEDULING_CR);
+    }
     // ci39534271.h5
     // winlen_ci39534271.txt
     AU::Array<short> *T_h5;
@@ -278,8 +384,22 @@ void init_xcorr()
         T_h5->ControlEndpoint(DIR_FILE_SORT_INDEXES, index_param);
     }
 
-    aug_input_search_rgx_h5.push_back("(.*)h5$"); // tstart_ci39534271.txt
-    T_h5->EndpointControl(DIR_INPUT_SEARCH_RGX, aug_input_search_rgx_h5);
+    if (!is_input_template_file_list)
+    {
+        if (!is_template_input_search_rgx)
+        {
+            aug_input_search_rgx_h5.push_back("(.*)h5$"); // tstart_ci39534271.txt
+        }
+        else
+        {
+            aug_input_search_rgx_h5.push_back("(.*)" + template_input_search_rgx + "(.*)h5$"); // tstart_ci39534271.txt
+        }
+        T_h5->EndpointControl(DIR_INPUT_SEARCH_RGX, aug_input_search_rgx_h5);
+    }
+    else
+    {
+        T_h5->ControlEndpoint(DIR_SET_INPUT_FILE_LIST, h5_input_template_files_new);
+    }
 
     T_h5->ControlEndpoint(DIR_GET_FILE_SIZE, file_size_str_h5);
     String2Vector(file_size_str_h5[0], chunk_size_h5);
@@ -313,6 +433,9 @@ void init_xcorr()
         ntemplates_to_go = ntemplates;
     }
 
+    if (is_template_list_output_file)
+        T_h5->ControlEndpoint(DIR_SAVE_FINAL_FILE_LIST, template_list_output_file);
+
     if (!ft_rank)
         std::cout << "Rank " << ft_rank << "ntemplates = " << ntemplates << ", ntemplates_to_go = " << ntemplates_to_go << std::endl;
 
@@ -322,6 +445,7 @@ void init_xcorr()
     template_weights.resize(ntemplates_to_go);
 
     template_winlen.clear();
+    template_smoothhw.clear();
     std::vector<std::vector<double>> T_ts2d; //[Channels][Points]
     double T_weight_sum = 0;
     size_t T_tstart_weight_size;
@@ -332,6 +456,21 @@ void init_xcorr()
         // PrintVector("T_winlen_data = ", T_winlen_data);
         template_winlen.push_back(std::round(T_winlen_data[0] / dt1));
         // PrintScalar("template_winlen[0] = ", template_winlen[0]);
+
+        if (is_smoothhw)
+        {
+            // Read smoothhw
+            T_smoothhw->ReadNextChunk(T_smoothhw_data);
+            int T_smoothhw_data_round = std::round(T_smoothhw_data[0] / dt1);
+            if ((T_smoothhw_data_round + 1) % 2 == 0)
+            {
+                template_smoothhw.push_back(T_smoothhw_data_round + 2);
+            }
+            else
+            {
+                template_smoothhw.push_back(T_smoothhw_data_round + 1);
+            }
+        }
 
         // Read tstart_weight data and split it into tstart and weight
         T_tsstart->ReadNextChunk(T_tstart_weight);
@@ -378,12 +517,12 @@ void init_xcorr()
 #endif
         for (int i = 0; i < T_ts2d.size(); i++)
         {
-#if defined(_OPENMP)
-            if ((!ft_rank && !omp_get_thread_num() && (!i)))
-            {
-                printf("Init Inside the OpenMP parallel region thread 0, we have %d threads, at template %d of MPI rank %d .\n", omp_get_num_threads(), i, ft_rank);
-            }
-#endif
+            // #if defined(_OPENMP)
+            //             if ((!ft_rank && !omp_get_thread_num() && (!i)))
+            //             {
+            //                 printf("Init Inside the OpenMP parallel region thread 0, we have %d threads, at template %d of MPI rank %d .\n", omp_get_num_threads(), i, ft_rank);
+            //             }
+            // #endif
             //  detrend(T_ts2d[i].data(), T_pts); // Detread
             // for (int j = 0; j < ctap_template1.size(); j++)
             //{
@@ -418,9 +557,9 @@ void init_xcorr()
             T_ts2d[i] = atemp2;
             // std::cout << " end for  channel #" << i << "\n";
         } // end for all channels of each template
-        if (!ft_rank)
-            std::cout << " end for all channels of each template \n";
-        // PrintVV("T_ts2d cha x points = ", T_ts2d);
+        // if (!ft_rank)
+        //     std::cout << " end for all channels of each template \n";
+        // // PrintVV("T_ts2d cha x points = ", T_ts2d);
         template_data[rc2] = T_ts2d;
 
         double template_tstart_min = *(std::min_element(template_tstart[rc2].begin(), template_tstart[rc2].end()));
@@ -478,14 +617,18 @@ void init_xcorr()
     // std::cout << " template_data.size =" << template_data.size() << " , template_data[0].size = " << template_data[0].size() << " , template_data[0][0].size = " << template_data[0][0].size();
 
     // PrintVV("template_data[0] = ", template_data[0]);
-
-    // PrintVV("template_data[0] = ", template_data[0]);
 }
 
 template <class TT>
 inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStencil)
 {
     double init_xcorr_t_start = AU_WTIME;
+
+// #define TEST_SUM_SQ_INSIDE 1
+#ifdef TEST_SUM_SQ_INSIDE
+    if (!ft_rank)
+        std::cout << " TEST_SUM_SQ_INSIDE \n";
+#endif
 
     // Input pramters
     std::vector<int> max_offset_upper; // Size of input data for the whole chunk, zero based
@@ -580,30 +723,42 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
 
     amat1.resize(chs_per_file_udf);
 
-    int npts1_new = round(((nof1 - 1) * npts0) / decifac) + round(taperwidth / dt1) + MaxVector(template_winlen) + MaxVectorVector(template_tstart) + 1;
+    int npts1_new;
+    if (is_smoothhw)
+    {
+        //(2*max(template_smoothingwindows)+1)
+        npts1_new = round(((nof1 - 1) * npts0) / decifac) + round(taperwidth / dt1) + MaxVector(template_winlen) + MaxVectorVector(template_tstart) + 2 * MaxVector(template_smoothhw) + 1;
+    }
+    else
+    {
+        npts1_new = round(((nof1 - 1) * npts0) / decifac) + round(taperwidth / dt1) + MaxVector(template_winlen) + MaxVectorVector(template_tstart) + 1;
+    }
     if (npts1_new < npts1)
         npts1 = npts1_new;
-    // npts1 = min([npts1 npts1_new]) ;
+// npts1 = min([npts1 npts1_new]) ;
 
-    // if (!ft_rank)
-    // {
-    //     std::cout << "round(((nof1 - 1) * npts0) / decifac) = " << round(((nof1 - 1) * npts0) / decifac)
-    //               << ", round(taperwidth / dt1) = " << round(taperwidth / dt1)
-    //               << ", MaxVector(template_winlen) = " << MaxVector(template_winlen)
-    //               << ", MaxVectorVector(template_tstart) = " << MaxVectorVector(template_tstart) << "\n";
-    //     PrintVV("template_tstart = ", template_tstart);
-    // }
+// if (!ft_rank)
+// {
+//     std::cout << "round(((nof1 - 1) * npts0) / decifac) = " << round(((nof1 - 1) * npts0) / decifac)
+//               << ", round(taperwidth / dt1) = " << round(taperwidth / dt1)
+//               << ", MaxVector(template_winlen) = " << MaxVector(template_winlen)
+//               << ", MaxVectorVector(template_tstart) = " << MaxVectorVector(template_tstart) << "\n";
+//     PrintVV("template_tstart = ", template_tstart);
+// }
 
-    // PrintVV("ts2d  of das data ", ts2d);
+// PrintVV("ts2d  of das data ", ts2d);
 
-    // Resample in time-domain
+// Resample in time-domain
+#if defined(_OPENMP)
+#pragma omp parallel for firstprivate(ts_temp2)
+#endif
     for (int ii = 0; ii < chs_per_file_udf; ii++)
     {
         // if (ii % 1000 == 0)
         //     std::cout << "ts2d[" << ii << " ], chs_per_file_udf = " << chs_per_file_udf << "\n";
         ts_temp2 = ddff(ts2d[ii], ctap0, 10, BUTTER_A, BUTTER_B, cheby1_b, cheby1_a);
         // ts_temp2.pop_back();
-        ts_temp2.resize(npts1);
+        ts_temp2.resize(npts1); // get rid of the last one
         amat1[ii] = ts_temp2;
     }
 
@@ -643,80 +798,127 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
         xc0[rc2].resize(npts2_max, 0);
     }
 
+    std::vector<double> max_neighbors, correlation_per_chal;
+    if (correlation_method == CORR_DOT_PRODUCT_NEIGHBORS)
+    {
+        max_neighbors.resize(npts2_max, 0);
+        correlation_per_chal.resize(npts2_max, 0);
+    }
+
     if (!ft_rank)
         std::cout << "npts1 = " << npts1 << ", npts2_max = " << npts2_max << ", chs_per_file_udf =" << chs_per_file_udf << ", nchan1 = " << nchan1 << ", mpi_rank =" << ft_rank << ", ntemplates = " << ntemplates << ", nchan1 = " << nchan1 << ", npts2_vector[0] = " << npts2_vector[0] << ", npts1_new = " << npts1_new << "\n";
 
-    // PrintVector("ctap_template2 ", ctap_template2);
-    // #if defined(_OPENMP)
-    // #endif
+    // std::deque<double> ch_window_buffer(template_winlen[0], 0); firstprivate(ch_window_buffer)
+    //  #if defined(_OPENMP)
+    //  #endif
     ////#pragma omp parallel for
     for (int rc2 = 0; rc2 < ntemplates; rc2++)
     {
-        // #if defined(_OPENMP)
-        //  if ((!ft_rank) && (!omp_get_thread_num()))
-        //{
-        //    printf("Corr: Inside the OpenMP parallel region thread 0, we have %d threads, at template %d, at MPI rank %d .\n", omp_get_num_threads(), rc2, ft_rank);
-        // }
-        // #endif
-        ////std::vector<double> sdcn_v;
-        /// size_t dx1;
-        double micro_init_xcorr_t_start = AU_WTIME;
-        // double template_tstart_max = *(std::max_element(std::begin(template_tstart[rc2]), std::end(template_tstart[rc2])));
-        // size_t npts2 = npts1 - template_winlen[rc2] - template_tstart_max;
-        //  npts2=npts1-template_winlen(rc2)-max(template_tstart(:,rc2))+1; % [62182]
-        //  % VECTOR WITH CROSS-CORRELATION RESULTS
-        //      xc0=zeros(1,npts2); %
-        //  xc0[rc2].resize(npts2);
-        //  Points rc3=1:npts2
-        /////std::vector<double> xc1; // cross correlation per channel
-        /////xc1.resize(chs_per_file_udf);
-#if defined(_OPENMP)
-#pragma omp parallel for
-#endif
-        for (int rc3 = 0; rc3 < npts2_vector[rc2]; rc3++)
+        if (is_smoothhw)
         {
-#if defined(_OPENMP)
-            if ((!ft_rank) && (!omp_get_thread_num()) && (!rc3))
+            n_neighbors = template_smoothhw[rc2];
+        }
+        double micro_init_xcorr_t_start = AU_WTIME;
+        // std::vector<std::vector<double>> xc_channel_time;
+        // xc_channel_time.resize(nchan1);
+        // https://stackoverflow.com/questions/15349695/pre-allocated-private-stdvector-in-openmp-parallelized-for-loop-in-c
+        // #if defined(_OPENMP)
+        // #pragma omp parallel for schedule(static, 1)
+        // #endif
+        for (int rc1 = 0; rc1 < nchan1; rc1++)
+        {
+            if (template_weights[rc2][rc1] > 0)
             {
-                printf("Corr: Inside the OpenMP parallel region thread 0, we have %d threads, at channels %d of template %d, at MPI rank %d .\n", omp_get_num_threads(), rc3, rc2, ft_rank);
-            }
-#endif
-            std::vector<double> sdcn_v(template_winlen[rc2], 0);
-            size_t dx1;
-            std::vector<double> xc1(chs_per_file_udf, 0); // cross correlation per channel
-            // xc1.resize(chs_per_file_udf);
-            //  Channels rc1=1:nchan1
 
-            for (int rc1 = 0; rc1 < nchan1; rc1++)
-            {
-
-                if (template_weights[rc2][rc1] > 0)
+                // cross correlation per channel Channels rc1=1:nchan1
+                // std::vector<double> xc1(npts2_vector[rc2], 0);
+                double xmean, Sxx = 0, xsum;
+                xmean = (template_winlen[rc2] - 1) / 2;
+                xsum = (template_winlen[rc2] - 1) * template_winlen[rc2] / 2;
+                for (int iiii = 0; iiii < template_winlen[rc2]; iiii++)
                 {
-                    // dx1=rc3+template_tstart(rc1,rc2);
-                    dx1 = rc3 + template_tstart[rc2][rc1];
-                    sdcn(amat1[rc1], sdcn_v, dx1, template_winlen[rc2], ctap_template2);
-                    // if (rc1 < 10 && rc3 == 0)
-                    //     PrintVector("After sdcn sdcn_v =", sdcn_v);
-                    // if (is_xcross)
-                    //{
-                    //    xc1[rc1] = xcross_max(sdcn_v, template_data[rc2][rc1]);
-                    //}
-                    // else
-                    //{
-                    //   xc1[rc1] = dot_product(sdcn_v, template_data[rc2][rc1]);
-                    //}
-                    // exit(0);
+                    Sxx += (iiii - xmean) * (iiii - xmean);
+                }
+                // #if defined(_OPENMP)
+                // #pragma omp parallel {
+                // #endif
+                std::vector<double> sdcn_v(template_winlen[rc2], 0);
+                size_t dx1;
+                // double sum_sq = 0;
 
+                // correlation_per_chal.resize(npts2_max, 0);
+                //  https://stackoverflow.com/questions/15349695/pre-allocated-private-stdvector-in-openmp-parallelized-for-loop-in-c
+
+#ifndef TEST_SUM_SQ_INSIDE
+                std::vector<double> amat1_rc1_sum_sq;
+                if (correlation_method == CORR_DOT_PRODUCT_NO_DETREND)
+                {
+                    sum_sqrt(amat1[rc1], amat1_rc1_sum_sq, (int)template_winlen[rc2]);
+                }
+#endif
+
+#if defined(_OPENMP)
+#pragma omp parallel for firstprivate(sdcn_v, dx1)
+#endif
+                for (int rc3 = 0; rc3 < npts2_vector[rc2]; rc3++)
+                {
+                    dx1 = rc3 + template_tstart[rc2][rc1];
+#ifdef TEST_SUM_SQ_INSIDE
+                    double sum_sq = 0;
+#endif
+                    // Replace below line with the following to find difference of two version
+                    if (correlation_method != CORR_DOT_PRODUCT_NO_DETREND)
+                    {
+                        detrend_range_one_pass_std(amat1[rc1], dx1, template_winlen[rc2], ctap_template2, xmean, xsum, Sxx, sdcn_v);
+                    }
+                    else
+                    {
+
+                        sdcn_v.resize(template_winlen[rc2]);
+                        for (size_t i = 0; i < template_winlen[rc2]; i++)
+                        {
+#ifndef TEST_SUM_SQ_INSIDE
+                            sdcn_v[i] = amat1[rc1][dx1 + i] / amat1_rc1_sum_sq[dx1];
+#else
+                            sdcn_v[i] = amat1[rc1][dx1 + i];
+                            sum_sq = sum_sq + sdcn_v[i] * sdcn_v[i];
+#endif
+                        }
+
+#ifdef TEST_SUM_SQ_INSIDE
+                        sum_sq = sqrt(sum_sq);
+                        for (size_t i = 0; i < template_winlen[rc2]; i++)
+                        {
+                            sdcn_v[i] = sdcn_v[i] / sum_sq;
+                        }
+#endif
+                    }
+                    // sdcn(amat1[rc1], sdcn_v, dx1, template_winlen[rc2], ctap_template2);
+                    // double temp_xcorr;
                     switch (correlation_method)
                     {
+                    case CORR_DOT_PRODUCT_NO_DETREND:
                     case CORR_DOT_PRODUCT:
-                        xc1[rc1] = dot_product(sdcn_v, template_data[rc2][rc1]);
+                        xc0[rc2][rc3] = xc0[rc2][rc3] + template_weights[rc2][rc1] * dot_product(sdcn_v, template_data[rc2][rc1]);
+                        break;
+                        // xc0[rc2][rc3] = xc0[rc2][rc3] + template_weights[rc2][rc1] * dot_product(sdcn_v, template_data[rc2][rc1]);
+                        // break;
+                    case CORR_DOT_PRODUCT_NEIGHBORS:
+                        // xc0[rc2][rc3] = dot_product(sdcn_v, template_data[rc2][rc1]);
+                        correlation_per_chal[rc3] = dot_product(sdcn_v, template_data[rc2][rc1]);
                         break;
                     case CORR_XCORR_MAX:
-                        xc1[rc1] = xcross_max(sdcn_v, template_data[rc2][rc1]);
+                        xc0[rc2][rc3] = xc0[rc2][rc3] + template_weights[rc2][rc1] * xcross_max(sdcn_v, template_data[rc2][rc1]);
                         break;
                     case CORR_FFT_MAX:
-                        xc1[rc1] = xcross_fft(sdcn_v, template_data[rc2][rc1]);
+                        if (!rc3 && !rc1)
+                        {
+                            PrintVector("sdcn_v: ", sdcn_v);
+                            PrintVector("template_data[rc2][rc1]: ", template_data[rc2][rc1]);
+                            std::cout << "xcross_fft = " << xcross_fft(sdcn_v, template_data[rc2][rc1]) << "\n";
+                        }
+
+                        xc0[rc2][rc3] = xc0[rc2][rc3] + template_weights[rc2][rc1] * xcross_fft(sdcn_v, template_data[rc2][rc1]);
                         break;
                     default:
                         std::cout << "Unsupported Correlation Method code " << correlation_method << "\n";
@@ -725,51 +927,30 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
                         exit(-1);
                         break;
                     }
-                }
-            }
-            // Stack of all channels at time rc3 [template index][time] for template rc2
-            xc0[rc2][rc3] = sum_weight(xc1, template_weights[rc2]);
-        }
+                    // xc0[rc2][rc3] = xc0[rc2][rc3] + template_weights[rc2][rc1] * temp_xcorr;
+                } // end of time shift rc3 for the fixxed channel rc1 and template rc2
+                  // end of _OPENMP
 
-#if defined(_OPENMP)
-        if ((!ft_rank) && (!omp_get_thread_num()))
-            std::cout << "current template " << rc2 << " takes   " << AU_WTIME - micro_init_xcorr_t_start << " (sec)" << std::endl;
-#endif
-    }
+                if (correlation_method == CORR_DOT_PRODUCT_NEIGHBORS)
+                {
+                    // correlation_per_chal
+                    for (int rc3 = 0; rc3 < npts2_vector[rc2]; rc3++)
+                    {
+                        max_neighbors[rc3] = template_weights[rc2][rc1] * find_max_neighbors(correlation_per_chal, rc3, n_neighbors);
+                    }
+                    for (int rc3 = 0; rc3 < npts2_vector[rc2]; rc3++)
+                    {
+                        xc0[rc2][rc3] = xc0[rc2][rc3] + max_neighbors[rc3];
+                    }
+                }
+            } // end of  if (template_weights[rc2][rc1] > 0)
+        }     // end of channel rc1
+    }         // end of template index rc2
 
     if (!ft_rank)
         std::cout << "sdcn (for loop of all templates ) (s) = " << AU_WTIME - init_xcorr_t_start << std::endl;
     init_xcorr_t_start = AU_WTIME;
 
-    // Set output
-    // if (!ft_rank)
-    // std::cout << "xc0.size = " << xc0.size() << ", xc0[0].size =" << xc0[0].size() << ", at mpi rank = " << ft_rank << " \n";
-    // for (int si = 0; si < xc0.size(); si++)
-    // {
-    //     if (xc0[si].size() != xc0[0].size())
-    //     {
-    //         std::cout << "Missed size matched found for xc0[ " << si << " ] = " << xc0[si].size() << " , xc0[0].size() = " << xc0[0].size() << ", at mpi rank = " << ft_rank << "\n";
-    //     }
-    // }
-    // // exit(-1);
-
-    // PrintVV("Finish UDF, xc0 = ", xc0);
-    // for (int i = 0; i < xc0[0].size(); i++)
-    // {
-    //     if (xc0[0][i] == 0)
-    //     {
-    //         std::cout << i - 5 << ": " << xc0[0][i - 5] << " \n";
-    //         std::cout << i - 4 << ": " << xc0[0][i - 4] << " \n";
-    //         std::cout << i - 3 << ": " << xc0[0][i - 3] << " \n";
-    //         std::cout << i - 2 << ": " << xc0[0][i - 2] << " \n";
-    //         std::cout << i - 1 << ": " << xc0[0][i - 1] << " \n";
-    //         std::cout << i << ": " << xc0[0][i] << " \n";
-    //         std::cout << i + 1 << ": " << xc0[0][i + 1] << " \n";
-    //         std::cout << i + 2 << ": " << xc0[0][i + 2] << " \n";
-    //         std::cout << i + 3 << ": " << xc0[0][i + 3] << " \n";
-    //         break;
-    //     }
-    // }
     ts_temp = Convert2DVTo1DV(xc0);
     if (is_column_major)
     {
@@ -838,6 +1019,11 @@ int main(int argc, char *argv[])
         std::cout << "Set [omp_set_num_threads] to " << omp_num_threads_p << "\n";
 #endif
 
+    /*if (correlation_method == 2)
+    {
+        fftw_make_planner_thread_safe();
+    }*/
+
     gettimeofday(&begin_time, 0);
 
     // set up the chunk size and the overlap size
@@ -883,20 +1069,19 @@ int main(int argc, char *argv[])
         exit(-1);
     }
 
-    std::vector<std::string> null_str;
     // A->GetStencilTag();
 
-    if (is_input_single_file == false)
+    std::vector<std::string> null_str;
+    if (!is_input_single_file)
     {
         A->SkipFileTail();
         A->ExecuteUDFOnce();
         A->ControlEndpoint(DIR_SKIP_SIZE_CHECK, null_str);
     }
-
-    if (is_input_search_rgx && is_input_single_file == false)
+    if (is_das_input_search_rgx && is_input_single_file == false)
     {
         std::vector<std::string> aug_input_search_rgx;
-        aug_input_search_rgx.push_back(input_search_rgx);
+        aug_input_search_rgx.push_back(das_input_search_rgx);
         A->ControlEndpoint(DIR_INPUT_SEARCH_RGX, aug_input_search_rgx);
     }
 
@@ -1039,37 +1224,47 @@ int main(int argc, char *argv[])
         }
     }
 
-    if (is_column_major)
+    if (!is_input_single_file)
     {
-        if (is_channel_range)
+        if (is_column_major)
         {
-            chunk_size[1] = channel_range_end - channel_range_start + 1;
-            // A->SetView(channel_range_start, chunk_size[1], 1);
+            if (is_channel_range)
+            {
+                chunk_size[1] = channel_range_end - channel_range_start + 1;
+                // A->SetView(channel_range_start, chunk_size[1], 1);
+            }
+            overlap_size[1] = 0;
+            overlap_size[0] = chunk_size[0];
+            chunk_size[0] = chunk_size[0] * n_files_to_concatenate;
+            chs_per_file = chunk_size[1];
+            // lts_per_file = chunk_size[0];
         }
-        overlap_size[1] = 0;
-        overlap_size[0] = chunk_size[0];
-        chunk_size[0] = chunk_size[0] * n_files_to_concatenate;
-        chs_per_file = chunk_size[1];
-        // lts_per_file = chunk_size[0];
+        else
+        {
+            if (is_channel_range)
+            {
+                chunk_size[0] = channel_range_end - channel_range_start + 1;
+                // A->SetView(channel_range_start, chunk_size[0], 0);
+            }
+            overlap_size[1] = chunk_size[0];
+            overlap_size[0] = 0;
+            chunk_size[1] = chunk_size[1] * n_files_to_concatenate;
+            chs_per_file = chunk_size[0];
+            // lts_per_file = chunk_size[1];
+        }
     }
     else
     {
-        if (is_channel_range)
-        {
-            chunk_size[0] = channel_range_end - channel_range_start + 1;
-            // A->SetView(channel_range_start, chunk_size[0], 0);
-        }
-        overlap_size[1] = chunk_size[0];
+        overlap_size[1] = 0;
         overlap_size[0] = 0;
-        chunk_size[1] = chunk_size[1] * n_files_to_concatenate;
-        chs_per_file = chunk_size[0];
-        // lts_per_file = chunk_size[1];
     }
-
     A->SetChunkSize(chunk_size);
     A->SetOverlapSize(overlap_size);
-    A->DisableOverlapLower(); // Only have one extra data in upper side
 
+    if (!is_input_single_file)
+    {
+        A->DisableOverlapLower(); // Only have one extra data in upper side
+    }
     if (!ft_rank)
     {
         PrintVector("chunk_size = ", chunk_size);
@@ -1141,6 +1336,28 @@ void printf_help(char *cmd)
     fprintf(stdout, msg, cmd, cmd);
 }
 
+std::vector<std::string> read_template_file_list(const std::string &filename)
+{
+    std::ifstream file(filename);
+    std::vector<std::string> lines;
+    std::string line;
+
+    if (file.is_open())
+    {
+        while (std::getline(file, line))
+        {
+            lines.push_back(line);
+        }
+        file.close();
+    }
+    else
+    {
+        std::cerr << "Failed to open file: " << filename << std::endl;
+    }
+
+    return lines;
+}
+
 int read_config_file(std::string file_name, int mpi_rank)
 {
     INIReader reader(file_name);
@@ -1181,13 +1398,20 @@ int read_config_file(std::string file_name, int mpi_rank)
     std::string temp_str = reader.Get("parameter", "is_input_single_file", "false");
     is_input_single_file = (temp_str == "false") ? false : true;
 
-    temp_str = reader.Get("parameter", "is_input_search_rgx", "false");
+    temp_str = reader.Get("parameter", "is_das_input_search_rgx", "false");
+    is_das_input_search_rgx = (temp_str == "false") ? false : true;
 
-    is_input_search_rgx = (temp_str == "false") ? false : true;
-
-    if (is_input_search_rgx)
+    if (is_das_input_search_rgx)
     {
-        input_search_rgx = reader.Get("parameter", "input_search_rgx", "^(.*)[1234]\\.tdms$");
+        das_input_search_rgx = reader.Get("parameter", "das_input_search_rgx", "^(.*)[1234]\\.tdms$");
+    }
+
+    temp_str = reader.Get("parameter", "is_template_input_search_rgx", "false");
+    is_template_input_search_rgx = (temp_str == "false") ? false : true;
+
+    if (is_template_input_search_rgx)
+    {
+        template_input_search_rgx = reader.Get("parameter", "template_input_search_rgx", "(ci37327652|ci37329164)");
     }
 
     std::string is_file_range_str = reader.Get("parameter", "is_das_file_range", "false");
@@ -1240,6 +1464,17 @@ int read_config_file(std::string file_name, int mpi_rank)
         is_column_major_from_config = true;
     }
 
+    correlation_method = reader.GetInteger("parameter", "correlation_method", 0);
+    if (correlation_method < 0 || correlation_method > 4)
+    {
+        AU_EXIT("Don't understand the correlation_method's value " + correlation_method);
+    }
+
+    if (correlation_method == CORR_DOT_PRODUCT_NEIGHBORS)
+    {
+        is_smoothhw = true;
+    }
+
     std::string is_template_file_range_str = reader.Get("parameter", "is_template_file_range", "false");
     if (is_template_file_range_str == "false" || is_template_file_range_str == "0")
     {
@@ -1251,13 +1486,7 @@ int read_config_file(std::string file_name, int mpi_rank)
     }
     else
     {
-        AU_EXIT("Don't understand the is_template_file_range's value " + is_template_file_range);
-    }
-
-    correlation_method = reader.GetInteger("parameter", "correlation_method", 0);
-    if (correlation_method < 0 || correlation_method > 2)
-    {
-        AU_EXIT("Don't understand the correlation_method's value = " + std::to_string(correlation_method) + ", please use 0 (dot-product), 1 (xcorr-max), 2 (fft-max)");
+        AU_EXIT("Don't read the is_template_file_range's value " + is_template_file_range);
     }
 
     if (is_template_file_range)
@@ -1279,6 +1508,43 @@ int read_config_file(std::string file_name, int mpi_rank)
     is_output_single_file = (temp_str == "false") ? false : true;
 
     output_type = reader.Get("parameter", "output_type", "EP_HDF5");
+
+    std::string is_template_list_output_file_str = reader.Get("parameter", "is_template_list_output_file", "false");
+    if (is_template_list_output_file_str == "false" || is_template_list_output_file_str == "0")
+    {
+        is_template_list_output_file = false;
+    }
+    else if (is_template_list_output_file_str == "true" || is_template_list_output_file_str == "1")
+    {
+        is_template_list_output_file = true;
+    }
+    else
+    {
+        AU_EXIT("Don't read the is_template_list_output_file's value " + is_template_list_output_file);
+    }
+
+    if (is_template_list_output_file)
+        template_list_output_file = reader.Get("parameter", "template_list_output_file", "template_final_list.txt");
+
+    std::string is_input_template_file_list_str = reader.Get("parameter", "is_input_template_file_list", "false");
+    if (is_input_template_file_list_str == "false" || is_input_template_file_list_str == "0")
+    {
+        is_input_template_file_list = false;
+    }
+    else if (is_input_template_file_list_str == "true" || is_input_template_file_list_str == "1")
+    {
+        is_input_template_file_list = true;
+    }
+    else
+    {
+        AU_EXIT("Don't read the is_input_template_file_list's value " + is_input_template_file_list);
+    }
+
+    if (is_input_template_file_list)
+    {
+        input_template_file_list = reader.Get("parameter", "input_template_file_list", "input_template_file_list.txt");
+        input_template_files = read_template_file_list(input_template_file_list);
+    }
 
     output_file_dir = reader.Get("parameter", "output_file_dir", "./tdms-dir-dec/test.h5");
 
@@ -1309,13 +1575,14 @@ int read_config_file(std::string file_name, int mpi_rank)
 
     // fbands
 
-    temp_str = reader.Get("parameter", "is_output_single_file", "false");
-    if (temp_str == "true")
-    {
-        fbands.resize(1);
-        fbands[0] = reader.GetReal("parameter", "fbands_low", 0.5);
-        fbands[1] = reader.GetReal("parameter", "fbands_high", 16);
-    }
+    // temp_str = reader.Get("parameter", "is_output_single_file", "false");
+    // if (temp_str == "true")
+    //{
+    // }
+
+    fbands.resize(1);
+    fbands[0] = reader.GetReal("parameter", "fbands_low", 0.5);
+    fbands[1] = reader.GetReal("parameter", "fbands_high", 16);
 
     if (!mpi_rank)
     {
@@ -1389,9 +1656,9 @@ int read_config_file(std::string file_name, int mpi_rank)
             std::cout << termcolor::magenta << "\n        is_channel_stride = " << termcolor::green << "false";
         }
 
-        if (is_input_search_rgx)
+        if (is_das_input_search_rgx)
         {
-            std::cout << termcolor::magenta << "\n        input_search_rgx = " << termcolor::green << input_search_rgx;
+            std::cout << termcolor::magenta << "\n        das_input_search_rgx = " << termcolor::green << das_input_search_rgx;
         }
         std::cout << termcolor::magenta << "\n        n_files_to_concatenate = " << termcolor::green << n_files_to_concatenate;
 
@@ -1408,6 +1675,12 @@ int read_config_file(std::string file_name, int mpi_rank)
         case CORR_DOT_PRODUCT:
             std::cout << termcolor::magenta << "\n        correlation_method = " << termcolor::green << CORR_DOT_PRODUCT << " dot_product";
             break;
+        case CORR_DOT_PRODUCT_NEIGHBORS:
+            std::cout << termcolor::magenta << "\n        correlation_method = " << termcolor::green << CORR_DOT_PRODUCT_NEIGHBORS << " dot_product_neighbors";
+            break;
+        case CORR_DOT_PRODUCT_NO_DETREND:
+            std::cout << termcolor::magenta << "\n        correlation_method = " << termcolor::green << CORR_DOT_PRODUCT_NO_DETREND << " dot_product_no_detrend";
+            break;
         case CORR_XCORR_MAX:
             std::cout << termcolor::magenta << "\n        correlation_method = " << termcolor::green << CORR_XCORR_MAX << " xcorr_max";
             break;
@@ -1418,8 +1691,30 @@ int read_config_file(std::string file_name, int mpi_rank)
             break;
         }
 
+        if (is_input_template_file_list)
+        {
+            std::cout << termcolor::magenta << "\n     input_template_file_list = " << termcolor::green << input_template_file_list;
+            int input_template_files_size = input_template_files.size();
+            if (input_template_files_size > 2)
+            {
+                std::cout << termcolor::magenta << "\n                                " << termcolor::green << input_template_files[0];
+                std::cout << termcolor::magenta << "\n                                " << termcolor::green << input_template_files[input_template_files_size - 1];
+            }
+            else if (input_template_files_size == 1)
+            {
+                std::cout << termcolor::magenta << "\n                                " << termcolor::green << input_template_files[0];
+            }
+            else
+            {
+                std::cout << "input_template_file_list is empty !\n";
+                exit(-1);
+            }
+        }
+
         std::cout << termcolor::blue << "\n\n Output parameters: ";
 
+        if (is_template_list_output_file)
+            std::cout << termcolor::magenta << "\n    template_list_output_file = " << termcolor::green << template_list_output_file;
         std::cout << termcolor::magenta << "\n        is_output_single_file = " << termcolor::green << is_output_single_file;
         std::cout << termcolor::magenta << "\n        output_type = " << termcolor::green << output_type;
         std::cout << termcolor::magenta << "\n        output_file_dir = " << termcolor::green << output_file_dir;

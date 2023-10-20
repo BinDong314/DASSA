@@ -1,40 +1,28 @@
 .. template-match:
 
 
-TemplateMatch
+Template Matching
 =============
 
-TemplateMatch contains a parallel tempalte-match code on DAS data. 
+Template Matching contains a parallel tempalte matching code (namely tmatch) on DAS data. 
 
 Tables of contents of this page
 
 - :ref:`1, Quick Start Example`
 - :ref:`2, Configuration File`
-- :ref:`3, Documentation for Functions within the Xcorrelation`
+- :ref:`3, Documentation for Functions within the TemplateMatch`
 
 
 1, Quick Start Example 
 ----------------------
 
-Below is a quick start example to run `xcorrelation` with the existing configuration file ( xcorrelation.config ) in the repo. 
-The xcorrelation accepts one parameter `-c` which comes with the configuration file name.
+Below is a quick start example to run `tmatch` with the existing configuration file (tmatch.config ) in the repo. 
+The tmatch accepts one parameter `-c` which comes with the configuration file name.
 
 .. code-block:: bash
 
-#!/bin/bash
+ > ./tmatch -c tmatch.config
 
-#SBATCH -C cpu
-#SBATCH -q regular
-#SBATCH -A m1248
-#SBATCH -N 36
-#SBATCH -t 02:30:00
-#SBATCH -J tmatch
-#SBATCH -e tmatch-reoganized_%j.err
-#SBATCH -o tmatch-reoganized_%j.out
-
-export HDF5_USE_FILE_LOCKING=FALSE
-
-srun -n 72 tmatch-reoganized -c  tmatch-reorg.config
 
 
 2, Configuration File

@@ -2,7 +2,7 @@
 
 #AU_DIR=/Users/dbin/work/fastensor-dassa/build
 AU_DIR=/Users/dbin/work/fastensor/build
-HDF5_DIR=/Users/dbin/work/soft/hdf5-1.10.7/build
+HDF5_DIR=/Users/dbin/work/soft/hdf5-git-dev/build
 FFTW_DIR=/Users/dbin/work/soft/fftw-3.3.9/build
 DASH_DIR=/Users/dbin/work/soft/dash/build/install
 EIGEN3_DIR=/Users/dbin/work/dassa/Tools3rd
@@ -27,7 +27,8 @@ EIGEN3_FLAG=-I$(EIGEN3_DIR)
 ALL_FLAGS= $(OTHER_FLAGS) $(AU_FLAG) $(HDF5_FLAG) $(FFTW_FLAG)  $(DASH_FLAG) $(EIGEN3_FLAG) 
 
 .PHONY:all
-all:stack tdms2h5 xcorrelation decimate similarity  create_test_data tmatch
+all: stack tdms2h5 xcorrelation decimate similarity  create_test_data tmatch
+#all: tmatch
 
 stack:stack.cpp
 	$(CCC) -o stack stack.cpp $(ALL_FLAGS)
@@ -51,7 +52,7 @@ create_test_data: create_test_data.cpp
 	$(CCC) -o create_test_data create_test_data.cpp $(ALL_FLAGS)
 
 clean:
-	rm stack tdms2h5 xcorrelation decimate similarity create_test_data
+	rm stack tdms2h5 xcorrelation decimate similarity create_test_data tmatch
 
 test:
 	./test.sh
