@@ -41,6 +41,8 @@ void printf_help(char *cmd);
 int read_config_file(std::string file_name, int mpi_rank);
 std::string config_file = "./tmatch.config";
 
+bool is_save_pre_processed_files = false;
+
 // Input Parameter
 bool is_input_single_file = false;
 std::string das_dir = "/Users/dbin/work/dassa/template-match/template-match-data";
@@ -614,6 +616,57 @@ void init_xcorr()
         template_winlen = template_winlen_merged;
     }
 
+    if (is_save_pre_processed_files && !ft_rank)
+    {
+        std::vector<int> data_chunk_size_p(3, 0);
+        std::vector<int> data_overlap_size_p(3, 0);
+
+        AU::Array<double> *T = new AU::Array<double>("template.h5:/template");
+        std::vector<unsigned long long> T_size(3, 0);
+        T_size[0] = template_data.size();
+        T_size[1] = template_data[0].size();
+        T_size[2] = template_data[0][0].size();
+        T->CreateEndpoint(T_size, data_chunk_size_p, data_overlap_size_p);
+        std::vector<unsigned long long> start_address(3, 0);
+        std::vector<unsigned long long> end_address(3, 0);
+        end_address[0] = T_size[0] - 1;
+        end_address[1] = T_size[1] - 1;
+        end_address[2] = T_size[2] - 1;
+        std::vector<double> template_data_1D = Convert3DVTo1DV(template_data);
+        T->WriteArray(start_address, end_address, template_data_1D);
+
+        AU::Array<double> *W = new AU::Array<double>("template.h5:/weight");
+        std::vector<unsigned long long> W_size(2, 0);
+        W_size[0] = template_weights.size();
+        W_size[1] = template_weights[0].size();
+        data_chunk_size_p.resize(2, 0);
+        data_overlap_size_p.resize(2, 0);
+        W->CreateEndpoint(W_size, data_chunk_size_p, data_overlap_size_p);
+        start_address.resize(2, 0);
+        end_address.resize(2, 0);
+        end_address[0] = W_size[0] - 1;
+        end_address[1] = W_size[1] - 1;
+        std::vector<double> template_weights_1D = Convert2DVTo1DV(template_weights);
+        W->WriteArray(start_address, end_address, template_weights_1D);
+
+        AU::Array<double> *S = new AU::Array<double>("template.h5:/start");
+        std::vector<unsigned long long> S_size(2, 0);
+        S_size[0] = template_tstart.size();
+        S_size[1] = template_tstart[0].size();
+        data_chunk_size_p.resize(2, 0);
+        data_overlap_size_p.resize(2, 0);
+        S->CreateEndpoint(S_size, data_chunk_size_p, data_overlap_size_p);
+        start_address.resize(2, 0);
+        end_address.resize(2, 0);
+        end_address[0] = S_size[0] - 1;
+        end_address[1] = S_size[1] - 1;
+        std::vector<double> template_tstart_1D = Convert2DVTo1DV(template_tstart);
+        S->WriteArray(start_address, end_address, template_tstart_1D);
+
+        delete T;
+        delete W;
+        delete S;
+    }
     // std::cout << " template_data.size =" << template_data.size() << " , template_data[0].size = " << template_data[0].size() << " , template_data[0][0].size = " << template_data[0][0].size();
 
     // PrintVV("template_data[0] = ", template_data[0]);
@@ -762,6 +815,34 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
         amat1[ii] = ts_temp2;
     }
 
+    if (is_save_pre_processed_files)
+    {
+
+        ts_temp = Convert2DVTo1DV(amat1);
+        if (is_column_major)
+        {
+            vector_shape[1] = amat1.size();
+            vector_shape[0] = amat1[0].size();
+
+            std::vector<double> ts_temp_column;
+            ts_temp_column.resize(ts_temp.size());
+            transpose(ts_temp.data(), ts_temp_column.data(), amat1.size(), amat1[0].size());
+            ts_temp = ts_temp_column;
+        }
+        else
+        {
+            vector_shape[0] = amat1.size();
+            vector_shape[1] = amat1[0].size();
+        }
+
+        if (ft_rank == 0 || ft_rank == (ft_size - 1))
+            PrintVector("Output vector_shape: ", vector_shape);
+
+        oStencil.SetShape(vector_shape);
+        oStencil = ts_temp;
+        // exit(0);
+        return oStencil;
+    }
     // std::cout << " amat1.size =" << amat1.size() << " , amat1[0].size = " << amat1[0].size() << " \n";
     // PrintVV("amat1  ", amat1);
 
