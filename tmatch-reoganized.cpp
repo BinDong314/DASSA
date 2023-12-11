@@ -1062,7 +1062,7 @@ int main(int argc, char *argv[])
 {
     int copt;
     bool has_config_file_flag = false;
-    while ((copt = getopt(argc, argv, "c:ht")) != -1)
+    while ((copt = getopt(argc, argv, "c:hpt")) != -1)
         switch (copt)
         {
         case 'c':
@@ -1072,6 +1072,9 @@ int main(int argc, char *argv[])
         case 'h':
             printf_help(argv[0]);
             exit(0);
+        case 'p':
+            is_save_pre_processed_files = true;
+            break;
         default:
             printf("Wrong option [%c] for %s \n", copt, argv[0]);
             printf_help(argv[0]);
