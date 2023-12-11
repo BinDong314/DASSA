@@ -621,7 +621,7 @@ void init_xcorr()
         std::vector<int> data_chunk_size_p(3, 0);
         std::vector<int> data_overlap_size_p(3, 0);
 
-        AU::Array<double> *T = new AU::Array<double>("template.h5:/template");
+        AU::Array<double> *T = new AU::Array<double>("EP_HDF5:template-intermediate.h5:/template");
         std::vector<unsigned long long> T_size(3, 0);
         T_size[0] = template_data.size();
         T_size[1] = template_data[0].size();
@@ -635,7 +635,7 @@ void init_xcorr()
         std::vector<double> template_data_1D = Convert3DVTo1DV(template_data);
         T->WriteArray(start_address, end_address, template_data_1D);
 
-        AU::Array<double> *W = new AU::Array<double>("template.h5:/weight");
+        AU::Array<double> *W = new AU::Array<double>("EP_HDF5:template-intermediate.h5:/weight");
         std::vector<unsigned long long> W_size(2, 0);
         W_size[0] = template_weights.size();
         W_size[1] = template_weights[0].size();
@@ -649,7 +649,7 @@ void init_xcorr()
         std::vector<double> template_weights_1D = Convert2DVTo1DV(template_weights);
         W->WriteArray(start_address, end_address, template_weights_1D);
 
-        AU::Array<double> *S = new AU::Array<double>("template.h5:/start");
+        AU::Array<double> *S = new AU::Array<double>("EP_HDF5:template-intermediate.h5:/start");
         std::vector<unsigned long long> S_size(2, 0);
         S_size[0] = template_tstart.size();
         S_size[1] = template_tstart[0].size();
