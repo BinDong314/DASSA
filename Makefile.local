@@ -1,7 +1,7 @@
 #Bin's Mac
 
 #AU_DIR=/Users/dbin/work/fastensor-dassa/build
-AU_DIR=/Users/dbin/work/fastensor/build
+AU_DIR=/Users/dbin/work/fastensor/build-nodash/
 HDF5_DIR=/Users/dbin/work/soft/hdf5-git-dev/build
 FFTW_DIR=/Users/dbin/work/soft/fftw-3.3.9/build
 DASH_DIR=/Users/dbin/work/soft/dash/build/install
@@ -16,7 +16,7 @@ EIGEN3_DIR=/Users/dbin/work/dassa/Tools3rd
 
 SHELL:=/bin/bash
 
-CCC=mpicxx
+CCC=mpic++
 OTHER_FLAGS=-O3  -std=c++17 -I./DasLib/
 
 AU_FLAG=-I$(AU_DIR)/include -L$(AU_DIR)/lib -lFastensor
