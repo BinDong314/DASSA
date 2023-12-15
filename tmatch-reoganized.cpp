@@ -618,54 +618,57 @@ void init_xcorr()
 
     if (is_save_pre_processed_files && !ft_rank)
     {
-        std::vector<int> data_chunk_size_p(3, 0);
-        std::vector<int> data_overlap_size_p(3, 0);
+        std::vector<int> data_chunk_size_p(2, 0);
+        std::vector<int> data_overlap_size_p(2, 0);
+        int n_templates = template_data.size();
+        for (int template_index = 0; template_index < n_templates; template_index++)
+        {
+            AU::Array<double> *T = new AU::Array<double>("EP_HDF5:template-intermediate-" + std::to_string(template_index) + ".h5:/template");
+            std::vector<unsigned long long> T_size(2, 0);
+            // T_size[0] = template_data.size();
+            T_size[0] = template_data[template_index].size();
+            T_size[1] = template_data[template_index][0].size();
+            T->CreateEndpoint(T_size, data_chunk_size_p, data_overlap_size_p);
+            std::vector<unsigned long long> start_address(2, 0);
+            std::vector<unsigned long long> end_address(2, 0);
+            // end_address[0] = T_size[0] - 1;
+            end_address[0] = T_size[0] - 1;
+            end_address[1] = T_size[1] - 1;
+            std::vector<double> template_data_1D = Convert2DVTo1DV(template_data[template_index]);
+            T->WriteArray(start_address, end_address, template_data_1D);
 
-        AU::Array<double> *T = new AU::Array<double>("EP_HDF5:template-intermediate.h5:/template");
-        std::vector<unsigned long long> T_size(3, 0);
-        T_size[0] = template_data.size();
-        T_size[1] = template_data[0].size();
-        T_size[2] = template_data[0][0].size();
-        T->CreateEndpoint(T_size, data_chunk_size_p, data_overlap_size_p);
-        std::vector<unsigned long long> start_address(3, 0);
-        std::vector<unsigned long long> end_address(3, 0);
-        end_address[0] = T_size[0] - 1;
-        end_address[1] = T_size[1] - 1;
-        end_address[2] = T_size[2] - 1;
-        std::vector<double> template_data_1D = Convert3DVTo1DV(template_data);
-        T->WriteArray(start_address, end_address, template_data_1D);
+            AU::Array<double> *W = new AU::Array<double>("EP_HDF5:template-intermediate-" + std::to_string(template_index) + ".h5:/template");
+            std::vector<unsigned long long> W_size(1, 0);
+            // W_size[0] = template_weights.size();
+            W_size[0] = template_weights[template_index].size();
+            data_chunk_size_p.resize(1, 0);
+            data_overlap_size_p.resize(1, 0);
+            W->CreateEndpoint(W_size, data_chunk_size_p, data_overlap_size_p);
+            start_address.resize(1, 0);
+            end_address.resize(1, 0);
+            end_address[0] = W_size[0] - 1;
+            // end_address[1] = W_size[1] - 1;
+            // std::vector<double> template_weights_1D = Convert2DVTo1DV(template_weights);
+            W->WriteArray(start_address, end_address, template_weights[template_index]);
 
-        AU::Array<double> *W = new AU::Array<double>("EP_HDF5:template-intermediate.h5:/weight");
-        std::vector<unsigned long long> W_size(2, 0);
-        W_size[0] = template_weights.size();
-        W_size[1] = template_weights[0].size();
-        data_chunk_size_p.resize(2, 0);
-        data_overlap_size_p.resize(2, 0);
-        W->CreateEndpoint(W_size, data_chunk_size_p, data_overlap_size_p);
-        start_address.resize(2, 0);
-        end_address.resize(2, 0);
-        end_address[0] = W_size[0] - 1;
-        end_address[1] = W_size[1] - 1;
-        std::vector<double> template_weights_1D = Convert2DVTo1DV(template_weights);
-        W->WriteArray(start_address, end_address, template_weights_1D);
+            AU::Array<double> *S = new AU::Array<double>("EP_HDF5:template-intermediate-" + std::to_string(template_index) + ".h5:/template");
+            std::vector<unsigned long long> S_size(1, 0);
+            // S_size[0] = template_tstart.size();
+            S_size[0] = template_tstart[template_index].size();
+            data_chunk_size_p.resize(1, 0);
+            data_overlap_size_p.resize(1, 0);
+            S->CreateEndpoint(S_size, data_chunk_size_p, data_overlap_size_p);
+            start_address.resize(1, 0);
+            end_address.resize(1, 0);
+            end_address[0] = S_size[0] - 1;
+            // end_address[1] = S_size[1] - 1;
+            // std::vector<double> template_tstart_1D = Convert2DVTo1DV(template_tstart);
+            S->WriteArray(start_address, end_address, template_tstart[template_index]);
 
-        AU::Array<double> *S = new AU::Array<double>("EP_HDF5:template-intermediate.h5:/start");
-        std::vector<unsigned long long> S_size(2, 0);
-        S_size[0] = template_tstart.size();
-        S_size[1] = template_tstart[0].size();
-        data_chunk_size_p.resize(2, 0);
-        data_overlap_size_p.resize(2, 0);
-        S->CreateEndpoint(S_size, data_chunk_size_p, data_overlap_size_p);
-        start_address.resize(2, 0);
-        end_address.resize(2, 0);
-        end_address[0] = S_size[0] - 1;
-        end_address[1] = S_size[1] - 1;
-        std::vector<double> template_tstart_1D = Convert2DVTo1DV(template_tstart);
-        S->WriteArray(start_address, end_address, template_tstart_1D);
-
-        delete T;
-        delete W;
-        delete S;
+            delete T;
+            delete W;
+            delete S;
+        }
     }
     // std::cout << " template_data.size =" << template_data.size() << " , template_data[0].size = " << template_data[0].size() << " , template_data[0][0].size = " << template_data[0][0].size();
 
