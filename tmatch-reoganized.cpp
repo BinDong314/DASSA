@@ -637,7 +637,7 @@ void init_xcorr()
             std::vector<double> template_data_1D = Convert2DVTo1DV(template_data[template_index]);
             T->WriteArray(start_address, end_address, template_data_1D);
 
-            AU::Array<double> *W = new AU::Array<double>("EP_HDF5:template-intermediate-" + std::to_string(template_index) + ".h5:/template");
+            AU::Array<double> *W = new AU::Array<double>("EP_HDF5:template-intermediate-" + std::to_string(template_index) + ".h5:/weight");
             std::vector<unsigned long long> W_size(1, 0);
             // W_size[0] = template_weights.size();
             W_size[0] = template_weights[template_index].size();
@@ -651,7 +651,7 @@ void init_xcorr()
             // std::vector<double> template_weights_1D = Convert2DVTo1DV(template_weights);
             W->WriteArray(start_address, end_address, template_weights[template_index]);
 
-            AU::Array<double> *S = new AU::Array<double>("EP_HDF5:template-intermediate-" + std::to_string(template_index) + ".h5:/template");
+            AU::Array<double> *S = new AU::Array<double>("EP_HDF5:template-intermediate-" + std::to_string(template_index) + ".h5:/start");
             std::vector<unsigned long long> S_size(1, 0);
             // S_size[0] = template_tstart.size();
             S_size[0] = template_tstart[template_index].size();
