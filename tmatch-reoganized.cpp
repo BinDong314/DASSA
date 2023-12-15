@@ -632,10 +632,13 @@ void init_xcorr()
             std::vector<unsigned long long> start_address(2, 0);
             std::vector<unsigned long long> end_address(2, 0);
             // end_address[0] = T_size[0] - 1;
-            end_address[0] = T_size[0] - 1;
             end_address[1] = T_size[1] - 1;
+            end_address[0] = T_size[0] - 1;
             std::vector<double> template_data_1D = Convert2DVTo1DV(template_data[template_index]);
-            T->WriteArray(start_address, end_address, template_data_1D);
+            std::vector<double> template_data_1D_transposed;
+            template_data_1D_transposed.resize(template_data_1D.size());
+            transpose(template_data_1D.data(), template_data_1D_transposed.data(), T_size[0], T_size[1]);
+            T->WriteArray(start_address, end_address, template_data_1D_transposed);
 
             AU::Array<double> *W = new AU::Array<double>("EP_HDF5:template-intermediate-" + std::to_string(template_index) + ".h5:/weight");
             std::vector<unsigned long long> W_size(1, 0);
