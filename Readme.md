@@ -9,7 +9,7 @@ Please see the Coryright at the end.
 **1, Install FastTensor (ArrayUDF)** 
 
   See Readme file at the below link
-  https://bitbucket.org/dbin_sdm/fasttensor/src/master/
+   https://github.com/BinDong314/FasTensor
 
 **2, Install Dependency** 
 
