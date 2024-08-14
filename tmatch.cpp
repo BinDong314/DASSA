@@ -507,8 +507,8 @@ void init_xcorr()
         // std::cout << " template_weights[" << rc2 << "].size() = " << template_weights[rc2].size() << " \n";
         // std::cout << "T_chs = " << T_chs << " \n";
 
-        T_ts2d = DasLib::Vector1D2DByColStride(T_chs, T_h5_data, 2, 3); // filter the data starting at ch (2-1) and every 3 chs
-                                                                        // std::cout << "T_ts2d.size() = " << T_ts2d.size() << "\n";
+        T_ts2d = DasLib::Vector1D2DByColStride(T_chs, T_h5_data, channel_stride_start, channel_stride_size); // filter the data starting at ch (2-1) and every 3 chs
+                                                                                                             // std::cout << "T_ts2d.size() = " << T_ts2d.size() << "\n";
 
         // PrintVV("T_ts2d of template = ", T_ts2d);
 
@@ -709,7 +709,7 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
         std::cout << "ReadNeighbors (s) = " << AU_WTIME - init_xcorr_t_start << std::endl;
     init_xcorr_t_start = AU_WTIME;
 
-    ts2d = DasLib::Vector1D2DByColStride(chs_per_file_udf, ts_short, 2, 3);
+    ts2d = DasLib::Vector1D2DByColStride(chs_per_file_udf, ts_short, channel_stride_start, channel_stride_size);
     if (!ft_rank || ft_rank == (ft_size - 1))
         std::cout << "chs = " << ts2d.size() << ", each with " << ts2d[0].size() << " points\n";
 
@@ -944,8 +944,8 @@ inline Stencil<std::vector<double>> udf_template_match(const Stencil<TT> &iStenc
                     }
                 }
             } // end of  if (template_weights[rc2][rc1] > 0)
-        }     // end of channel rc1
-    }         // end of template index rc2
+        } // end of channel rc1
+    } // end of template index rc2
 
     if (!ft_rank)
         std::cout << "sdcn (for loop of all templates ) (s) = " << AU_WTIME - init_xcorr_t_start << std::endl;
@@ -1450,7 +1450,13 @@ int read_config_file(std::string file_name, int mpi_rank)
     is_channel_stride = (temp_str == "false" || temp_str == "0") ? false : true;
     if (is_channel_stride)
     {
-        channel_stride_size = reader.GetInteger("parameter", "channel_stride_size", 1);
+        channel_stride_start = reader.GetInteger("parameter", "channel_stride_size", 2);
+        channel_stride_size = reader.GetInteger("parameter", "channel_stride_size", 3);
+    }
+    else
+    {
+        channel_stride_start = 1;
+        channel_stride_size = 1;
     }
 
     temp_str = reader.Get("parameter", "is_column_vector", "NULL");
@@ -1649,6 +1655,7 @@ int read_config_file(std::string file_name, int mpi_rank)
         if (is_channel_stride)
         {
             std::cout << termcolor::magenta << "\n        is_channel_stride = " << termcolor::green << "true";
+            std::cout << termcolor::magenta << "\n        channel_stride_start = " << termcolor::green << channel_stride_start;
             std::cout << termcolor::magenta << "\n        channel_stride_size = " << termcolor::green << channel_stride_size;
         }
         else
@@ -1669,7 +1676,7 @@ int read_config_file(std::string file_name, int mpi_rank)
         std::cout << termcolor::magenta << "\n        DT = " << termcolor::green << DT;
 
         std::cout << termcolor::magenta << "\n        decifac = " << termcolor::green << decifac;
-        std::cout << termcolor::magenta << "\n        OpenMP_num_threads = " << termcolor::green << omp_num_threads_p;
+        std::cout << termcolor::magenta << "\n        omp_num_threads = " << termcolor::green << omp_num_threads_p;
         switch (correlation_method)
         {
         case CORR_DOT_PRODUCT:
