@@ -1450,7 +1450,7 @@ int read_config_file(std::string file_name, int mpi_rank)
     is_channel_stride = (temp_str == "false" || temp_str == "0") ? false : true;
     if (is_channel_stride)
     {
-        channel_stride_start = reader.GetInteger("parameter", "channel_stride_size", 2);
+        channel_stride_start = reader.GetInteger("parameter", "channel_stride_start", 2);
         channel_stride_size = reader.GetInteger("parameter", "channel_stride_size", 3);
     }
     else
