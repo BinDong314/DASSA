@@ -376,18 +376,18 @@ ddff(std::vector<T> &in_vec, const std::vector<double> &ctap,
 
   detrend(in_vec.data(), in_vec.size()); // Detread
 
-  PrintVectorDebug("ddff:in_vec after detrend=", in_vec);
+  // PrintVectorDebug("ddff:in_vec after detrend=", in_vec);
 
   for (int j = 0; j < ctap.size(); j++) {
     in_vec[j] = in_vec[j] * ctap[j];
   }
   in_vec.push_back(0); // add one zero
 
-  PrintVectorDebug("ddff:in_vec after ctap=", in_vec);
+  // PrintVectorDebug("ddff:in_vec after ctap=", in_vec);
 
   decimate(in_vec, decimate_factor, decimate_cheby1_b, decimate_cheby1_a);
 
-  PrintVectorDebug("ddff:in_vec after decimate=", in_vec);
+  // PrintVectorDebug("ddff:in_vec after decimate=", in_vec);
 
   filtfilt(filtfilt_B, filtfilt_A, in_vec, out_vec);
 
@@ -919,9 +919,9 @@ Vector1D2DByColStride(size_t cols, const std::vector<T1> &data1d,
   for (int i = 0; i < new_cols; i++)
     result[i].resize(rows);
 
-  // #if defined(_OPENMP)
-  // #pragma omp parallel for
-  // #endif
+#if defined(_OPENMP)
+#pragma omp parallel for
+#endif
   for (std::size_t j = 0; j < rows; ++j) {
     for (std::size_t i = start - 1; i < cols; i = i + stride) {
       result[i / stride][j] = data1d[j * cols + i];

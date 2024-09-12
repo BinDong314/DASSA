@@ -767,26 +767,26 @@ udf_template_match(const Stencil<TT> &iStencil) {
   }
   if (npts1_new < npts1)
     npts1 = npts1_new;
-  // npts1 = min([npts1 npts1_new]) ;
+// npts1 = min([npts1 npts1_new]) ;
 
-  // if (!ft_rank)
-  // {
-  //     std::cout << "round(((nof1 - 1) * npts0) / decifac) = " << round(((nof1
-  //     - 1) * npts0) / decifac)
-  //               << ", round(taperwidth / dt1) = " << round(taperwidth / dt1)
-  //               << ", MaxVector(template_winlen) = " <<
-  //               MaxVector(template_winlen)
-  //               << ", MaxVectorVector(template_tstart) = " <<
-  //               MaxVectorVector(template_tstart) << "\n";
-  //     PrintVV("template_tstart = ", template_tstart);
-  // }
+// if (!ft_rank)
+// {
+//     std::cout << "round(((nof1 - 1) * npts0) / decifac) = " << round(((nof1
+//     - 1) * npts0) / decifac)
+//               << ", round(taperwidth / dt1) = " << round(taperwidth / dt1)
+//               << ", MaxVector(template_winlen) = " <<
+//               MaxVector(template_winlen)
+//               << ", MaxVectorVector(template_tstart) = " <<
+//               MaxVectorVector(template_tstart) << "\n";
+//     PrintVV("template_tstart = ", template_tstart);
+// }
 
-  PrintVV("ts2d  of das data ", ts2d);
+// PrintVV("ts2d  of das data ", ts2d);
 
-  // Resample in time-domain
-  // #if defined(_OPENMP)
-  // #pragma omp parallel for firstprivate(ts_temp2)
-  // #endif
+// Resample in time-domain
+#if defined(_OPENMP)
+#pragma omp parallel for firstprivate(ts_temp2)
+#endif
   for (int ii = 0; ii < chs_per_file_udf; ii++) {
     // if (ii % 1000 == 0)
     //     std::cout << "ts2d[" << ii << " ], chs_per_file_udf = " <<
@@ -1707,9 +1707,17 @@ int read_config_file(std::string file_name, int mpi_rank) {
 
     std::cout << termcolor::magenta
               << "\n        decifac = " << termcolor::green << decifac;
+
+#if defined(_OPENMP)
     std::cout << termcolor::magenta
-              << "\n        omp_num_threads = " << termcolor::green
-              << omp_num_threads_p;
+              << "\n       OpenMP (multiple threads) is  enabled with  "
+                 "omp_num_threads = "
+              << termcolor::green << omp_num_threads_p;
+#else
+    std::cout << termcolor::magenta
+              << "\n        OpenMP (multiple threads) is not enabled "
+              << termcolor::green;
+#endif
     switch (correlation_method) {
     case CORR_DOT_PRODUCT:
       std::cout << termcolor::magenta
